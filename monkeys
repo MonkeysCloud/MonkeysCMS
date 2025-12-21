@@ -1,0 +1,87 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * MonkeysCMS CLI Runner
+ * 
+ * This script bootstraps the CLI environment and runs commands.
+ * 
+ * Usage:
+ *   ./monkeys command:name [arguments] [--options]
+ *   
+ * Examples:
+ *   ./monkeys cms:module:enable Ecommerce
+ *   ./monkeys cms:module:list
+ *   ./monkeys cms:schema:sync
+ *   ./monkeys migrate
+ */
+
+// Find autoloader
+$autoloaders = [
+    __DIR__ . '/vendor/autoload.php',
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../vendor/autoload.php',
+];
+
+$autoloaderFound = false;
+foreach ($autoloaders as $autoloader) {
+    if (file_exists($autoloader)) {
+        require $autoloader;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    fwrite(STDERR, "Could not find Composer autoloader. Run 'composer install' first.\n");
+    exit(1);
+}
+
+// Define base path
+define('ML_BASE_PATH', dirname($autoloader, 2));
+
+// Load environment
+require_once ML_BASE_PATH . '/bootstrap/env.php';
+
+// Verify config exists
+$configFile = ML_BASE_PATH . '/config/app.php';
+if (!file_exists($configFile)) {
+    fwrite(STDERR, "Configuration file not found: config/app.php\n");
+    exit(1);
+}
+
+// Bootstrap CLI application
+use MonkeysLegion\Cli\CliKernel;
+use MonkeysLegion\Cli\Support\CommandFinder;
+use MonkeysLegion\DI\ContainerBuilder;
+
+try {
+    // Build DI container
+    $builder = new ContainerBuilder();
+    $builder->addDefinitions(require $configFile);
+    
+    // Add database configuration
+    $dbConfig = ML_BASE_PATH . '/config/database.php';
+    if (file_exists($dbConfig)) {
+        $builder->addDefinitions(require $dbConfig);
+    }
+    
+    $container = $builder->build();
+
+    // Find all commands
+    $commands = CommandFinder::all();
+
+    // Run CLI kernel
+    $kernel = new CliKernel($container, $commands);
+    $exitCode = $kernel->run($argv);
+    
+    exit($exitCode);
+} catch (Throwable $e) {
+    fwrite(STDERR, "Fatal error: " . $e->getMessage() . "\n");
+    if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
+        fwrite(STDERR, $e->getTraceAsString() . "\n");
+    }
+    exit(1);
+}

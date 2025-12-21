@@ -1,0 +1,36 @@
+# MonkeysCMS Default Admin Theme
+# Clean, modern dashboard interface
+
+name = "admin-default"
+version = "1.0.0"
+description = "MonkeysCMS Default Admin Theme - Clean dashboard interface"
+author = "MonkeysCMS"
+type = "admin"
+
+# Parent theme (null for base themes)
+parent = null
+
+# Theme regions for block placement
+[regions]
+header = "Admin Header"
+sidebar = "Admin Sidebar"
+content = "Main Content"
+footer = "Admin Footer"
+
+# Theme configuration options
+[config]
+sidebar_collapsed = false
+dark_mode = false
+accent_color = "#3b82f6"
+
+# Screenshots for theme preview
+screenshots = []
+
+# Asset paths
+[assets]
+css = ["assets/css/admin.css"]
+js = ["assets/js/admin.js"]
+
+# Required permissions to use this theme
+[permissions]
+required = ["access_admin"]

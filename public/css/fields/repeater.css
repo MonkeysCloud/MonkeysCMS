@@ -1,0 +1,372 @@
+/**
+ * MonkeysCMS Repeater Field Widget CSS
+ * Styles for repeatable field groups
+ */
+
+/* ==========================================================================
+   Repeater Container
+   ========================================================================== */
+
+.field-repeater {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: #f9fafb;
+}
+
+.field-repeater__items {
+    display: flex;
+    flex-direction: column;
+}
+
+.field-repeater__items:empty {
+    padding: 2rem;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.field-repeater__items:empty::after {
+    content: 'No items. Click "Add" to create one.';
+}
+
+/* ==========================================================================
+   Repeater Item
+   ========================================================================== */
+
+.field-repeater__item {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.field-repeater__item:last-child {
+    border-bottom: none;
+}
+
+.field-repeater__item.dragging {
+    opacity: 0.5;
+    background: #eff6ff;
+}
+
+.field-repeater__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    user-select: none;
+}
+
+.field-repeater__item--collapsed .field-repeater__header {
+    border-bottom: none;
+}
+
+.field-repeater__drag {
+    cursor: grab;
+    color: #9ca3af;
+    font-size: 1rem;
+    padding: 0.25rem;
+}
+
+.field-repeater__drag:hover {
+    color: #6b7280;
+}
+
+.field-repeater__drag:active {
+    cursor: grabbing;
+}
+
+.field-repeater__title {
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.field-repeater__num {
+    color: #6b7280;
+}
+
+.field-repeater__toggle {
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.field-repeater__item--collapsed .field-repeater__toggle {
+    transform: rotate(-90deg);
+}
+
+.field-repeater__remove {
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    border: none;
+    color: #dc2626;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.field-repeater__remove:hover {
+    opacity: 1;
+}
+
+.field-repeater__remove:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Repeater Content
+   ========================================================================== */
+
+.field-repeater__content {
+    padding: 1rem;
+}
+
+.field-repeater__item--collapsed .field-repeater__content {
+    display: none;
+}
+
+.field-repeater__field {
+    margin-bottom: 1rem;
+}
+
+.field-repeater__field:last-child {
+    margin-bottom: 0;
+}
+
+.field-repeater__field label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.field-repeater__field input,
+.field-repeater__field textarea,
+.field-repeater__field select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #111827;
+    background-color: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field-repeater__field input:focus,
+.field-repeater__field textarea:focus,
+.field-repeater__field select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-repeater__field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.field-repeater__field select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+/* Checkbox in repeater */
+.field-repeater__field input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+/* Image in repeater */
+.field-repeater__image {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-repeater__image img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+    border: 1px solid #e5e7eb;
+}
+
+.field-repeater__image button {
+    padding: 0.375rem 0.75rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+.field-repeater__image button:hover {
+    background: #f3f4f6;
+}
+
+/* ==========================================================================
+   Repeater Actions
+   ========================================================================== */
+
+.field-repeater__actions {
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.field-repeater__add {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 2px dashed #d1d5db;
+    border-radius: 0.375rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.field-repeater__add:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
+.field-repeater__add:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Repeater Layouts
+   ========================================================================== */
+
+/* Compact layout */
+.field-repeater--compact .field-repeater__header {
+    padding: 0.5rem 0.75rem;
+}
+
+.field-repeater--compact .field-repeater__content {
+    padding: 0.75rem;
+}
+
+.field-repeater--compact .field-repeater__field {
+    margin-bottom: 0.75rem;
+}
+
+/* Inline layout */
+.field-repeater--inline .field-repeater__content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.field-repeater--inline .field-repeater__field {
+    flex: 1;
+    min-width: 150px;
+    margin-bottom: 0;
+}
+
+/* Grid layout */
+.field-repeater--grid .field-repeater__content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.field-repeater--grid .field-repeater__field {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Drag & Drop States
+   ========================================================================== */
+
+.field-repeater__item--drag-over {
+    border-top: 2px solid #3b82f6;
+}
+
+.field-repeater__item--drag-ghost {
+    opacity: 0.4;
+    background: #e5e7eb;
+}
+
+/* ==========================================================================
+   Nested Repeaters
+   ========================================================================== */
+
+.field-repeater .field-repeater {
+    margin-top: 0.5rem;
+    border-color: #d1d5db;
+}
+
+.field-repeater .field-repeater .field-repeater__header {
+    background: #e5e7eb;
+}
+
+/* ==========================================================================
+   Validation States
+   ========================================================================== */
+
+.field-repeater__item--error {
+    border-color: #fecaca;
+}
+
+.field-repeater__item--error .field-repeater__header {
+    background: #fef2f2;
+}
+
+.field-repeater__field--error input,
+.field-repeater__field--error textarea,
+.field-repeater__field--error select {
+    border-color: #dc2626;
+}
+
+.field-repeater__field-error {
+    font-size: 0.75rem;
+    color: #dc2626;
+    margin-top: 0.25rem;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 640px) {
+    .field-repeater__header {
+        padding: 0.625rem 0.75rem;
+    }
+    
+    .field-repeater__content {
+        padding: 0.75rem;
+    }
+    
+    .field-repeater__title {
+        font-size: 0.8125rem;
+    }
+    
+    .field-repeater--inline .field-repeater__content {
+        flex-direction: column;
+    }
+    
+    .field-repeater--inline .field-repeater__field {
+        min-width: 100%;
+    }
+}

@@ -1,0 +1,309 @@
+# MonkeysCMS File Storage Configuration
+# Uses MonkeysLegion-Files for storage drivers and processing
+
+# =============================================================================
+# Default Storage
+# =============================================================================
+
+# Default disk for file operations
+default = env("FILES_DISK", "local")
+
+# Default disk for public files (images, media)
+public_disk = env("FILES_PUBLIC_DISK", "public")
+
+# =============================================================================
+# Storage Disks
+# =============================================================================
+
+[disks.local]
+driver = "local"
+root = "storage/files"
+url = null
+visibility = "private"
+
+[disks.local.permissions.file]
+public = 0644
+private = 0600
+
+[disks.local.permissions.dir]
+public = 0755
+private = 0700
+
+[disks.public]
+driver = "local"
+root = "storage/uploads"
+url = "/uploads"
+visibility = "public"
+
+[disks.public.permissions.file]
+public = 0644
+private = 0600
+
+[disks.public.permissions.dir]
+public = 0755
+private = 0700
+
+# Amazon S3
+[disks.s3]
+driver = "s3"
+key = env("AWS_ACCESS_KEY_ID", "")
+secret = env("AWS_SECRET_ACCESS_KEY", "")
+region = env("AWS_DEFAULT_REGION", "us-east-1")
+bucket = env("AWS_BUCKET", "")
+endpoint = env("AWS_ENDPOINT", "")
+url = env("AWS_URL", "")
+use_path_style_endpoint = env("AWS_USE_PATH_STYLE", false)
+visibility = "private"
+
+# MinIO (S3-compatible)
+[disks.minio]
+driver = "s3"
+key = env("MINIO_ACCESS_KEY", "")
+secret = env("MINIO_SECRET_KEY", "")
+region = "us-east-1"
+bucket = env("MINIO_BUCKET", "")
+endpoint = env("MINIO_ENDPOINT", "")
+use_path_style_endpoint = true
+visibility = "private"
+
+# Google Cloud Storage
+[disks.gcs]
+driver = "gcs"
+project_id = env("GOOGLE_CLOUD_PROJECT_ID", "")
+bucket = env("GOOGLE_CLOUD_STORAGE_BUCKET", "")
+key_file_path = env("GOOGLE_CLOUD_KEY_FILE", "")
+path_prefix = env("GOOGLE_CLOUD_STORAGE_PATH_PREFIX", "")
+visibility = "private"
+url = env("GOOGLE_CLOUD_STORAGE_URL", "")
+
+# DigitalOcean Spaces
+[disks.spaces]
+driver = "s3"
+key = env("DO_SPACES_KEY", "")
+secret = env("DO_SPACES_SECRET", "")
+region = env("DO_SPACES_REGION", "nyc3")
+bucket = env("DO_SPACES_BUCKET", "")
+endpoint = env("DO_SPACES_ENDPOINT", "")
+visibility = "private"
+
+# =============================================================================
+# Upload Settings
+# =============================================================================
+
+[upload]
+# Maximum file size in bytes (default: 50MB)
+max_size = env("UPLOAD_MAX_BYTES", 52428800)
+
+# Chunk size for multipart uploads (5MB)
+chunk_size = env("UPLOAD_CHUNK_SIZE", 5242880)
+
+# Chunk upload session expiry in seconds (24 hours)
+chunk_expiry = env("UPLOAD_CHUNK_EXPIRY", 86400)
+
+# Temp directory for chunked uploads
+temp_dir = env("UPLOAD_TEMP_DIR", "storage/tmp/uploads")
+
+# Verify MIME type by reading file content (security)
+verify_mime = true
+
+# Generate checksums for uploaded files
+generate_checksum = true
+
+# Allowed MIME types
+allowed_mimes = [
+    # Images
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/svg+xml",
+    "image/avif",
+    
+    # Documents
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "text/csv",
+    "text/markdown",
+    
+    # Audio
+    "audio/mpeg",
+    "audio/wav",
+    "audio/ogg",
+    "audio/webm",
+    "audio/mp4",
+    
+    # Video
+    "video/mp4",
+    "video/webm",
+    "video/ogg",
+    "video/quicktime",
+    
+    # Archives
+    "application/zip",
+    "application/x-rar-compressed",
+    "application/gzip"
+]
+
+# Blocked MIME types (security - always blocked)
+blocked_mimes = [
+    "application/x-php",
+    "application/x-httpd-php",
+    "application/x-executable",
+    "application/x-msdownload",
+    "application/x-sh",
+    "application/x-csh",
+    "text/x-php",
+    "text/html"
+]
+
+# Blocked file extensions (security)
+blocked_extensions = [
+    "php", "phtml", "php3", "php4", "php5", "phps", "phar",
+    "exe", "com", "bat", "cmd", "sh", "csh", "bash",
+    "js", "vbs", "wsf", "wsh",
+    "htaccess", "htpasswd"
+]
+
+# =============================================================================
+# Image Processing
+# =============================================================================
+
+[image]
+# Driver: gd or imagick
+driver = env("IMAGE_DRIVER", "gd")
+
+# Default quality for JPEG/WebP (1-100)
+quality = 85
+
+# Maximum image dimension (resize if larger)
+max_dimension = 4096
+
+# Strip EXIF metadata for privacy
+strip_metadata = true
+
+# Default output format (null = keep original)
+default_format = null
+
+# Auto-orient images based on EXIF
+auto_orient = true
+
+# =============================================================================
+# Image Variants (Thumbnails)
+# =============================================================================
+
+[image.variants.thumbnail]
+width = 150
+height = 150
+mode = "cover"
+quality = 80
+format = null
+
+[image.variants.small]
+width = 320
+height = 240
+mode = "fit"
+quality = 85
+format = null
+
+[image.variants.medium]
+width = 800
+height = 600
+mode = "fit"
+quality = 85
+format = null
+
+[image.variants.large]
+width = 1920
+height = 1080
+mode = "fit"
+quality = 85
+format = null
+
+[image.variants.square]
+width = 400
+height = 400
+mode = "cover"
+quality = 85
+format = null
+
+# WebP optimized variant
+[image.variants.webp]
+width = 1920
+height = 1080
+mode = "fit"
+quality = 80
+format = "webp"
+
+# =============================================================================
+# Virus Scanning (Optional)
+# =============================================================================
+
+[virusscan]
+# Enable virus scanning
+enabled = env("VIRUSSCAN_ENABLED", false)
+
+# Scanner driver: clamav, virustotal
+driver = env("VIRUSSCAN_DRIVER", "clamav")
+
+# ClamAV settings
+[virusscan.clamav]
+socket = env("CLAMAV_SOCKET", "/var/run/clamav/clamd.sock")
+host = env("CLAMAV_HOST", "127.0.0.1")
+port = env("CLAMAV_PORT", 3310)
+timeout = 30
+
+# VirusTotal API settings
+[virusscan.virustotal]
+api_key = env("VIRUSTOTAL_API_KEY", "")
+timeout = 60
+
+# =============================================================================
+# Rate Limiting
+# =============================================================================
+
+[rate_limit]
+# Enable upload rate limiting
+enabled = true
+
+# Requests per window
+max_uploads = 100
+
+# Window in seconds
+window = 3600
+
+# Rate limit by: ip, user, or both
+limit_by = "user"
+
+# =============================================================================
+# CDN Settings
+# =============================================================================
+
+[cdn]
+# Enable CDN URL rewriting
+enabled = env("CDN_ENABLED", false)
+
+# CDN base URL
+url = env("CDN_URL", "")
+
+# Cache-Control header value
+cache_control = "public, max-age=31536000"
+
+# =============================================================================
+# Cleanup Settings
+# =============================================================================
+
+[cleanup]
+# Auto-delete orphaned files (not in database)
+orphan_cleanup = true
+
+# Orphan cleanup interval in days
+orphan_max_age = 30
+
+# Delete variants when original is deleted
+cascade_delete = true

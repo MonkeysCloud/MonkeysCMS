@@ -1,0 +1,169 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * MonkeysCMS CLI
+ * 
+ * Usage:
+ *   php cms <command> [options]
+ * 
+ * Commands:
+ *   migrate              Run pending migrations
+ *   migrate:rollback     Rollback last batch
+ *   migrate:reset        Reset all migrations
+ *   migrate:fresh        Drop all tables and re-run
+ *   migrate:status       Show migration status
+ * 
+ *   cache:clear          Clear all caches
+ *   cache:stats          Show cache statistics
+ * 
+ *   field:list           List all field definitions
+ *   field:create         Create a new field
+ *   field:widgets        List available widgets
+ * 
+ *   module:list          List all modules
+ *   module:enable        Enable a module
+ *   module:disable       Disable a module
+ * 
+ *   user:create          Create a new user
+ *   user:list            List users
+ *   user:role            Manage user roles
+ */
+
+// Error handling
+set_error_handler(function ($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+// Autoload
+require_once __DIR__ . '/vendor/autoload.php';
+
+// Load configuration
+$configFile = __DIR__ . '/config/database.php';
+if (!file_exists($configFile)) {
+    echo "\033[31mError: Database configuration not found.\033[0m\n";
+    echo "Please create config/database.php with your database settings.\n";
+    exit(1);
+}
+
+$dbConfig = require $configFile;
+
+// Create database connection
+try {
+    $dsn = sprintf(
+        '%s:host=%s;port=%d;dbname=%s;charset=%s',
+        $dbConfig['driver'] ?? 'mysql',
+        $dbConfig['host'] ?? 'localhost',
+        $dbConfig['port'] ?? 3306,
+        $dbConfig['database'],
+        $dbConfig['charset'] ?? 'utf8mb4'
+    );
+
+    $pdo = new PDO($dsn, $dbConfig['username'] ?? null, $dbConfig['password'] ?? null, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+} catch (PDOException $e) {
+    echo "\033[31mDatabase connection failed: {$e->getMessage()}\033[0m\n";
+    exit(1);
+}
+
+// Parse command
+$command = $argv[1] ?? 'help';
+
+// Route command
+switch ($command) {
+    // Migration commands
+    case 'migrate':
+    case 'migrate:up':
+    case 'migrate:rollback':
+    case 'migrate:down':
+    case 'migrate:reset':
+    case 'migrate:fresh':
+    case 'migrate:status':
+        $migrationsPath = __DIR__ . '/app/Cms/Database/migrations';
+        exit(\App\Cms\Database\Console\MigrationCommands::run($argv, $pdo, $migrationsPath));
+
+    // Cache commands
+    case 'cache:clear':
+    case 'cache:stats':
+        exit(\App\Cms\Cache\Console\CacheCommands::run($argv, $pdo));
+
+    // Field commands
+    case 'field:list':
+    case 'field:create':
+    case 'field:show':
+    case 'field:delete':
+    case 'field:widgets':
+    case 'field:export':
+    case 'field:import':
+        exit(\App\Cms\Fields\Console\FieldCommands::run($argv, $pdo));
+
+    // Help
+    case 'help':
+    case '--help':
+    case '-h':
+        showHelp();
+        exit(0);
+
+    // Version
+    case 'version':
+    case '--version':
+    case '-v':
+        echo "MonkeysCMS v1.0.0\n";
+        exit(0);
+
+    default:
+        echo "\033[31mUnknown command: {$command}\033[0m\n";
+        echo "Run 'php cms help' for available commands.\n";
+        exit(1);
+}
+
+function showHelp(): void
+{
+    $help = <<<HELP
+\033[36mMonkeysCMS CLI\033[0m
+
+\033[33mUsage:\033[0m
+  php cms <command> [options]
+
+\033[33mDatabase Commands:\033[0m
+  \033[32mmigrate\033[0m              Run all pending migrations
+  \033[32mmigrate:rollback\033[0m     Rollback the last batch of migrations
+  \033[32mmigrate:reset\033[0m        Rollback all migrations
+  \033[32mmigrate:fresh\033[0m        Drop all tables and re-run migrations
+  \033[32mmigrate:status\033[0m       Show the status of each migration
+
+\033[33mCache Commands:\033[0m
+  \033[32mcache:clear\033[0m          Clear all caches
+  \033[32mcache:stats\033[0m          Show cache statistics
+
+\033[33mField Commands:\033[0m
+  \033[32mfield:list\033[0m           List all field definitions
+  \033[32mfield:create\033[0m         Create a new field interactively
+  \033[32mfield:show <id>\033[0m      Show details for a field
+  \033[32mfield:delete <id>\033[0m    Delete a field
+  \033[32mfield:widgets\033[0m        List available field widgets
+  \033[32mfield:export\033[0m         Export fields to JSON
+  \033[32mfield:import <file>\033[0m  Import fields from JSON
+
+\033[33mModule Commands:\033[0m
+  \033[32mmodule:list\033[0m          List all modules
+  \033[32mmodule:enable <name>\033[0m Enable a module
+  \033[32mmodule:disable <name>\033[0m Disable a module
+
+\033[33mUser Commands:\033[0m
+  \033[32muser:create\033[0m          Create a new user
+  \033[32muser:list\033[0m            List all users
+  \033[32muser:role\033[0m            Manage user roles
+
+\033[33mOther:\033[0m
+  \033[32mhelp\033[0m                 Show this help message
+  \033[32mversion\033[0m              Show version information
+
+HELP;
+    echo $help;
+}

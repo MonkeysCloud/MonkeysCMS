@@ -1,0 +1,156 @@
+/**
+ * MonkeysCMS Rating Field Widget CSS
+ * Custom star rating selector styles
+ */
+
+/* ==========================================================================
+   Rating Container
+   ========================================================================== */
+
+.field-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-rating__stars {
+    display: flex;
+    gap: 0.125rem;
+}
+
+/* ==========================================================================
+   Star Icons
+   ========================================================================== */
+
+.field-rating__star {
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.field-rating__star:hover {
+    transform: scale(1.1);
+}
+
+.field-rating__svg {
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.field-rating__star--highlighted .field-rating__svg path {
+    fill: #fbbf24;
+}
+
+/* ==========================================================================
+   Sizes
+   ========================================================================== */
+
+/* Small */
+.field-rating--small .field-rating__svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Medium (default) */
+.field-rating--medium .field-rating__svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Large */
+.field-rating--large .field-rating__svg {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* ==========================================================================
+   Value Display
+   ========================================================================== */
+
+.field-rating__value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    min-width: 2rem;
+}
+
+.field-rating--small .field-rating__value {
+    font-size: 0.75rem;
+}
+
+.field-rating--large .field-rating__value {
+    font-size: 1rem;
+}
+
+/* ==========================================================================
+   Clear Button
+   ========================================================================== */
+
+.field-rating__clear {
+    padding: 0.125rem 0.375rem;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+}
+
+.field-rating:hover .field-rating__clear {
+    opacity: 1;
+}
+
+.field-rating__clear:hover {
+    color: #dc2626;
+}
+
+/* ==========================================================================
+   Display Mode
+   ========================================================================== */
+
+.field-display--rating {
+    color: #fbbf24;
+    font-size: 1rem;
+    letter-spacing: 0.125rem;
+}
+
+.field-display--rating .field-rating__number {
+    color: #6b7280;
+    font-size: 0.875rem;
+    letter-spacing: normal;
+}
+
+/* ==========================================================================
+   Disabled State
+   ========================================================================== */
+
+.field-rating--disabled .field-rating__star {
+    cursor: default;
+    pointer-events: none;
+}
+
+.field-rating--disabled .field-rating__star:hover {
+    transform: none;
+}
+
+.field-rating--disabled .field-rating__clear {
+    display: none;
+}
+
+/* ==========================================================================
+   Readonly State
+   ========================================================================== */
+
+.field-rating--readonly .field-rating__star {
+    cursor: default;
+}
+
+.field-rating--readonly .field-rating__star:hover {
+    transform: none;
+}
+
+.field-rating--readonly .field-rating__clear {
+    display: none;
+}

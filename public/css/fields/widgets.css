@@ -1,0 +1,597 @@
+/**
+ * MonkeysCMS Field Widget Styles
+ * 
+ * Core styles for all field widgets with modern design.
+ */
+
+/* =============================================================================
+   Base Field Styles
+   ============================================================================= */
+
+.field-widget {
+    margin-bottom: 1.5rem;
+}
+
+.field-widget__wrapper {
+    position: relative;
+}
+
+.field-widget__label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.field-widget__label--required::after {
+    content: ' *';
+    color: #ef4444;
+}
+
+.field-widget__help {
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.field-widget__errors {
+    margin-top: 0.375rem;
+}
+
+.field-widget__error {
+    display: block;
+    font-size: 0.75rem;
+    color: #ef4444;
+}
+
+/* Error state */
+.field-widget--has-error .field-widget__input,
+.field-widget--has-error input,
+.field-widget--has-error textarea,
+.field-widget--has-error select {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* =============================================================================
+   Input Base Styles
+   ============================================================================= */
+
+.field-widget input[type="text"],
+.field-widget input[type="email"],
+.field-widget input[type="url"],
+.field-widget input[type="tel"],
+.field-widget input[type="number"],
+.field-widget input[type="password"],
+.field-widget input[type="date"],
+.field-widget input[type="datetime-local"],
+.field-widget input[type="time"],
+.field-widget textarea,
+.field-widget select {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #1f2937;
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-widget input:focus,
+.field-widget textarea:focus,
+.field-widget select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-widget input:disabled,
+.field-widget textarea:disabled,
+.field-widget select:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.field-widget input::placeholder,
+.field-widget textarea::placeholder {
+    color: #9ca3af;
+}
+
+/* =============================================================================
+   Text Input Widget
+   ============================================================================= */
+
+.field-text-input {
+    position: relative;
+}
+
+.field-text-input--with-prefix,
+.field-text-input--with-suffix {
+    display: flex;
+    align-items: stretch;
+}
+
+.field-text-input__prefix,
+.field-text-input__suffix {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    white-space: nowrap;
+}
+
+.field-text-input__prefix {
+    border-right: none;
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.field-text-input__suffix {
+    border-left: none;
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.field-text-input--with-prefix input {
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.field-text-input--with-suffix input {
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.field-text-input--with-prefix.field-text-input--with-suffix input {
+    border-radius: 0;
+}
+
+/* =============================================================================
+   Textarea Widget
+   ============================================================================= */
+
+.field-textarea {
+    position: relative;
+}
+
+.field-textarea textarea {
+    min-height: 6rem;
+    resize: vertical;
+}
+
+.field-textarea--no-resize textarea {
+    resize: none;
+}
+
+.field-textarea__counter {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.field-textarea__counter--warning {
+    color: #f59e0b;
+}
+
+.field-textarea__counter--error {
+    color: #ef4444;
+}
+
+/* =============================================================================
+   Select Widget
+   ============================================================================= */
+
+.field-select select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+.field-select select[multiple] {
+    background-image: none;
+    padding-right: 0.875rem;
+}
+
+/* =============================================================================
+   Checkbox & Radio Widgets
+   ============================================================================= */
+
+.field-checkbox,
+.field-radio {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.field-checkbox--vertical,
+.field-radio--vertical {
+    flex-direction: column;
+}
+
+.field-checkbox label,
+.field-radio label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.field-checkbox input,
+.field-radio input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #3b82f6;
+}
+
+/* =============================================================================
+   Switch Widget
+   ============================================================================= */
+
+.field-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.field-switch__toggle {
+    position: relative;
+    width: 2.75rem;
+    height: 1.5rem;
+    background-color: #d1d5db;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.field-switch__toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: #fff;
+    border-radius: 9999px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.field-switch input:checked + .field-switch__toggle {
+    background-color: #3b82f6;
+}
+
+.field-switch input:checked + .field-switch__toggle::after {
+    transform: translateX(1.25rem);
+}
+
+.field-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.field-switch__label {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+/* =============================================================================
+   Number & Range Widgets
+   ============================================================================= */
+
+.field-number {
+    position: relative;
+}
+
+.field-number--with-prefix,
+.field-number--with-suffix {
+    display: flex;
+}
+
+.field-number__prefix,
+.field-number__suffix {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+}
+
+.field-range {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.field-range input[type="range"] {
+    flex: 1;
+    height: 0.5rem;
+    appearance: none;
+    background: #e5e7eb;
+    border-radius: 9999px;
+}
+
+.field-range input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: #3b82f6;
+    border-radius: 9999px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.field-range__value {
+    min-width: 3rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* =============================================================================
+   Color Widget
+   ============================================================================= */
+
+.field-color {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.field-color input[type="color"] {
+    width: 3rem;
+    height: 2.5rem;
+    padding: 0.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    cursor: pointer;
+}
+
+.field-color__hex {
+    width: 7rem;
+    font-family: monospace;
+}
+
+.field-color__preview {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+}
+
+/* =============================================================================
+   Date Widgets
+   ============================================================================= */
+
+.field-date input,
+.field-datetime input,
+.field-time input {
+    max-width: 16rem;
+}
+
+/* =============================================================================
+   Slug Widget
+   ============================================================================= */
+
+.field-slug {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.field-slug input {
+    flex: 1;
+    font-family: monospace;
+}
+
+.field-slug__generate {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    color: #374151;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.field-slug__generate:hover {
+    background-color: #e5e7eb;
+}
+
+/* =============================================================================
+   JSON Widget
+   ============================================================================= */
+
+.field-json {
+    position: relative;
+}
+
+.field-json__editor {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8125rem;
+    tab-size: 2;
+}
+
+.field-json__status {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.field-json__status--valid {
+    color: #10b981;
+}
+
+.field-json__status--error {
+    color: #ef4444;
+}
+
+.field-json__format {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+/* =============================================================================
+   Password Widget
+   ============================================================================= */
+
+.field-password {
+    position: relative;
+}
+
+.field-password input {
+    padding-right: 3rem;
+}
+
+.field-password__toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.field-password__strength {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.field-password__strength--very-weak { color: #ef4444; }
+.field-password__strength--weak { color: #f97316; }
+.field-password__strength--fair { color: #eab308; }
+.field-password__strength--strong { color: #22c55e; }
+.field-password__strength--very-strong { color: #10b981; }
+
+/* =============================================================================
+   Display Styles
+   ============================================================================= */
+
+.field-display {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.field-display--empty {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.field-display--boolean .field-display__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 9999px;
+}
+
+.field-display__badge--yes {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.field-display__badge--no {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.field-display--color {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-display__swatch {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+}
+
+.field-display--json {
+    padding: 0.75rem;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.field-display--json code {
+    font-family: monospace;
+    font-size: 0.8125rem;
+    white-space: pre;
+}
+
+.field-display--taxonomy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.field-display__tag {
+    display: inline-flex;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    background-color: #e0e7ff;
+    color: #3730a3;
+    border-radius: 9999px;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 640px) {
+    .field-text-input--with-prefix,
+    .field-text-input--with-suffix,
+    .field-number--with-prefix,
+    .field-number--with-suffix {
+        flex-direction: column;
+    }
+    
+    .field-text-input__prefix,
+    .field-text-input__suffix,
+    .field-number__prefix,
+    .field-number__suffix {
+        border-radius: 0.5rem;
+        border: 1px solid #d1d5db;
+    }
+    
+    .field-text-input--with-prefix input,
+    .field-text-input--with-suffix input {
+        border-radius: 0.5rem;
+    }
+    
+    .field-checkbox,
+    .field-radio {
+        flex-direction: column;
+    }
+}

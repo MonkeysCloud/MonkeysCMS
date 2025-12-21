@@ -1,0 +1,99 @@
+# MonkeysCMS Cache Configuration
+# Uses MonkeysLegion-Cache package (PSR-16 SimpleCache compliant)
+
+# =============================================================================
+# Default Cache Store
+# =============================================================================
+
+# Default cache driver (file, redis, memcached, array)
+cache.default = env("CACHE_DRIVER", "file")
+
+# Global cache prefix for all keys
+cache.prefix = env("CACHE_PREFIX", "monkeyscms")
+
+# Default TTL in seconds (1 hour)
+cache.ttl = env("CACHE_TTL", 3600)
+
+# =============================================================================
+# File Cache Store
+# =============================================================================
+
+cache.stores.file.driver = "file"
+cache.stores.file.path = "storage/cache"
+cache.stores.file.prefix = env("CACHE_PREFIX", "ml_cache")
+cache.stores.file.permission = 0755
+
+# =============================================================================
+# Redis Cache Store
+# =============================================================================
+
+cache.stores.redis.driver = "redis"
+cache.stores.redis.host = env("REDIS_HOST", "127.0.0.1")
+cache.stores.redis.port = env("REDIS_PORT", 6379)
+cache.stores.redis.password = env("REDIS_PASSWORD", null)
+cache.stores.redis.database = env("REDIS_CACHE_DB", 1)
+cache.stores.redis.prefix = env("CACHE_PREFIX", "ml_cache")
+cache.stores.redis.timeout = 2.5
+cache.stores.redis.persistent = false
+
+# =============================================================================
+# Memcached Cache Store
+# =============================================================================
+
+cache.stores.memcached.driver = "memcached"
+cache.stores.memcached.persistent_id = env("MEMCACHED_PERSISTENT_ID", "monkeyscms")
+cache.stores.memcached.prefix = env("CACHE_PREFIX", "ml_cache")
+
+# Memcached servers (can be multiple)
+[[cache.stores.memcached.servers]]
+host = env("MEMCACHED_HOST", "127.0.0.1")
+port = env("MEMCACHED_PORT", 11211)
+weight = 100
+
+# =============================================================================
+# Array Cache Store (for testing)
+# =============================================================================
+
+cache.stores.array.driver = "array"
+cache.stores.array.prefix = env("CACHE_PREFIX", "ml_cache")
+cache.stores.array.serialize = false
+
+# =============================================================================
+# Null Cache Store (disables caching)
+# =============================================================================
+
+cache.stores.null.driver = "null"
+
+# =============================================================================
+# Session Configuration
+# =============================================================================
+
+session.driver = env("SESSION_DRIVER", "file")
+session.lifetime = env("SESSION_LIFETIME", 120)
+session.expire_on_close = false
+session.encrypt = false
+session.files = "storage/sessions"
+session.connection = "session"
+session.table = "sessions"
+
+# Session cookie settings
+session.cookie.name = env("SESSION_COOKIE", "monkeyscms_session")
+session.cookie.path = "/"
+session.cookie.domain = env("SESSION_DOMAIN", "")
+session.cookie.secure = env("SESSION_SECURE", false)
+session.cookie.http_only = true
+session.cookie.same_site = "lax"
+
+# Garbage collection
+session.gc.probability = 2
+session.gc.divisor = 100
+
+# =============================================================================
+# Cache Tags Configuration
+# =============================================================================
+
+# Enable cache tagging (requires Redis or Memcached)
+cache.tags.enabled = true
+
+# Tag store (defaults to the cache driver)
+cache.tags.store = env("CACHE_TAGS_STORE", "redis")

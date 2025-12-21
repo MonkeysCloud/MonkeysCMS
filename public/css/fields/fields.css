@@ -1,0 +1,968 @@
+/**
+ * MonkeysCMS Field Widgets CSS
+ * Styles for all form field widgets
+ */
+
+/* ==========================================================================
+   Base Field Styles
+   ========================================================================== */
+
+.field-widget {
+    margin-bottom: 1.25rem;
+}
+
+.field-widget__label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.field-widget__required {
+    color: #dc2626;
+    margin-left: 0.125rem;
+}
+
+.field-widget__input {
+    position: relative;
+}
+
+.field-widget__control {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #111827;
+    background-color: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field-widget__control:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-widget__control:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+}
+
+.field-widget__control::placeholder {
+    color: #9ca3af;
+}
+
+.field-widget__help {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.field-widget__errors {
+    margin-top: 0.375rem;
+}
+
+.field-widget__error {
+    font-size: 0.75rem;
+    color: #dc2626;
+}
+
+.field-widget--error .field-widget__control {
+    border-color: #dc2626;
+}
+
+.field-widget--error .field-widget__control:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* ==========================================================================
+   Input Group (Prefix/Suffix)
+   ========================================================================== */
+
+.field-input-group {
+    display: flex;
+    align-items: stretch;
+}
+
+.field-input-group .field-widget__control {
+    flex: 1;
+    min-width: 0;
+}
+
+.field-input-group__prefix,
+.field-input-group__suffix {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.field-input-group__prefix {
+    border-right: none;
+    border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.field-input-group__suffix {
+    border-left: none;
+    border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.field-input-group .field-widget__control:first-child {
+    border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.field-input-group .field-widget__control:last-child {
+    border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.field-input-group .field-widget__control:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+
+/* ==========================================================================
+   Textarea
+   ========================================================================== */
+
+textarea.field-widget__control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.field-textarea__counter {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+/* ==========================================================================
+   Checkbox & Radio
+   ========================================================================== */
+
+.field-checkbox,
+.field-radio {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.25rem 0;
+}
+
+.field-checkbox input,
+.field-radio input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.field-checkbox__mark,
+.field-radio__mark {
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 2px solid #d1d5db;
+    background: #fff;
+    transition: all 0.15s;
+}
+
+.field-checkbox__mark {
+    border-radius: 0.25rem;
+}
+
+.field-radio__mark {
+    border-radius: 50%;
+}
+
+.field-checkbox input:checked + .field-checkbox__mark,
+.field-radio input:checked + .field-radio__mark {
+    border-color: #3b82f6;
+    background: #3b82f6;
+}
+
+.field-checkbox input:checked + .field-checkbox__mark::after {
+    content: '';
+    display: block;
+    width: 0.375rem;
+    height: 0.625rem;
+    margin: 0.0625rem auto 0;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.field-radio input:checked + .field-radio__mark::after {
+    content: '';
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin: 0.1875rem auto 0;
+    background: white;
+    border-radius: 50%;
+}
+
+.field-checkbox input:focus + .field-checkbox__mark,
+.field-radio input:focus + .field-radio__mark {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-checkbox__label,
+.field-radio__label {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.field-checkbox-group,
+.field-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.field-checkbox-group--horizontal,
+.field-radio-group--horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* ==========================================================================
+   Switch Toggle
+   ========================================================================== */
+
+.field-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.field-switch input {
+    position: absolute;
+    opacity: 0;
+}
+
+.field-switch__track {
+    position: relative;
+    width: 2.75rem;
+    height: 1.5rem;
+    background: #d1d5db;
+    border-radius: 0.75rem;
+    transition: background 0.2s;
+}
+
+.field-switch__thumb {
+    position: absolute;
+    top: 0.125rem;
+    left: 0.125rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+
+.field-switch input:checked + .field-switch__track {
+    background: #3b82f6;
+}
+
+.field-switch input:checked + .field-switch__track .field-switch__thumb {
+    transform: translateX(1.25rem);
+}
+
+.field-switch input:focus + .field-switch__track {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-switch__labels {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.field-switch__on,
+.field-switch__off {
+    display: none;
+}
+
+.field-switch input:checked ~ .field-switch__labels .field-switch__on {
+    display: inline;
+}
+
+.field-switch input:not(:checked) ~ .field-switch__labels .field-switch__off {
+    display: inline;
+}
+
+/* ==========================================================================
+   Select
+   ========================================================================== */
+
+select.field-widget__control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+select.field-widget__control[multiple] {
+    background-image: none;
+    padding-right: 0.75rem;
+    min-height: 6rem;
+}
+
+/* ==========================================================================
+   Date & Time
+   ========================================================================== */
+
+input[type="date"].field-widget__control,
+input[type="datetime-local"].field-widget__control,
+input[type="time"].field-widget__control {
+    padding-right: 0.5rem;
+}
+
+/* ==========================================================================
+   Color Picker
+   ========================================================================== */
+
+.field-color {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-color input[type="color"] {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.125rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    cursor: pointer;
+}
+
+.field-color__swatch {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    vertical-align: middle;
+    margin-right: 0.375rem;
+}
+
+/* ==========================================================================
+   Range Slider
+   ========================================================================== */
+
+.field-range {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.field-range input[type="range"] {
+    flex: 1;
+    height: 0.375rem;
+    background: #d1d5db;
+    border-radius: 0.1875rem;
+    appearance: none;
+}
+
+.field-range input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.field-range__value {
+    min-width: 3rem;
+    text-align: right;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* ==========================================================================
+   Slug Field
+   ========================================================================== */
+
+.field-slug {
+    display: flex;
+    align-items: center;
+}
+
+.field-slug__prefix {
+    padding: 0.5rem 0.75rem;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-right: none;
+    border-radius: 0.375rem 0 0 0.375rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.field-slug .field-widget__control {
+    border-radius: 0;
+    flex: 1;
+}
+
+.field-slug__generate {
+    padding: 0.5rem 0.75rem;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-left: none;
+    border-radius: 0 0.375rem 0.375rem 0;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.field-slug__generate:hover {
+    background: #e5e7eb;
+}
+
+/* ==========================================================================
+   Link Field
+   ========================================================================== */
+
+.field-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.field-link > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.field-link label {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.field-link__target label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   Address Field
+   ========================================================================== */
+
+.field-address {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.field-address > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.field-address label {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.field-address__street,
+.field-address__street2 {
+    grid-column: span 2;
+}
+
+/* ==========================================================================
+   Geolocation Field
+   ========================================================================== */
+
+.field-geolocation__inputs {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.field-geolocation__lat,
+.field-geolocation__lng {
+    flex: 1;
+}
+
+.field-geolocation__lat label,
+.field-geolocation__lng label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.field-geolocation__locate {
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    align-self: flex-end;
+}
+
+.field-geolocation__locate:hover {
+    background: #e5e7eb;
+}
+
+.field-geolocation__map {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   JSON Editor
+   ========================================================================== */
+
+.field-json__editor {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    tab-size: 2;
+}
+
+.field-json__error {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 0 0 0.375rem 0.375rem;
+    border: 1px solid #fecaca;
+    border-top: none;
+}
+
+/* ==========================================================================
+   Code Editor
+   ========================================================================== */
+
+.field-code-editor {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+.field-code-editor__toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+}
+
+.field-code-editor__language {
+    padding: 0.25rem 0.5rem;
+    background: #334155;
+    border: none;
+    border-radius: 0.25rem;
+    color: #e2e8f0;
+    font-size: 0.75rem;
+}
+
+.field-code-editor__copy,
+.field-code-editor__format {
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    border: 1px solid #475569;
+    border-radius: 0.25rem;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.field-code-editor__copy:hover,
+.field-code-editor__format:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+.field-code-editor__container {
+    height: 300px;
+    background: #1e293b;
+}
+
+/* ==========================================================================
+   Markdown Editor
+   ========================================================================== */
+
+.field-markdown__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.field-markdown__toolbar button {
+    padding: 0.375rem 0.5rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.field-markdown__toolbar button:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.field-markdown__separator {
+    width: 1px;
+    background: #d1d5db;
+    margin: 0 0.25rem;
+}
+
+.field-markdown__container {
+    display: flex;
+    border: 1px solid #d1d5db;
+    border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.field-markdown__container--split .field-markdown__editor,
+.field-markdown__container--split .field-markdown__preview {
+    width: 50%;
+}
+
+.field-markdown__editor {
+    flex: 1;
+}
+
+.field-markdown__textarea {
+    width: 100%;
+    border: none;
+    border-radius: 0 0 0 0.375rem;
+    padding: 0.75rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    resize: vertical;
+}
+
+.field-markdown__textarea:focus {
+    outline: none;
+}
+
+.field-markdown__preview {
+    border-left: 1px solid #d1d5db;
+    background: #f9fafb;
+}
+
+.field-markdown__preview-label {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.field-markdown__preview-content {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    overflow-y: auto;
+}
+
+/* ==========================================================================
+   WYSIWYG Editor
+   ========================================================================== */
+
+.wysiwyg-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.wysiwyg-toolbar button {
+    padding: 0.375rem 0.5rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.wysiwyg-toolbar button:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.wysiwyg-separator {
+    width: 1px;
+    background: #d1d5db;
+    margin: 0 0.25rem;
+}
+
+.wysiwyg-content {
+    border: 1px solid #d1d5db;
+    border-radius: 0 0 0.375rem 0.375rem;
+    padding: 0.75rem;
+    min-height: 200px;
+    max-height: 500px;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.wysiwyg-content:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.wysiwyg-content[data-placeholder]:empty:before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Multiple Values
+   ========================================================================== */
+
+.field-widget__multiple {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+}
+
+.field-widget__items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.field-widget__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-widget__item-content {
+    flex: 1;
+}
+
+.field-widget__remove {
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    border: none;
+    color: #dc2626;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.field-widget__remove:hover {
+    opacity: 1;
+}
+
+.field-widget__add {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border: 1px dashed #d1d5db;
+    border-radius: 0.375rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.field-widget__add:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+    color: #374151;
+}
+
+/* ==========================================================================
+   Display Mode (View)
+   ========================================================================== */
+
+.field-display {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.field-display--empty {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.field-display--checked {
+    color: #059669;
+}
+
+.field-display--unchecked {
+    color: #dc2626;
+}
+
+.field-display--on {
+    color: #059669;
+}
+
+.field-display--off {
+    color: #6b7280;
+}
+
+.field-display--image img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 0.375rem;
+}
+
+.field-display--gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.field-display--gallery img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+}
+
+.field-display--html {
+    line-height: 1.6;
+}
+
+.field-display--json,
+.field-display--code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8125rem;
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+}
+
+/* ==========================================================================
+   Form Layout
+   ========================================================================== */
+
+.cms-form {
+    max-width: 48rem;
+}
+
+.cms-form__fields {
+    margin-bottom: 1.5rem;
+}
+
+.cms-form__group {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 0;
+    margin-bottom: 1.25rem;
+}
+
+.cms-form__group-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cms-form__group-toggle {
+    transition: transform 0.2s;
+}
+
+.cms-form__group--collapsed .cms-form__group-toggle {
+    transform: rotate(-90deg);
+}
+
+.cms-form__group-content {
+    padding: 1rem;
+}
+
+.cms-form__group--collapsed .cms-form__group-content {
+    display: none;
+}
+
+.cms-form__errors {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.cms-form__error {
+    color: #dc2626;
+    font-size: 0.875rem;
+}
+
+.cms-form__actions {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.cms-form__submit {
+    padding: 0.5rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.cms-form__submit:hover {
+    background: #2563eb;
+}
+
+.cms-form__cancel {
+    padding: 0.5rem 1.5rem;
+    background: transparent;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.cms-form__cancel:hover {
+    background: #f3f4f6;
+    color: #374151;
+}

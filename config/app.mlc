@@ -1,0 +1,120 @@
+# MonkeysCMS Application Configuration
+# Uses MLC (MonkeysLegion Config) format
+
+app {
+    name = ${APP_NAME:MonkeysCMS}
+    env = ${APP_ENV:production}
+    debug = ${APP_DEBUG:false}
+    url = ${APP_URL:http://localhost:8000}
+    timezone = ${APP_TIMEZONE:UTC}
+    locale = ${APP_LOCALE:en}
+}
+
+# CMS specific settings
+cms {
+    # Module discovery paths (relative to app root)
+    modules {
+        paths = [
+            "app/Modules/Contrib",
+            "app/Modules/Custom"
+        ]
+        cache_enabled = ${CMS_MODULE_CACHE:true}
+    }
+    
+    # Content settings
+    content {
+        default_status = "draft"
+        enable_revisions = true
+        enable_translations = false
+        media_path = "storage/uploads"
+    }
+    
+    # Admin settings
+    admin {
+        path = "/admin"
+        per_page = 20
+        max_per_page = 100
+    }
+}
+
+# Theme configuration
+themes {
+    # Active theme
+    active = ${CMS_THEME:default}
+    
+    # Theme discovery paths
+    paths {
+        contrib = "themes/contrib"
+        custom = "themes/custom"
+    }
+    
+    # Admin theme (separate from frontend)
+    admin_theme = ${CMS_ADMIN_THEME:admin-default}
+    
+    # Theme cache
+    cache {
+        enabled = ${THEME_CACHE:true}
+        path = "var/cache/themes"
+    }
+}
+
+# View / Template engine settings
+view {
+    # Template file extension
+    extension = ".ml.php"
+    
+    # View paths (searched in order)
+    paths = [
+        "themes/custom/${CMS_THEME:default}/views",
+        "themes/contrib/${CMS_THEME:default}/views",
+        "app/Views"
+    ]
+    
+    # Component paths
+    components {
+        paths = [
+            "themes/custom/${CMS_THEME:default}/components",
+            "themes/contrib/${CMS_THEME:default}/components",
+            "app/Views/components"
+        ]
+        namespace = "x"
+    }
+    
+    # Compiled view cache
+    cache {
+        enabled = ${VIEW_CACHE:true}
+        path = "var/cache/views"
+    }
+}
+
+# Middleware stack
+middleware {
+    global = [
+        "MonkeysLegion\\Http\\Middleware\\CorsMiddleware"
+    ]
+    
+    admin = [
+        "MonkeysLegion\\Auth\\Middleware\\AuthMiddleware",
+        "App\\Middleware\\AdminAccessMiddleware"
+    ]
+    
+    api = [
+        "MonkeysLegion\\Http\\Middleware\\JsonMiddleware",
+        "MonkeysLegion\\Http\\Middleware\\RateLimitMiddleware"
+    ]
+}
+
+# Service providers
+providers = [
+    "App\\Providers\\CmsServiceProvider",
+    "App\\Providers\\ThemeServiceProvider"
+]
+
+# Controller scanning paths
+controllers {
+    paths = [
+        "app/Controllers",
+        "app/Controllers/Admin",
+        "app/Controllers/Api"
+    ]
+}
