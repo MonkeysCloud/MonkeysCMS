@@ -8,6 +8,7 @@ use App\Cms\Auth\CmsAuthService;
 use App\Cms\Auth\SessionManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use MonkeysLegion\Router\Attributes\Route;
 
 /**
  * PasswordResetController - Handles password reset flow
@@ -25,9 +26,8 @@ class PasswordResetController
 
     /**
      * Show forgot password form
-     * 
-     * GET /password/forgot
      */
+    #[Route('GET', '/password/forgot', name: 'password.forgot')]
     public function showForgot(ServerRequestInterface $request): ResponseInterface
     {
         return $this->view('auth/forgot-password', [
@@ -39,9 +39,8 @@ class PasswordResetController
 
     /**
      * Send password reset email
-     * 
-     * POST /password/forgot
      */
+    #[Route('POST', '/password/forgot', name: 'password.email')]
     public function sendReset(ServerRequestInterface $request): ResponseInterface
     {
         $data = $request->getParsedBody();
@@ -62,9 +61,8 @@ class PasswordResetController
 
     /**
      * Show reset password form
-     * 
-     * GET /password/reset/{token}
      */
+    #[Route('GET', '/password/reset/{token}', name: 'password.reset.form')]
     public function showReset(ServerRequestInterface $request, string $token): ResponseInterface
     {
         return $this->view('auth/reset-password', [
@@ -76,9 +74,8 @@ class PasswordResetController
 
     /**
      * Reset password with token
-     * 
-     * POST /password/reset
      */
+    #[Route('POST', '/password/reset', name: 'password.reset')]
     public function reset(ServerRequestInterface $request): ResponseInterface
     {
         $data = $request->getParsedBody();

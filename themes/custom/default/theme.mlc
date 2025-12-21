@@ -1,0 +1,14 @@
+name = "default"
+version = "1.0.0"
+description = "Default theme for MonkeysCMS"
+author = "MonkeysCloud"
+type = "frontend"
+
+[regions]
+header = "Header"
+content = "Main Content"
+footer = "Footer"
+
+[assets]
+css = ["assets/css/theme.css"]
+js = ["assets/js/theme.js"]

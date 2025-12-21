@@ -9,6 +9,9 @@ use App\Cms\Auth\SessionManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
+use MonkeysLegion\Template\Renderer;
+use MonkeysLegion\Router\Attributes\Route;
+
 /**
  * RegisterController - Handles user registration
  */
@@ -16,15 +19,18 @@ class RegisterController
 {
     private CmsAuthService $auth;
     private SessionManager $session;
+    private Renderer $renderer;
     private array $config;
 
     public function __construct(
         CmsAuthService $auth,
         SessionManager $session,
+        Renderer $renderer,
         array $config = []
     ) {
         $this->auth = $auth;
         $this->session = $session;
+        $this->renderer = $renderer;
         $this->config = array_merge([
             'require_email_verification' => true,
             'auto_login' => true,
@@ -36,9 +42,8 @@ class RegisterController
 
     /**
      * Show registration form
-     * 
-     * GET /register
      */
+    #[Route('GET', '/register', name: 'register')]
     public function show(ServerRequestInterface $request): ResponseInterface
     {
         if ($this->auth->check()) {
@@ -55,9 +60,8 @@ class RegisterController
 
     /**
      * Process registration
-     * 
-     * POST /register
      */
+    #[Route('POST', '/register', name: 'register.submit')]
     public function register(ServerRequestInterface $request): ResponseInterface
     {
         $data = $request->getParsedBody();
@@ -226,94 +230,7 @@ class RegisterController
 
     private function view(string $template, array $data = []): ResponseInterface
     {
-        $html = $this->renderTemplate($data);
+        $html = $this->renderer->render($template, $data);
         return new \Nyholm\Psr7\Response(200, ['Content-Type' => 'text/html'], $html);
-    }
-
-    private function renderTemplate(array $data): string
-    {
-        $csrf = $data['csrf_token'] ?? '';
-        $error = $data['error'] ?? '';
-        $errors = $data['errors'] ?? [];
-        $old = $data['old'] ?? [];
-
-        $errorHtml = '';
-        if ($error) {
-            $errorHtml = "<div class=\"bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4\">{$error}</div>";
-        }
-
-        $fieldError = fn($field) => isset($errors[$field]) 
-            ? "<p class=\"text-red-500 text-sm mt-1\">{$errors[$field]}</p>" 
-            : '';
-
-        $oldValue = fn($field) => htmlspecialchars($old[$field] ?? '');
-
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - MonkeysCMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center py-12">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center mb-6">Create Account</h1>
-        
-        {$errorHtml}
-        
-        <form method="POST" action="/register" class="space-y-4">
-            <input type="hidden" name="_token" value="{$csrf}">
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" name="email" value="{$oldValue('email')}" required 
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {$fieldError('email')}
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Username</label>
-                <input type="text" name="username" value="{$oldValue('username')}" required 
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {$fieldError('username')}
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Display Name (optional)</label>
-                <input type="text" name="display_name" value="{$oldValue('display_name')}" 
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" name="password" required 
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {$fieldError('password')}
-                <p class="text-gray-500 text-xs mt-1">Min 8 characters, 1 uppercase, 1 number</p>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                <input type="password" name="password_confirmation" required 
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {$fieldError('password_confirmation')}
-            </div>
-            
-            <button type="submit" 
-                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Create Account
-            </button>
-        </form>
-        
-        <div class="mt-6 text-center">
-            <span class="text-sm text-gray-600">Already have an account?</span>
-            <a href="/login" class="text-sm text-blue-600 hover:underline ml-1">Sign in</a>
-        </div>
-    </div>
-</body>
-</html>
-HTML;
     }
 }

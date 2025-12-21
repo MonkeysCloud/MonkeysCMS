@@ -8,6 +8,7 @@ use App\Cms\Auth\CmsAuthService;
 use App\Cms\Auth\SessionManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use MonkeysLegion\Router\Attributes\Route;
 
 /**
  * LogoutController - Handles user logout
@@ -25,9 +26,8 @@ class LogoutController
 
     /**
      * Logout user
-     * 
-     * POST /logout
      */
+    #[Route('POST', '/logout', name: 'logout')]
     public function logout(ServerRequestInterface $request): ResponseInterface
     {
         $data = $request->getParsedBody();
@@ -51,9 +51,8 @@ class LogoutController
 
     /**
      * Logout from all devices
-     * 
-     * POST /logout/all
      */
+    #[Route('POST', '/logout/all', name: 'logout.all')]
     public function logoutAll(ServerRequestInterface $request): ResponseInterface
     {
         $this->auth->logout(true);

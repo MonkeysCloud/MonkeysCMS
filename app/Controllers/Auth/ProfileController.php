@@ -9,6 +9,7 @@ use App\Cms\Auth\CmsUserProvider;
 use App\Cms\Auth\SessionManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use MonkeysLegion\Router\Attributes\Route;
 
 /**
  * ProfileController - Handles user profile management
@@ -31,9 +32,8 @@ class ProfileController
 
     /**
      * Show user profile
-     * 
-     * GET /profile
      */
+    #[Route('GET', '/profile', name: 'profile.show')]
     public function show(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -52,9 +52,8 @@ class ProfileController
 
     /**
      * Show edit profile form
-     * 
-     * GET /profile/edit
      */
+    #[Route('GET', '/profile/edit', name: 'profile.edit')]
     public function edit(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -72,9 +71,8 @@ class ProfileController
 
     /**
      * Update profile
-     * 
-     * PUT /profile
      */
+    #[Route('PUT', '/profile', name: 'profile.update')]
     public function update(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -113,9 +111,8 @@ class ProfileController
 
     /**
      * Show change email form
-     * 
-     * GET /profile/email
      */
+    #[Route('GET', '/profile/email', name: 'profile.email')]
     public function showEmailForm(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -133,9 +130,8 @@ class ProfileController
 
     /**
      * Update email
-     * 
-     * PUT /profile/email
      */
+    #[Route('PUT', '/profile/email', name: 'profile.email.update')]
     public function updateEmail(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -177,9 +173,8 @@ class ProfileController
 
     /**
      * Show change password form
-     * 
-     * GET /profile/password
      */
+    #[Route('GET', '/profile/password', name: 'profile.password')]
     public function showPasswordForm(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -196,9 +191,8 @@ class ProfileController
 
     /**
      * Update password
-     * 
-     * PUT /profile/password
      */
+    #[Route('PUT', '/profile/password', name: 'profile.password.update')]
     public function updatePassword(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -234,9 +228,8 @@ class ProfileController
 
     /**
      * Show active sessions
-     * 
-     * GET /profile/sessions
      */
+    #[Route('GET', '/profile/sessions', name: 'profile.sessions')]
     public function showSessions(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -257,9 +250,8 @@ class ProfileController
 
     /**
      * Revoke a session
-     * 
-     * DELETE /profile/sessions/{id}
      */
+    #[Route('DELETE', '/profile/sessions/{id}', name: 'profile.sessions.revoke')]
     public function revokeSession(ServerRequestInterface $request, string $sessionId): ResponseInterface
     {
         $user = $this->auth->user();
@@ -282,9 +274,8 @@ class ProfileController
 
     /**
      * Revoke all other sessions
-     * 
-     * DELETE /profile/sessions
      */
+    #[Route('DELETE', '/profile/sessions', name: 'profile.sessions.revoke_all')]
     public function revokeAllSessions(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -313,9 +304,8 @@ class ProfileController
 
     /**
      * Show linked accounts (OAuth)
-     * 
-     * GET /profile/accounts
      */
+    #[Route('GET', '/profile/accounts', name: 'profile.accounts')]
     public function showLinkedAccounts(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -338,9 +328,8 @@ class ProfileController
 
     /**
      * Delete account
-     * 
-     * DELETE /profile
      */
+    #[Route('DELETE', '/profile', name: 'profile.delete')]
     public function delete(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();

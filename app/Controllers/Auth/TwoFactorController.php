@@ -8,6 +8,7 @@ use App\Cms\Auth\CmsAuthService;
 use App\Cms\Auth\SessionManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use MonkeysLegion\Router\Attributes\Route;
 
 /**
  * TwoFactorController - Handles 2FA setup and management
@@ -25,9 +26,8 @@ class TwoFactorController
 
     /**
      * Show 2FA settings page
-     * 
-     * GET /settings/2fa
      */
+    #[Route('GET', '/settings/2fa', name: 'settings.2fa')]
     public function show(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -50,9 +50,8 @@ class TwoFactorController
 
     /**
      * Generate 2FA setup (QR code)
-     * 
-     * POST /settings/2fa/setup
      */
+    #[Route('POST', '/settings/2fa/setup', name: 'settings.2fa.setup')]
     public function setup(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -79,9 +78,8 @@ class TwoFactorController
 
     /**
      * Enable 2FA after verification
-     * 
-     * POST /settings/2fa/enable
      */
+    #[Route('POST', '/settings/2fa/enable', name: 'settings.2fa.enable')]
     public function enable(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -116,9 +114,8 @@ class TwoFactorController
 
     /**
      * Disable 2FA
-     * 
-     * POST /settings/2fa/disable
      */
+    #[Route('POST', '/settings/2fa/disable', name: 'settings.2fa.disable')]
     public function disable(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -146,9 +143,8 @@ class TwoFactorController
 
     /**
      * Show recovery codes
-     * 
-     * GET /settings/2fa/recovery
      */
+    #[Route('GET', '/settings/2fa/recovery', name: 'settings.2fa.recovery')]
     public function showRecoveryCodes(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -175,9 +171,8 @@ class TwoFactorController
 
     /**
      * Regenerate recovery codes
-     * 
-     * POST /settings/2fa/recovery/regenerate
      */
+    #[Route('POST', '/settings/2fa/recovery/regenerate', name: 'settings.2fa.regenerate')]
     public function regenerateRecoveryCodes(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();

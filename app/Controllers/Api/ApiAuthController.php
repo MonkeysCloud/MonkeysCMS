@@ -10,6 +10,7 @@ use App\Cms\Auth\LoginAttempt;
 use App\Cms\Auth\CmsApiKeyService;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use MonkeysLegion\Router\Attributes\Route;
 
 /**
  * ApiAuthController - API authentication endpoints
@@ -62,6 +63,10 @@ class ApiAuthController
      *   "expires_in": 1800
      * }
      */
+    /**
+     * Login and get tokens
+     */
+    #[Route('POST', '/api/auth/login', name: 'api.auth.login')]
     public function login(ServerRequestInterface $request): ResponseInterface
     {
         $data = $this->getJsonBody($request);
@@ -127,6 +132,10 @@ class ApiAuthController
      *   "code": "123456"
      * }
      */
+    /**
+     * Verify 2FA and complete login
+     */
+    #[Route('POST', '/api/auth/2fa/verify', name: 'api.auth.2fa.verify')]
     public function verify2FA(ServerRequestInterface $request): ResponseInterface
     {
         $data = $this->getJsonBody($request);
@@ -164,6 +173,10 @@ class ApiAuthController
      *   "refresh_token": "..."
      * }
      */
+    /**
+     * Refresh access token
+     */
+    #[Route('POST', '/api/auth/refresh', name: 'api.auth.refresh')]
     public function refresh(ServerRequestInterface $request): ResponseInterface
     {
         $data = $this->getJsonBody($request);
@@ -192,6 +205,10 @@ class ApiAuthController
      * 
      * POST /api/auth/logout
      */
+    /**
+     * Logout / revoke tokens
+     */
+    #[Route('POST', '/api/auth/logout', name: 'api.auth.logout')]
     public function logout(ServerRequestInterface $request): ResponseInterface
     {
         $data = $this->getJsonBody($request);
@@ -209,6 +226,10 @@ class ApiAuthController
      * 
      * GET /api/auth/me
      */
+    /**
+     * Get authenticated user
+     */
+    #[Route('GET', '/api/auth/me', name: 'api.auth.me')]
     public function me(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
@@ -238,6 +259,10 @@ class ApiAuthController
      *   "display_name": "John Doe"
      * }
      */
+    /**
+     * Register new user
+     */
+    #[Route('POST', '/api/auth/register', name: 'api.auth.register')]
     public function register(ServerRequestInterface $request): ResponseInterface
     {
         $data = $this->getJsonBody($request);
@@ -280,6 +305,10 @@ class ApiAuthController
      * 
      * POST /api/auth/password/forgot
      */
+    /**
+     * Request password reset
+     */
+    #[Route('POST', '/api/auth/password/forgot', name: 'api.auth.password.forgot')]
     public function forgotPassword(ServerRequestInterface $request): ResponseInterface
     {
         $data = $this->getJsonBody($request);
@@ -302,6 +331,10 @@ class ApiAuthController
      * 
      * POST /api/auth/password/reset
      */
+    /**
+     * Reset password
+     */
+    #[Route('POST', '/api/auth/password/reset', name: 'api.auth.password.reset')]
     public function resetPassword(ServerRequestInterface $request): ResponseInterface
     {
         $data = $this->getJsonBody($request);
@@ -333,6 +366,10 @@ class ApiAuthController
      * 
      * PUT /api/auth/password
      */
+    /**
+     * Change password (authenticated)
+     */
+    #[Route('PUT', '/api/auth/password', name: 'api.auth.password.change')]
     public function changePassword(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->auth->check()) {
@@ -372,6 +409,10 @@ class ApiAuthController
      * 
      * GET /api/auth/api-keys
      */
+    /**
+     * List API keys
+     */
+    #[Route('GET', '/api/auth/api-keys', name: 'api.auth.keys.list')]
     public function listApiKeys(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->auth->check() || !$this->apiKeys) {
@@ -388,6 +429,10 @@ class ApiAuthController
      * 
      * POST /api/auth/api-keys
      */
+    /**
+     * Create API key
+     */
+    #[Route('POST', '/api/auth/api-keys', name: 'api.auth.keys.create')]
     public function createApiKey(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->auth->check() || !$this->apiKeys) {
@@ -424,6 +469,10 @@ class ApiAuthController
      * 
      * DELETE /api/auth/api-keys/{id}
      */
+    /**
+     * Revoke API key
+     */
+    #[Route('DELETE', '/api/auth/api-keys/{id}', name: 'api.auth.keys.revoke')]
     public function revokeApiKey(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->auth->check() || !$this->apiKeys) {

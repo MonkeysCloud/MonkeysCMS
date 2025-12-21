@@ -7,13 +7,14 @@ namespace App\Cms\User;
 use App\Cms\Entity\BaseEntity;
 use App\Cms\Entity\SoftDeleteInterface;
 use App\Cms\Entity\SoftDeleteTrait;
+use MonkeysLegion\Auth\Contract\AuthenticatableInterface;
 
 /**
  * User - User entity for the CMS
  * 
  * Represents a user account with authentication and profile information.
  */
-class User extends BaseEntity implements SoftDeleteInterface
+class User extends BaseEntity implements SoftDeleteInterface, AuthenticatableInterface
 {
     use SoftDeleteTrait;
 
@@ -229,6 +230,14 @@ class User extends BaseEntity implements SoftDeleteInterface
     // =========================================================================
 
     /**
+     * Get the name of the unique identifier for the user.
+     */
+    public function getAuthIdentifierName(): string
+    {
+        return 'id';
+    }
+
+    /**
      * Get auth identifier (for JWT)
      */
     public function getAuthIdentifier(): int|string
@@ -285,6 +294,14 @@ class User extends BaseEntity implements SoftDeleteInterface
     {
         $this->remember_token = null;
         return $this;
+    }
+
+    /**
+     * Set the token value for the "remember me" session.
+     */
+    public function setRememberToken(string $value): void
+    {
+        $this->remember_token = $value;
     }
 
     /**
