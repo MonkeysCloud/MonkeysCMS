@@ -14,12 +14,12 @@ final class JsonTransformer implements ValueTransformerInterface
         if ($value->isEmpty()) {
             return FieldValue::string('');
         }
-        
+
         $data = $value->get();
         if (is_array($data)) {
             return FieldValue::string(json_encode($data, JSON_PRETTY_PRINT));
         }
-        
+
         return $value;
     }
 
@@ -28,10 +28,10 @@ final class JsonTransformer implements ValueTransformerInterface
         if ($value->isEmpty()) {
             return FieldValue::null('json');
         }
-        
+
         $string = $value->asString();
         $decoded = json_decode($string, true);
-        
+
         return FieldValue::array($decoded ?? []);
     }
 
@@ -40,12 +40,12 @@ final class JsonTransformer implements ValueTransformerInterface
         if ($value->isEmpty()) {
             return '';
         }
-        
+
         $data = $value->get();
         if (is_array($data)) {
             return json_encode($data, JSON_PRETTY_PRINT);
         }
-        
+
         return $value->asString();
     }
 }

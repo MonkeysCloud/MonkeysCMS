@@ -8,7 +8,7 @@ use App\Cms\Database\MigrationRunner;
 
 /**
  * MigrationCommands - CLI commands for database migrations
- * 
+ *
  * Commands:
  * - migrate             Run all pending migrations
  * - migrate:rollback    Rollback the last batch
@@ -16,7 +16,7 @@ use App\Cms\Database\MigrationRunner;
  * - migrate:fresh       Drop all tables and re-run migrations
  * - migrate:status      Show migration status
  * - migrate:install     Create migrations table
- * 
+ *
  * Usage:
  * ```bash
  * php cms migrate
@@ -87,7 +87,7 @@ class MigrationCommands
     public function reset(): int
     {
         $this->warning("This will rollback ALL migrations. Continue? [y/N] ");
-        
+
         if (!$this->confirm()) {
             $this->info("Cancelled.");
             return 0;
@@ -117,7 +117,7 @@ class MigrationCommands
     public function fresh(): int
     {
         $this->warning("This will DROP ALL TABLES and re-run migrations. Continue? [y/N] ");
-        
+
         if (!$this->confirm()) {
             $this->info("Cancelled.");
             return 0;
@@ -246,7 +246,7 @@ class MigrationCommands
 
     /**
      * Run commands from CLI
-     * 
+     *
      * @param string[] $argv Command line arguments
      */
     public static function run(array $argv, \PDO $db, string $migrationsPath): int

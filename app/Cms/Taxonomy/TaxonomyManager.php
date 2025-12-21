@@ -11,13 +11,13 @@ use MonkeysLegion\Cache\CacheManager;
 
 /**
  * TaxonomyManager - Registry and manager for taxonomy vocabularies and terms
- * 
+ *
  * Manages both:
  * - Code-defined vocabularies (registered programmatically)
  * - Database-defined vocabularies (stored in vocabularies table)
- * 
+ *
  * Vocabularies can have custom fields attached to their terms.
- * 
+ *
  * @example
  * ```php
  * // Register a code-defined vocabulary
@@ -26,7 +26,7 @@ use MonkeysLegion\Cache\CacheManager;
  *     'name' => 'Tags',
  *     'hierarchical' => false,
  * ]);
- * 
+ *
  * // Create a database vocabulary with custom fields
  * $manager->createDatabaseVocabulary([
  *     'name' => 'Product Categories',
@@ -36,7 +36,7 @@ use MonkeysLegion\Cache\CacheManager;
  *         ['name' => 'Color', 'type' => 'color'],
  *     ]
  * ]);
- * 
+ *
  * // Get terms
  * $terms = $manager->getTerms('tags');
  * $tree = $manager->getTermTree('categories');
@@ -58,7 +58,8 @@ final class TaxonomyManager
     public function __construct(
         private readonly Connection $connection,
         private readonly ?CacheManager $cache = null,
-    ) {}
+    ) {
+    }
 
     // =========================================================================
     // Vocabulary Management
@@ -70,7 +71,7 @@ final class TaxonomyManager
     public function registerVocabulary(array $config): void
     {
         $id = $config['id'] ?? strtolower(preg_replace('/[^a-z0-9]+/i', '_', $config['name']));
-        
+
         $this->codeVocabularies[$id] = [
             'id' => $id,
             'name' => $config['name'],
@@ -91,14 +92,14 @@ final class TaxonomyManager
     public function getVocabularies(): array
     {
         $this->ensureInitialized();
-        
+
         $vocabularies = [];
-        
+
         // Code-defined
         foreach ($this->codeVocabularies as $id => $vocab) {
             $vocabularies[$id] = $vocab;
         }
-        
+
         // Database-defined
         foreach ($this->dbVocabularies as $id => $vocab) {
             $vocabularies[$id] = [
@@ -115,10 +116,10 @@ final class TaxonomyManager
                 'entity' => $vocab,
             ];
         }
-        
+
         // Sort by name
         uasort($vocabularies, fn($a, $b) => strcmp($a['name'], $b['name']));
-        
+
         return $vocabularies;
     }
 
@@ -128,11 +129,11 @@ final class TaxonomyManager
     public function getVocabulary(string $id): ?array
     {
         $this->ensureInitialized();
-        
+
         if (isset($this->codeVocabularies[$id])) {
             return $this->codeVocabularies[$id];
         }
-        
+
         if (isset($this->dbVocabularies[$id])) {
             $vocab = $this->dbVocabularies[$id];
             return [
@@ -149,7 +150,7 @@ final class TaxonomyManager
                 'entity' => $vocab,
             ];
         }
-        
+
         return null;
     }
 
@@ -179,9 +180,9 @@ final class TaxonomyManager
         $entity->settings = $data['settings'] ?? [];
         $entity->allowed_content_types = $data['allowed_content_types'] ?? [];
         $entity->enabled = $data['enabled'] ?? true;
-        
+
         $entity->prePersist();
-        
+
         $stmt = $this->connection->prepare("
             INSERT INTO vocabularies (
                 vocabulary_id, name, description, icon, is_system, enabled,
@@ -193,7 +194,7 @@ final class TaxonomyManager
                 :allowed_content_types, :weight, :created_at, :updated_at
             )
         ");
-        
+
         $stmt->execute([
             'vocabulary_id' => $entity->vocabulary_id,
             'name' => $entity->name,
@@ -211,9 +212,9 @@ final class TaxonomyManager
             'created_at' => $entity->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $entity->updated_at->format('Y-m-d H:i:s'),
         ]);
-        
+
         $entity->id = (int) $this->connection->lastInsertId();
-        
+
         // Add fields if provided
         if (!empty($data['fields'])) {
             foreach ($data['fields'] as $fieldData) {
@@ -221,10 +222,10 @@ final class TaxonomyManager
             }
             $entity->fields = $this->loadVocabularyFields($entity->id);
         }
-        
+
         $this->dbVocabularies[$entity->vocabulary_id] = $entity;
         $this->invalidateCache();
-        
+
         return $entity;
     }
 
@@ -238,16 +239,36 @@ final class TaxonomyManager
             return null;
         }
 
-        if (isset($data['name'])) $entity->name = $data['name'];
-        if (isset($data['description'])) $entity->description = $data['description'];
-        if (isset($data['icon'])) $entity->icon = $data['icon'];
-        if (isset($data['hierarchical'])) $entity->hierarchical = $data['hierarchical'];
-        if (isset($data['multiple'])) $entity->multiple = $data['multiple'];
-        if (isset($data['required'])) $entity->required = $data['required'];
-        if (isset($data['max_depth'])) $entity->max_depth = $data['max_depth'];
-        if (isset($data['settings'])) $entity->settings = $data['settings'];
-        if (isset($data['allowed_content_types'])) $entity->allowed_content_types = $data['allowed_content_types'];
-        if (isset($data['enabled'])) $entity->enabled = $data['enabled'];
+        if (isset($data['name'])) {
+            $entity->name = $data['name'];
+        }
+        if (isset($data['description'])) {
+            $entity->description = $data['description'];
+        }
+        if (isset($data['icon'])) {
+            $entity->icon = $data['icon'];
+        }
+        if (isset($data['hierarchical'])) {
+            $entity->hierarchical = $data['hierarchical'];
+        }
+        if (isset($data['multiple'])) {
+            $entity->multiple = $data['multiple'];
+        }
+        if (isset($data['required'])) {
+            $entity->required = $data['required'];
+        }
+        if (isset($data['max_depth'])) {
+            $entity->max_depth = $data['max_depth'];
+        }
+        if (isset($data['settings'])) {
+            $entity->settings = $data['settings'];
+        }
+        if (isset($data['allowed_content_types'])) {
+            $entity->allowed_content_types = $data['allowed_content_types'];
+        }
+        if (isset($data['enabled'])) {
+            $entity->enabled = $data['enabled'];
+        }
 
         $entity->updated_at = new \DateTimeImmutable();
 
@@ -387,9 +408,9 @@ final class TaxonomyManager
             "DELETE FROM vocabulary_fields WHERE vocabulary_id = :vocab_id AND machine_name = :machine_name"
         );
         $stmt->execute(['vocab_id' => $vocabularyId, 'machine_name' => $machineName]);
-        
+
         $this->invalidateCache();
-        
+
         return $stmt->rowCount() > 0;
     }
 
@@ -458,7 +479,7 @@ final class TaxonomyManager
     {
         $stmt = $this->connection->prepare("SELECT * FROM taxonomy_terms WHERE id = :id");
         $stmt->execute(['id' => $termId]);
-        
+
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) {
             return null;
@@ -478,7 +499,7 @@ final class TaxonomyManager
             "SELECT * FROM taxonomy_terms WHERE vocabulary_id = :vocab_id AND slug = :slug"
         );
         $stmt->execute(['vocab_id' => $vocabularyId, 'slug' => $slug]);
-        
+
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) {
             return null;
@@ -503,7 +524,7 @@ final class TaxonomyManager
         $term->weight = $data['weight'] ?? 0;
         $term->status = $data['status'] ?? 'active';
         $term->metadata = $data['metadata'] ?? [];
-        
+
         // Store custom field values in metadata
         $vocab = $this->getVocabulary($vocabularyId);
         if ($vocab && !empty($vocab['fields'])) {
@@ -554,13 +575,25 @@ final class TaxonomyManager
             return null;
         }
 
-        if (isset($data['name'])) $term->name = $data['name'];
-        if (isset($data['slug'])) $term->slug = $data['slug'];
-        if (isset($data['description'])) $term->description = $data['description'];
-        if (isset($data['parent_id'])) $term->parent_id = $data['parent_id'];
-        if (isset($data['weight'])) $term->weight = $data['weight'];
-        if (isset($data['status'])) $term->status = $data['status'];
-        
+        if (isset($data['name'])) {
+            $term->name = $data['name'];
+        }
+        if (isset($data['slug'])) {
+            $term->slug = $data['slug'];
+        }
+        if (isset($data['description'])) {
+            $term->description = $data['description'];
+        }
+        if (isset($data['parent_id'])) {
+            $term->parent_id = $data['parent_id'];
+        }
+        if (isset($data['weight'])) {
+            $term->weight = $data['weight'];
+        }
+        if (isset($data['status'])) {
+            $term->status = $data['status'];
+        }
+
         // Update custom field values
         $vocab = $this->getVocabulary($term->vocabulary_id);
         if ($vocab && !empty($vocab['fields'])) {
@@ -570,7 +603,7 @@ final class TaxonomyManager
                 }
             }
         }
-        
+
         if (isset($data['metadata'])) {
             $term->metadata = array_merge($term->metadata, $data['metadata']);
         }
@@ -772,15 +805,15 @@ final class TaxonomyManager
     private function getChildTermIds(int $parentId): array
     {
         $ids = [];
-        
+
         $stmt = $this->connection->prepare("SELECT id FROM taxonomy_terms WHERE parent_id = :parent_id");
         $stmt->execute(['parent_id' => $parentId]);
-        
+
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $ids[] = (int) $row['id'];
             $ids = array_merge($ids, $this->getChildTermIds((int) $row['id']));
         }
-        
+
         return $ids;
     }
 

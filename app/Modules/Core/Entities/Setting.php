@@ -117,27 +117,27 @@ class Setting extends BaseEntity
             ['key' => 'site.locale', 'value' => 'en', 'type' => 'string', 'group' => 'site', 'label' => 'Default Locale'],
             ['key' => 'site.date_format', 'value' => 'Y-m-d', 'type' => 'string', 'group' => 'site', 'label' => 'Date Format'],
             ['key' => 'site.time_format', 'value' => 'H:i', 'type' => 'string', 'group' => 'site', 'label' => 'Time Format'],
-            
+
             // Content settings
             ['key' => 'content.default_status', 'value' => 'draft', 'type' => 'string', 'group' => 'content', 'label' => 'Default Content Status'],
             ['key' => 'content.revisions_enabled', 'value' => '1', 'type' => 'bool', 'group' => 'content', 'label' => 'Enable Revisions'],
             ['key' => 'content.revision_limit', 'value' => '10', 'type' => 'int', 'group' => 'content', 'label' => 'Max Revisions'],
-            
+
             // User settings
             ['key' => 'users.registration_enabled', 'value' => '0', 'type' => 'bool', 'group' => 'users', 'label' => 'Allow Registration'],
             ['key' => 'users.email_verification', 'value' => '1', 'type' => 'bool', 'group' => 'users', 'label' => 'Require Email Verification'],
             ['key' => 'users.default_role', 'value' => 'authenticated', 'type' => 'string', 'group' => 'users', 'label' => 'Default Role'],
-            
+
             // Media settings
             ['key' => 'media.max_upload_size', 'value' => '10485760', 'type' => 'int', 'group' => 'media', 'label' => 'Max Upload Size (bytes)'],
             ['key' => 'media.allowed_types', 'value' => '["image/jpeg","image/png","image/gif","image/webp","application/pdf"]', 'type' => 'json', 'group' => 'media', 'label' => 'Allowed MIME Types'],
             ['key' => 'media.image_quality', 'value' => '85', 'type' => 'int', 'group' => 'media', 'label' => 'Image Quality'],
-            
+
             // SEO settings
             ['key' => 'seo.meta_title_suffix', 'value' => ' | MonkeysCMS', 'type' => 'string', 'group' => 'seo', 'label' => 'Meta Title Suffix'],
             ['key' => 'seo.meta_description', 'value' => '', 'type' => 'text', 'group' => 'seo', 'label' => 'Default Meta Description'],
             ['key' => 'seo.robots_txt', 'value' => "User-agent: *\nAllow: /", 'type' => 'text', 'group' => 'seo', 'label' => 'robots.txt'],
-            
+
             // API settings
             ['key' => 'api.rate_limit', 'value' => '60', 'type' => 'int', 'group' => 'api', 'label' => 'API Rate Limit (per minute)'],
             ['key' => 'api.pagination_limit', 'value' => '100', 'type' => 'int', 'group' => 'api', 'label' => 'Max Items Per Page'],

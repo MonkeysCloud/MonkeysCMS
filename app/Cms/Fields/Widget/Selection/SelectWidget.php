@@ -56,7 +56,7 @@ final class SelectWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $options = $this->getOptions($field);
         $values = is_array($value) ? $value : [$value];
-        
+
         $select = Html::select()
             ->attrs($this->buildCommonAttributes($field, $context));
 
@@ -81,7 +81,7 @@ final class SelectWidget extends AbstractWidget
             if (is_array($optLabel) && isset($optLabel['options'])) {
                 $optgroup = Html::element('optgroup')
                     ->attr('label', $optLabel['label'] ?? $optValue);
-                
+
                 foreach ($optLabel['options'] as $groupOptValue => $groupOptLabel) {
                     $optgroup->child(
                         Html::option(
@@ -91,7 +91,7 @@ final class SelectWidget extends AbstractWidget
                         )
                     );
                 }
-                
+
                 $select->child($optgroup);
             } else {
                 $select->child(
@@ -115,7 +115,7 @@ final class SelectWidget extends AbstractWidget
 
         $options = $this->getOptions($field);
         $values = is_array($value) ? $value : [$value];
-        
+
         $labels = [];
         foreach ($values as $v) {
             $labels[] = $options[$v] ?? $v;

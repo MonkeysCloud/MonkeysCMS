@@ -8,15 +8,15 @@ use Attribute;
 
 /**
  * Id Attribute - Marks the primary key field of a content type
- * 
+ *
  * This attribute designates a property as the primary key, with support
  * for various ID generation strategies.
- * 
+ *
  * @example
  * ```php
  * #[Id(strategy: 'auto')]
  * public int $id;
- * 
+ *
  * #[Id(strategy: 'uuid')]
  * public string $id;
  * ```
@@ -37,7 +37,8 @@ final readonly class Id
     public function __construct(
         public string $strategy = self::STRATEGY_AUTO,
         public ?string $sequence = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Get the SQL column definition for this ID

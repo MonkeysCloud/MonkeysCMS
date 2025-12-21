@@ -20,7 +20,7 @@ interface FieldRepositoryInterface
 
 /**
  * FieldRepository - Database repository for field definitions
- * 
+ *
  * Provides CRUD operations for field definitions with
  * support for entity type filtering and caching.
  */
@@ -29,7 +29,7 @@ final class FieldRepository implements FieldRepositoryInterface
     private \PDO $db;
     private string $tableName = 'field_definitions';
     private string $attachmentsTable = 'field_attachments';
-    
+
     /** @var array<int, FieldDefinition> */
     private array $cache = [];
 
@@ -86,7 +86,7 @@ final class FieldRepository implements FieldRepositoryInterface
 
     /**
      * Find all field definitions
-     * 
+     *
      * @return FieldDefinition[]
      */
     public function findAll(): array
@@ -101,7 +101,7 @@ final class FieldRepository implements FieldRepositoryInterface
 
     /**
      * Find fields attached to an entity type
-     * 
+     *
      * @return FieldDefinition[]
      */
     public function findByEntityType(string $entityType, ?int $bundleId = null): array
@@ -109,14 +109,14 @@ final class FieldRepository implements FieldRepositoryInterface
         $sql = "SELECT f.* FROM {$this->tableName} f
                 INNER JOIN {$this->attachmentsTable} a ON f.id = a.field_id
                 WHERE a.entity_type = :entity_type";
-        
+
         $params = ['entity_type' => $entityType];
-        
+
         if ($bundleId !== null) {
             $sql .= " AND a.bundle_id = :bundle_id";
             $params['bundle_id'] = $bundleId;
         }
-        
+
         $sql .= " ORDER BY a.weight ASC, f.name ASC";
 
         $stmt = $this->db->prepare($sql);
@@ -128,7 +128,7 @@ final class FieldRepository implements FieldRepositoryInterface
 
     /**
      * Find fields by multiple IDs
-     * 
+     *
      * @param int[] $ids
      * @return FieldDefinition[]
      */
@@ -158,15 +158,15 @@ final class FieldRepository implements FieldRepositoryInterface
         if ($field->id === null) {
             // Insert
             $data['created_at'] = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
-            
+
             $columns = implode(', ', array_keys($data));
             $placeholders = ':' . implode(', :', array_keys($data));
-            
+
             $stmt = $this->db->prepare(
                 "INSERT INTO {$this->tableName} ({$columns}) VALUES ({$placeholders})"
             );
             $stmt->execute($data);
-            
+
             $field->id = (int) $this->db->lastInsertId();
         } else {
             // Update
@@ -175,7 +175,7 @@ final class FieldRepository implements FieldRepositoryInterface
                 $sets[] = "{$column} = :{$column}";
             }
             $data['id'] = $field->id;
-            
+
             $stmt = $this->db->prepare(
                 "UPDATE {$this->tableName} SET " . implode(', ', $sets) . " WHERE id = :id"
             );
@@ -253,7 +253,7 @@ final class FieldRepository implements FieldRepositoryInterface
     ): void {
         $sql = "DELETE FROM {$this->attachmentsTable} 
                 WHERE field_id = :field_id AND entity_type = :entity_type";
-        
+
         $params = [
             'field_id' => $field->id,
             'entity_type' => $entityType,
@@ -278,7 +278,7 @@ final class FieldRepository implements FieldRepositoryInterface
     ): ?array {
         $sql = "SELECT * FROM {$this->attachmentsTable} 
                 WHERE field_id = :field_id AND entity_type = :entity_type";
-        
+
         $params = [
             'field_id' => $field->id,
             'entity_type' => $entityType,
@@ -356,14 +356,14 @@ final class FieldRepository implements FieldRepositoryInterface
     private function hydrate(array $row): FieldDefinition
     {
         // Decode JSON fields
-        $row['settings'] = isset($row['settings']) 
-            ? json_decode($row['settings'], true) ?? [] 
+        $row['settings'] = isset($row['settings'])
+            ? json_decode($row['settings'], true) ?? []
             : [];
-        $row['widget_settings'] = isset($row['widget_settings']) 
-            ? json_decode($row['widget_settings'], true) ?? [] 
+        $row['widget_settings'] = isset($row['widget_settings'])
+            ? json_decode($row['widget_settings'], true) ?? []
             : [];
-        $row['validation'] = isset($row['validation']) 
-            ? json_decode($row['validation'], true) ?? [] 
+        $row['validation'] = isset($row['validation'])
+            ? json_decode($row['validation'], true) ?? []
             : [];
 
         return FieldDefinition::fromArray($row);
@@ -372,7 +372,7 @@ final class FieldRepository implements FieldRepositoryInterface
     private function hydrateMany(array $rows): array
     {
         $fields = [];
-        
+
         foreach ($rows as $row) {
             $field = $this->hydrate($row);
             $this->cache[$field->id] = $field;
@@ -420,7 +420,7 @@ final class InMemoryFieldRepository implements FieldRepositoryInterface
     public function findByEntityType(string $entityType, ?int $bundleId = null): array
     {
         $fieldIds = [];
-        
+
         foreach ($this->attachments as $key => $attachment) {
             if ($attachment['entity_type'] === $entityType) {
                 if ($bundleId === null || $attachment['bundle_id'] === $bundleId) {
@@ -465,7 +465,7 @@ final class InMemoryFieldRepository implements FieldRepositoryInterface
     {
         if ($field->id !== null) {
             unset($this->fields[$field->id]);
-            
+
             // Remove attachments
             foreach ($this->attachments as $key => $attachment) {
                 if ($attachment['field_id'] === $field->id) {

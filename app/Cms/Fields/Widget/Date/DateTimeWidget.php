@@ -50,7 +50,7 @@ final class DateTimeWidget extends AbstractWidget
     {
         $settings = $this->getSettings($field);
         $formattedValue = $this->formatValue($field, $value);
-        
+
         $input = Html::input('datetime-local')
             ->attrs($this->buildCommonAttributes($field, $context))
             ->value($formattedValue);

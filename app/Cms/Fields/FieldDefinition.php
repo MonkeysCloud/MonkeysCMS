@@ -11,7 +11,7 @@ use App\Cms\Core\BaseEntity;
 
 /**
  * FieldDefinition - Defines a custom field that can be attached to any entity type
- * 
+ *
  * Fields can be attached to:
  * - Block types
  * - Content types
@@ -85,11 +85,11 @@ class FieldDefinition extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->machine_name)) {
             $this->machine_name = 'field_' . strtolower(preg_replace('/[^a-z0-9]+/i', '_', $this->name));
         }
-        
+
         // Ensure machine_name starts with field_
         if (!str_starts_with($this->machine_name, 'field_')) {
             $this->machine_name = 'field_' . $this->machine_name;
@@ -126,14 +126,14 @@ class FieldDefinition extends BaseEntity
     public function getValidationRules(): array
     {
         $rules = $this->validation;
-        
+
         if ($this->required) {
             $rules['required'] = true;
         }
-        
+
         // Add type-specific validation
         $fieldType = $this->getFieldTypeEnum();
-        
+
         if ($fieldType === FieldType::EMAIL) {
             $rules['email'] = true;
         } elseif ($fieldType === FieldType::URL) {
@@ -143,7 +143,7 @@ class FieldDefinition extends BaseEntity
         } elseif ($fieldType === FieldType::FLOAT || $fieldType === FieldType::DECIMAL) {
             $rules['numeric'] = true;
         }
-        
+
         return $rules;
     }
 
@@ -163,23 +163,23 @@ class FieldDefinition extends BaseEntity
             FieldType::TAXONOMY_REFERENCE, FieldType::USER_REFERENCE,
             FieldType::BLOCK_REFERENCE, FieldType::IMAGE,
             FieldType::FILE, FieldType::VIDEO => (int) $value,
-            
+
             FieldType::FLOAT, FieldType::DECIMAL => (float) $value,
-            
+
             FieldType::BOOLEAN => filter_var($value, FILTER_VALIDATE_BOOLEAN),
-            
-            FieldType::DATE => $value instanceof \DateTimeInterface 
-                ? $value 
+
+            FieldType::DATE => $value instanceof \DateTimeInterface
+                ? $value
                 : new \DateTimeImmutable($value),
-            
-            FieldType::DATETIME => $value instanceof \DateTimeInterface 
-                ? $value 
+
+            FieldType::DATETIME => $value instanceof \DateTimeInterface
+                ? $value
                 : new \DateTimeImmutable($value),
-            
+
             FieldType::CHECKBOX, FieldType::MULTISELECT, FieldType::GALLERY,
             FieldType::JSON, FieldType::LINK, FieldType::ADDRESS,
             FieldType::GEOLOCATION => is_array($value) ? $value : json_decode($value, true),
-            
+
             default => (string) $value,
         };
     }
@@ -197,23 +197,23 @@ class FieldDefinition extends BaseEntity
 
         return match ($fieldType) {
             FieldType::BOOLEAN => $value ? '1' : '0',
-            
-            FieldType::DATE => $value instanceof \DateTimeInterface 
+
+            FieldType::DATE => $value instanceof \DateTimeInterface
                 ? $value->format('Y-m-d')
                 : $value,
-            
-            FieldType::DATETIME => $value instanceof \DateTimeInterface 
+
+            FieldType::DATETIME => $value instanceof \DateTimeInterface
                 ? $value->format('Y-m-d H:i:s')
                 : $value,
-            
-            FieldType::TIME => $value instanceof \DateTimeInterface 
+
+            FieldType::TIME => $value instanceof \DateTimeInterface
                 ? $value->format('H:i:s')
                 : $value,
-            
+
             FieldType::CHECKBOX, FieldType::MULTISELECT, FieldType::GALLERY,
             FieldType::JSON, FieldType::LINK, FieldType::ADDRESS,
             FieldType::GEOLOCATION => json_encode($value),
-            
+
             default => (string) $value,
         };
     }
@@ -242,20 +242,20 @@ class FieldDefinition extends BaseEntity
         $type = $this->getFieldTypeEnum()->getSqlType();
         $nullable = $this->required ? 'NOT NULL' : 'NULL';
         $default = '';
-        
+
         if ($this->default_value !== null) {
             $default = " DEFAULT " . $this->getSqlDefaultValue();
         } elseif (!$this->required) {
             $default = " DEFAULT NULL";
         }
-        
+
         return "{$this->machine_name} {$type} {$nullable}{$default}";
     }
 
     private function getSqlDefaultValue(): string
     {
         $fieldType = $this->getFieldTypeEnum();
-        
+
         return match ($fieldType) {
             FieldType::INTEGER, FieldType::BOOLEAN => (string) (int) $this->default_value,
             FieldType::FLOAT, FieldType::DECIMAL => (string) (float) $this->default_value,
@@ -285,7 +285,7 @@ class FieldDefinition extends BaseEntity
         $this->weight = (int) ($data['weight'] ?? $this->weight);
         $this->searchable = (bool) ($data['searchable'] ?? $this->searchable);
         $this->translatable = (bool) ($data['translatable'] ?? $this->translatable);
-        
+
         return $this;
     }
 
@@ -331,47 +331,47 @@ class FieldDefinition extends BaseEntity
     public function validateValue(mixed $value): array
     {
         $errors = [];
-        
+
         // Check required
         if ($this->required && $this->isEmpty($value)) {
             $errors[] = "{$this->name} is required";
             return $errors;
         }
-        
+
         // Skip further validation if empty and not required
         if ($this->isEmpty($value)) {
             return $errors;
         }
-        
+
         // Type-specific validation
         $fieldType = $this->getFieldTypeEnum();
-        
+
         switch ($fieldType) {
             case FieldType::EMAIL:
                 if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
                     $errors[] = 'Please enter a valid email address';
                 }
                 break;
-                
+
             case FieldType::URL:
                 if (!filter_var($value, FILTER_VALIDATE_URL)) {
                     $errors[] = 'Please enter a valid URL';
                 }
                 break;
-                
+
             case FieldType::INTEGER:
                 if (!is_numeric($value) || (int) $value != $value) {
                     $errors[] = 'Please enter a valid integer';
                 }
                 break;
-                
+
             case FieldType::FLOAT:
             case FieldType::DECIMAL:
                 if (!is_numeric($value)) {
                     $errors[] = 'Please enter a valid number';
                 }
                 break;
-                
+
             case FieldType::DATE:
                 try {
                     new \DateTimeImmutable($value);
@@ -379,7 +379,7 @@ class FieldDefinition extends BaseEntity
                     $errors[] = 'Please enter a valid date';
                 }
                 break;
-                
+
             case FieldType::DATETIME:
                 try {
                     new \DateTimeImmutable($value);
@@ -388,44 +388,44 @@ class FieldDefinition extends BaseEntity
                 }
                 break;
         }
-        
+
         // Custom validation rules
         foreach ($this->validation as $rule => $param) {
             $ruleErrors = $this->applyValidationRule($rule, $param, $value);
             $errors = array_merge($errors, $ruleErrors);
         }
-        
+
         // Settings-based validation
         if ($max = $this->getSetting('max_length')) {
             if (is_string($value) && strlen($value) > $max) {
                 $errors[] = "Maximum length is {$max} characters";
             }
         }
-        
+
         if ($min = $this->getSetting('min_length')) {
             if (is_string($value) && strlen($value) < $min) {
                 $errors[] = "Minimum length is {$min} characters";
             }
         }
-        
+
         if ($max = $this->getSetting('max')) {
             if (is_numeric($value) && $value > $max) {
                 $errors[] = "Value must be at most {$max}";
             }
         }
-        
+
         if ($min = $this->getSetting('min')) {
             if (is_numeric($value) && $value < $min) {
                 $errors[] = "Value must be at least {$min}";
             }
         }
-        
+
         if ($pattern = $this->getSetting('pattern')) {
             if (is_string($value) && !preg_match('/' . $pattern . '/', $value)) {
                 $errors[] = 'Value does not match the required pattern';
             }
         }
-        
+
         return $errors;
     }
 
@@ -443,57 +443,57 @@ class FieldDefinition extends BaseEntity
     private function applyValidationRule(string $rule, mixed $param, mixed $value): array
     {
         $errors = [];
-        
+
         switch ($rule) {
             case 'min':
                 if (is_numeric($value) && $value < $param) {
                     $errors[] = "Value must be at least {$param}";
                 }
                 break;
-                
+
             case 'max':
                 if (is_numeric($value) && $value > $param) {
                     $errors[] = "Value must be at most {$param}";
                 }
                 break;
-                
+
             case 'minLength':
                 if (is_string($value) && strlen($value) < $param) {
                     $errors[] = "Minimum length is {$param} characters";
                 }
                 break;
-                
+
             case 'maxLength':
                 if (is_string($value) && strlen($value) > $param) {
                     $errors[] = "Maximum length is {$param} characters";
                 }
                 break;
-                
+
             case 'pattern':
                 if (is_string($value) && !preg_match('/' . $param . '/', $value)) {
                     $errors[] = 'Value does not match the required pattern';
                 }
                 break;
-                
+
             case 'in':
                 if (is_array($param) && !in_array($value, $param)) {
                     $errors[] = 'Value must be one of: ' . implode(', ', $param);
                 }
                 break;
-                
+
             case 'notIn':
                 if (is_array($param) && in_array($value, $param)) {
                     $errors[] = 'Value is not allowed';
                 }
                 break;
-                
+
             case 'regex':
                 if (is_string($value) && !preg_match($param, $value)) {
                     $errors[] = 'Value does not match the required format';
                 }
                 break;
         }
-        
+
         return $errors;
     }
 

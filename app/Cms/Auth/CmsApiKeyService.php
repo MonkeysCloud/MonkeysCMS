@@ -8,13 +8,13 @@ use App\Cms\User\User;
 
 /**
  * CmsApiKeyService - API Key authentication for MonkeysCMS
- * 
+ *
  * Features:
  * - Create scoped API keys
  * - Validate API keys
  * - Manage key lifecycle
  * - Rate limiting per key
- * 
+ *
  * Key format: ml_{keyId}_{secret}
  * Only keyId is stored; secret is hashed
  */
@@ -35,7 +35,7 @@ class CmsApiKeyService
 
     /**
      * Create a new API key
-     * 
+     *
      * @param string[] $scopes Permission scopes (e.g., ['read:content', 'write:content'])
      * @return array{key: string, id: int, name: string, scopes: array}
      */
@@ -77,14 +77,14 @@ class CmsApiKeyService
 
     /**
      * Validate an API key
-     * 
+     *
      * @return array{id: int, user_id: int, name: string, scopes: array}|null
      */
     public function validate(string $apiKey): ?array
     {
         // Parse key
         $parsed = $this->parseKey($apiKey);
-        
+
         if (!$parsed) {
             return null;
         }
@@ -160,7 +160,7 @@ class CmsApiKeyService
 
     /**
      * List API keys for a user
-     * 
+     *
      * @return array<array{id: int, name: string, scopes: array, last_used_at: ?string, expires_at: ?string, created_at: string}>
      */
     public function listForUser(int $userId): array
@@ -278,7 +278,7 @@ class CmsApiKeyService
             'expires_at' => $row['expires_at'],
             'revoked_at' => $row['revoked_at'],
             'created_at' => $row['created_at'],
-            'is_active' => $row['revoked_at'] === null && 
+            'is_active' => $row['revoked_at'] === null &&
                           ($row['expires_at'] === null || strtotime($row['expires_at']) > time()),
         ];
     }

@@ -99,13 +99,13 @@ class ImageBlock extends AbstractBlockType
 
         // Get image URL from media service (placeholder for now)
         $imageUrl = $this->getImageUrl($imageId, $imageStyle);
-        
+
         if (!$imageUrl) {
             return '<div class="image-block image-block--placeholder">No image selected</div>';
         }
 
         $alignClass = "image-block--{$alignment}";
-        
+
         $imgTag = sprintf(
             '<img src="%s" alt="%s" class="image-block__image" loading="lazy">',
             $this->escape($imageUrl),
@@ -142,12 +142,12 @@ class ImageBlock extends AbstractBlockType
     public function getCacheTags(Block $block): array
     {
         $tags = parent::getCacheTags($block);
-        
+
         $imageId = $this->getFieldValue($block, 'image');
         if ($imageId) {
             $tags[] = 'media:' . $imageId;
         }
-        
+
         return $tags;
     }
 

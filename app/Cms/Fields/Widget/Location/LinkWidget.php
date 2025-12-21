@@ -54,10 +54,10 @@ final class LinkWidget extends AbstractWidget
         $fieldName = $this->getFieldName($field, $context);
         $showTitle = $settings->getBool('show_title', true);
         $showTarget = $settings->getBool('show_target', true);
-        
+
         // Parse value
         $link = is_array($value) ? $value : ['url' => $value ?? '', 'title' => '', 'target' => '_self'];
-        
+
         $wrapper = Html::div()
             ->class('field-link')
             ->data('field-id', $fieldId);
@@ -139,7 +139,7 @@ final class LinkWidget extends AbstractWidget
             // Plain URL string
             return ['url' => $value, 'title' => '', 'target' => '_self'];
         }
-        
+
         if (is_array($value)) {
             return [
                 'url' => $value['url'] ?? '',
@@ -147,7 +147,7 @@ final class LinkWidget extends AbstractWidget
                 'target' => isset($value['external']) && $value['external'] ? '_blank' : ($value['target'] ?? '_self'),
             ];
         }
-        
+
         return null;
     }
 

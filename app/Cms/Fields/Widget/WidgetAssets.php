@@ -14,7 +14,8 @@ final class WidgetAssets
         private readonly array $js,
         private readonly array $inlineStyles,
         private readonly array $inlineScripts,
-    ) {}
+    ) {
+    }
 
     public static function empty(): self
     {

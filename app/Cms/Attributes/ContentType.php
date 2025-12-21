@@ -8,15 +8,15 @@ use Attribute;
 
 /**
  * ContentType Attribute - Defines a CMS content type (similar to Drupal's Entity Type)
- * 
+ *
  * This attribute marks a class as a CMS content type, allowing the system
  * to auto-generate database tables and manage the entity through the admin UI.
- * 
+ *
  * Unlike WordPress custom post types (which share a single table), each content type
  * gets its own normalized table - improving query performance and data integrity.
- * 
+ *
  * Unlike Drupal, no YAML or UI configuration is needed - everything is code-first.
- * 
+ *
  * @example
  * ```php
  * #[ContentType(
@@ -52,7 +52,8 @@ final readonly class ContentType
         public bool $publishable = true,
         public bool $translatable = false,
         public int $menuWeight = 0,
-    ) {}
+    ) {
+    }
 
     /**
      * Get the plural label, auto-generating if not provided

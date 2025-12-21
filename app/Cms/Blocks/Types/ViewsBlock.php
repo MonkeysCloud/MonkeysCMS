@@ -10,7 +10,7 @@ use MonkeysLegion\Database\Connection;
 
 /**
  * ViewsBlock - Dynamic content queries block
- * 
+ *
  * This block type allows you to display dynamic content based on queries.
  * Similar to Drupal's Views module.
  */
@@ -185,7 +185,7 @@ class ViewsBlock extends AbstractBlockType
 
         // Get current page from context
         $currentPage = (int) ($context['page'] ?? 1);
-        
+
         // Build and execute query
         $results = $this->executeQuery($contentType, [
             'filters' => $filters,
@@ -239,13 +239,13 @@ class ViewsBlock extends AbstractBlockType
     private function renderList(array $items, array $fields): string
     {
         $html = '<ul class="views-block__list">';
-        
+
         foreach ($items as $item) {
             $html .= '<li class="views-block__item">';
             $html .= $this->renderItemFields($item, $fields);
             $html .= '</li>';
         }
-        
+
         $html .= '</ul>';
         return $html;
     }
@@ -253,13 +253,13 @@ class ViewsBlock extends AbstractBlockType
     private function renderGrid(array $items, array $fields, int $columns): string
     {
         $html = '<div class="views-block__grid" style="--columns: ' . $columns . ';">';
-        
+
         foreach ($items as $item) {
             $html .= '<div class="views-block__grid-item">';
             $html .= $this->renderItemFields($item, $fields);
             $html .= '</div>';
         }
-        
+
         $html .= '</div>';
         return $html;
     }
@@ -272,9 +272,9 @@ class ViewsBlock extends AbstractBlockType
 
         // Use provided fields or all fields from first item
         $columns = !empty($fields) ? $fields : array_keys((array) $items[0]);
-        
+
         $html = '<table class="views-block__table">';
-        
+
         // Header
         $html .= '<thead><tr>';
         foreach ($columns as $column) {
@@ -282,7 +282,7 @@ class ViewsBlock extends AbstractBlockType
             $html .= "<th>{$label}</th>";
         }
         $html .= '</tr></thead>';
-        
+
         // Body
         $html .= '<tbody>';
         foreach ($items as $item) {
@@ -295,7 +295,7 @@ class ViewsBlock extends AbstractBlockType
             $html .= '</tr>';
         }
         $html .= '</tbody>';
-        
+
         $html .= '</table>';
         return $html;
     }
@@ -303,11 +303,11 @@ class ViewsBlock extends AbstractBlockType
     private function renderTeasers(array $items, array $fields): string
     {
         $html = '<div class="views-block__teasers">';
-        
+
         foreach ($items as $item) {
             $itemArray = (array) $item;
             $html .= '<article class="views-block__teaser">';
-            
+
             // Title
             if (isset($itemArray['title']) || isset($itemArray['name'])) {
                 $title = $itemArray['title'] ?? $itemArray['name'];
@@ -320,7 +320,7 @@ class ViewsBlock extends AbstractBlockType
                 }
                 $html .= '</h3>';
             }
-            
+
             // Summary/excerpt
             if (isset($itemArray['summary'])) {
                 $html .= '<div class="views-block__teaser-summary">' . $itemArray['summary'] . '</div>';
@@ -329,18 +329,18 @@ class ViewsBlock extends AbstractBlockType
                 $excerpt = mb_substr($excerpt, 0, 200) . '...';
                 $html .= '<div class="views-block__teaser-summary">' . $this->escape($excerpt) . '</div>';
             }
-            
+
             // Meta
             if (isset($itemArray['created_at'])) {
-                $date = $itemArray['created_at'] instanceof \DateTimeInterface 
+                $date = $itemArray['created_at'] instanceof \DateTimeInterface
                     ? $itemArray['created_at']->format('M j, Y')
                     : $itemArray['created_at'];
                 $html .= '<div class="views-block__teaser-meta">' . $date . '</div>';
             }
-            
+
             $html .= '</article>';
         }
-        
+
         $html .= '</div>';
         return $html;
     }
@@ -348,11 +348,11 @@ class ViewsBlock extends AbstractBlockType
     private function renderFull(array $items): string
     {
         $html = '<div class="views-block__full">';
-        
+
         foreach ($items as $item) {
             $itemArray = (array) $item;
             $html .= '<article class="views-block__full-item">';
-            
+
             foreach ($itemArray as $field => $value) {
                 if ($field === 'id' || str_ends_with($field, '_id')) {
                     continue;
@@ -362,10 +362,10 @@ class ViewsBlock extends AbstractBlockType
                 $html .= '<div class="views-block__field-value">' . $this->formatFieldValue($value, $field) . '</div>';
                 $html .= '</div>';
             }
-            
+
             $html .= '</article>';
         }
-        
+
         $html .= '</div>';
         return $html;
     }
@@ -385,11 +385,11 @@ class ViewsBlock extends AbstractBlockType
     private function renderItemFields(object|array $item, array $fields): string
     {
         $itemArray = (array) $item;
-        
+
         if (empty($fields)) {
             $fields = ['title', 'name'];
         }
-        
+
         $html = '';
         foreach ($fields as $field) {
             if (isset($itemArray[$field])) {
@@ -398,7 +398,7 @@ class ViewsBlock extends AbstractBlockType
                 $html .= '</span>';
             }
         }
-        
+
         return $html;
     }
 
@@ -406,18 +406,18 @@ class ViewsBlock extends AbstractBlockType
     {
         $html = '<nav class="views-block__pager" aria-label="Pagination">';
         $html .= '<ul class="views-block__pager-list">';
-        
+
         // Previous
         if ($currentPage > 1) {
             $html .= '<li class="views-block__pager-item views-block__pager-item--prev">';
             $html .= '<a href="?block_' . $blockId . '_page=' . ($currentPage - 1) . '">« Previous</a>';
             $html .= '</li>';
         }
-        
+
         // Page numbers
         $start = max(1, $currentPage - 2);
         $end = min($totalPages, $currentPage + 2);
-        
+
         for ($i = $start; $i <= $end; $i++) {
             $activeClass = $i === $currentPage ? ' views-block__pager-item--active' : '';
             $html .= '<li class="views-block__pager-item' . $activeClass . '">';
@@ -428,17 +428,17 @@ class ViewsBlock extends AbstractBlockType
             }
             $html .= '</li>';
         }
-        
+
         // Next
         if ($currentPage < $totalPages) {
             $html .= '<li class="views-block__pager-item views-block__pager-item--next">';
             $html .= '<a href="?block_' . $blockId . '_page=' . ($currentPage + 1) . '">Next »</a>';
             $html .= '</li>';
         }
-        
+
         $html .= '</ul>';
         $html .= '</nav>';
-        
+
         return $html;
     }
 
@@ -480,7 +480,7 @@ class ViewsBlock extends AbstractBlockType
         }
 
         $tableName = $this->getTableName($contentType);
-        
+
         $sql = "SELECT * FROM {$tableName}";
         $params = [];
         $wheres = [];
@@ -490,7 +490,7 @@ class ViewsBlock extends AbstractBlockType
             $field = $filter['field'] ?? null;
             $operator = $filter['operator'] ?? '=';
             $value = $filter['value'] ?? null;
-            
+
             if ($field && $value !== null) {
                 $paramName = ':filter_' . $field;
                 $wheres[] = "{$field} {$operator} {$paramName}";
@@ -534,7 +534,7 @@ class ViewsBlock extends AbstractBlockType
         }
 
         $tableName = $this->getTableName($contentType);
-        
+
         $sql = "SELECT COUNT(*) FROM {$tableName} WHERE (is_published = 1 OR status = 'published')";
 
         try {
@@ -559,12 +559,12 @@ class ViewsBlock extends AbstractBlockType
     public function getCacheTags(Block $block): array
     {
         $tags = parent::getCacheTags($block);
-        
+
         $contentType = $this->getFieldValue($block, 'content_type');
         if ($contentType) {
             $tags[] = 'content_type:' . $contentType;
         }
-        
+
         return $tags;
     }
 

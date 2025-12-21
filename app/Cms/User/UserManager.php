@@ -9,7 +9,7 @@ use App\Cms\Entity\EntityQuery;
 
 /**
  * UserManager - User operations manager
- * 
+ *
  * Provides high-level operations for managing users:
  * - User CRUD
  * - Role management
@@ -37,15 +37,15 @@ class UserManager
         $user = new User();
         $user->setEmail($data['email'] ?? '');
         $user->setUsername($data['username'] ?? '');
-        
+
         if (isset($data['password'])) {
             $user->setPassword($data['password']);
         }
-        
+
         if (isset($data['display_name'])) {
             $user->setDisplayName($data['display_name']);
         }
-        
+
         if (isset($data['status'])) {
             $user->setStatus($data['status']);
         }
@@ -67,27 +67,27 @@ class UserManager
         if (isset($data['email'])) {
             $user->setEmail($data['email']);
         }
-        
+
         if (isset($data['username'])) {
             $user->setUsername($data['username']);
         }
-        
+
         if (isset($data['password']) && !empty($data['password'])) {
             $user->setPassword($data['password']);
         }
-        
+
         if (isset($data['display_name'])) {
             $user->setDisplayName($data['display_name']);
         }
-        
+
         if (isset($data['avatar'])) {
             $user->setAvatar($data['avatar']);
         }
-        
+
         if (isset($data['bio'])) {
             $user->setBio($data['bio']);
         }
-        
+
         if (isset($data['status'])) {
             $user->setStatus($data['status']);
         }
@@ -112,7 +112,7 @@ class UserManager
     {
         // Remove role assignments
         $this->removeAllRoles($user);
-        
+
         $this->em->forceDelete($user);
     }
 
@@ -127,7 +127,7 @@ class UserManager
     {
         /** @var User|null $user */
         $user = $this->em->find(User::class, $id);
-        
+
         if ($user) {
             $this->loadRoles($user);
         }
@@ -142,7 +142,7 @@ class UserManager
     {
         /** @var User|null $user */
         $user = $this->em->findOneBy(User::class, ['email' => strtolower(trim($email))]);
-        
+
         if ($user) {
             $this->loadRoles($user);
         }
@@ -157,7 +157,7 @@ class UserManager
     {
         /** @var User|null $user */
         $user = $this->em->findOneBy(User::class, ['username' => $username]);
-        
+
         if ($user) {
             $this->loadRoles($user);
         }
@@ -171,7 +171,7 @@ class UserManager
     public function findByCredential(string $credential): ?User
     {
         $user = $this->findByEmail($credential);
-        
+
         if (!$user) {
             $user = $this->findByUsername($credential);
         }
@@ -186,7 +186,7 @@ class UserManager
     {
         /** @var User|null $user */
         $user = $this->em->findOneBy(User::class, ['remember_token' => $token]);
-        
+
         if ($user) {
             $this->loadRoles($user);
         }
@@ -196,13 +196,13 @@ class UserManager
 
     /**
      * Get all users
-     * 
+     *
      * @return User[]
      */
     public function all(): array
     {
         $users = $this->em->all(User::class);
-        
+
         foreach ($users as $user) {
             $this->loadRoles($user);
         }
@@ -262,7 +262,7 @@ class UserManager
             WHERE ur.user_id = :user_id
         ");
         $stmt->execute(['user_id' => $user->getId()]);
-        
+
         $roles = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         $user->setRoles($roles);
     }
@@ -273,7 +273,7 @@ class UserManager
     public function assignRole(User $user, string $roleMachineName): void
     {
         $roleId = $this->getRoleId($roleMachineName);
-        
+
         if (!$roleId) {
             throw new \InvalidArgumentException("Role not found: {$roleMachineName}");
         }
@@ -293,7 +293,7 @@ class UserManager
     public function removeRole(User $user, string $roleMachineName): void
     {
         $roleId = $this->getRoleId($roleMachineName);
-        
+
         if (!$roleId) {
             return;
         }
@@ -344,19 +344,19 @@ class UserManager
         ");
         $stmt->execute(['name' => $machineName]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
+
         return $row ? (int) $row['id'] : null;
     }
 
     /**
      * Get users by role
-     * 
+     *
      * @return User[]
      */
     public function findByRole(string $roleMachineName): array
     {
         $roleId = $this->getRoleId($roleMachineName);
-        
+
         if (!$roleId) {
             return [];
         }
@@ -415,7 +415,7 @@ class UserManager
     public function createPasswordResetToken(User $user): string
     {
         $token = bin2hex(random_bytes(32));
-        
+
         // Delete any existing tokens
         $stmt = $this->em->getConnection()->prepare("
             DELETE FROM password_resets WHERE email = :email
@@ -514,7 +514,7 @@ class UserManager
     public function isEmailAvailable(string $email, ?int $excludeUserId = null): bool
     {
         $query = $this->query()->where('email', strtolower(trim($email)));
-        
+
         if ($excludeUserId) {
             $query->where('id', '!=', $excludeUserId);
         }
@@ -528,7 +528,7 @@ class UserManager
     public function isUsernameAvailable(string $username, ?int $excludeUserId = null): bool
     {
         $query = $this->query()->where('username', $username);
-        
+
         if ($excludeUserId) {
             $query->where('id', '!=', $excludeUserId);
         }

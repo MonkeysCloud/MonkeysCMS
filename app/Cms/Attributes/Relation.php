@@ -8,23 +8,23 @@ use Attribute;
 
 /**
  * Relation Attribute - Defines relationships between content types
- * 
+ *
  * This attribute establishes foreign key relationships between entities,
  * enabling features like:
  * - Product -> Category (ManyToOne)
  * - Post -> Tags (ManyToMany)
  * - Order -> OrderItems (OneToMany)
- * 
+ *
  * Key improvements over Drupal Entity References:
  * - Proper SQL foreign keys with cascade options
  * - No separate field tables - direct column references
  * - Type-safe relationship definitions
- * 
+ *
  * Key improvements over WordPress relationships:
  * - No taxonomy/post_meta confusion
  * - Native JOIN support without plugins
  * - Enforced referential integrity
- * 
+ *
  * @example
  * ```php
  * #[Relation(
@@ -71,7 +71,8 @@ final readonly class Relation
         public bool $eager = false,
         public bool $required = false,
         public ?string $orderBy = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Check if this is the owning side of the relationship

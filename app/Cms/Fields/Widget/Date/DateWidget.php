@@ -50,7 +50,7 @@ final class DateWidget extends AbstractWidget
     {
         $settings = $this->getSettings($field);
         $formattedValue = $this->formatValue($field, $value);
-        
+
         $input = Html::input('date')
             ->attrs($this->buildCommonAttributes($field, $context))
             ->value($formattedValue);

@@ -62,7 +62,7 @@ final class CodeWidget extends AbstractWidget
         $theme = $settings->getString('theme', 'dracula');
         $lineNumbers = $settings->getBool('line_numbers', true);
         $height = $settings->getInt('height', 300);
-        
+
         $wrapper = Html::div()
             ->class('field-code')
             ->data('field-id', $fieldId)

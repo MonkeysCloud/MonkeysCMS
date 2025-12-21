@@ -13,7 +13,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * AuthMiddleware - Verifies user authentication
- * 
+ *
  * Features:
  * - JWT token validation
  * - Session-based authentication

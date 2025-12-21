@@ -15,11 +15,11 @@ final class TransformerFactory
     public function create(string $fieldType, array $settings = []): ValueTransformerInterface
     {
         $key = $fieldType . ':' . md5(serialize($settings));
-        
+
         if (!isset($this->cache[$key])) {
             $this->cache[$key] = $this->buildTransformer($fieldType, $settings);
         }
-        
+
         return $this->cache[$key];
     }
 

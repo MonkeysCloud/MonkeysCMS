@@ -63,7 +63,7 @@ final class GeolocationWidget extends AbstractWidget
         $defaultLat = $settings->getFloat('default_lat', 0);
         $defaultLng = $settings->getFloat('default_lng', 0);
         $defaultZoom = $settings->getInt('default_zoom', 12);
-        
+
         $wrapper = Html::div()
             ->class('field-geolocation')
             ->data('field-id', $fieldId)
@@ -145,7 +145,7 @@ final class GeolocationWidget extends AbstractWidget
     protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
         $settings = $this->getSettings($field);
-        
+
         if (!$settings->getBool('show_map', true)) {
             return null;
         }

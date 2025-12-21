@@ -7,9 +7,9 @@ namespace App\Controllers\Admin;
 use App\Modules\Core\Services\MenuService;
 use App\Modules\Core\Entities\Menu;
 use App\Modules\Core\Entities\MenuItem;
-use MonkeysLegion\Http\Attribute\Route;
-use MonkeysLegion\Http\Request;
-use MonkeysLegion\Http\JsonResponse;
+use MonkeysLegion\Router\Attributes\Route;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * MenuController - Admin API for menu management
@@ -18,7 +18,8 @@ final class MenuController
 {
     public function __construct(
         private readonly MenuService $menus,
-    ) {}
+    ) {
+    }
 
     // ─────────────────────────────────────────────────────────────
     // Menu Endpoints
@@ -28,11 +29,11 @@ final class MenuController
      * List all menus
      */
     #[Route('GET', '/admin/menus')]
-    public function index(): JsonResponse
+    public function index(): ResponseInterface
     {
         $menus = $this->menus->getAllMenus();
 
-        return new JsonResponse([
+        return json([
             'menus' => array_map(fn(Menu $m) => $m->toArray(), $menus),
         ]);
     }
@@ -41,15 +42,15 @@ final class MenuController
      * Get single menu with items
      */
     #[Route('GET', '/admin/menus/{id}')]
-    public function show(int $id): JsonResponse
+    public function show(int $id): ResponseInterface
     {
         $menu = $this->menus->getMenuWithItems($id);
 
         if (!$menu) {
-            return new JsonResponse(['error' => 'Menu not found'], 404);
+            return json(['error' => 'Menu not found'], 404);
         }
 
-        return new JsonResponse(array_merge($menu->toArray(), [
+        return json(array_merge($menu->toArray(), [
             'items' => array_map(fn(MenuItem $i) => $i->toArray(), $menu->items),
             'tree' => $this->formatTree($menu->getItemTree()),
         ]));
@@ -59,15 +60,15 @@ final class MenuController
      * Get menu by machine name
      */
     #[Route('GET', '/admin/menus/by-name/{name}')]
-    public function showByName(string $name): JsonResponse
+    public function showByName(string $name): ResponseInterface
     {
         $menu = $this->menus->getMenuByNameWithItems($name);
 
         if (!$menu) {
-            return new JsonResponse(['error' => 'Menu not found'], 404);
+            return json(['error' => 'Menu not found'], 404);
         }
 
-        return new JsonResponse(array_merge($menu->toArray(), [
+        return json(array_merge($menu->toArray(), [
             'items' => array_map(fn(MenuItem $i) => $i->toArray(), $menu->items),
             'tree' => $this->formatTree($menu->getItemTree()),
         ]));
@@ -77,18 +78,18 @@ final class MenuController
      * Create menu
      */
     #[Route('POST', '/admin/menus')]
-    public function create(Request $request): JsonResponse
+    public function create(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['name'])) {
-            return new JsonResponse(['errors' => ['name' => 'Name is required']], 422);
+            return json(['errors' => ['name' => 'Name is required']], 422);
         }
 
         $machineName = $data['machine_name'] ?? strtolower(preg_replace('/[^a-z0-9]+/', '_', $data['name']));
 
         if ($this->menus->getMenuByName($machineName)) {
-            return new JsonResponse(['errors' => ['machine_name' => 'Machine name already exists']], 422);
+            return json(['errors' => ['machine_name' => 'Machine name already exists']], 422);
         }
 
         $menu = new Menu();
@@ -99,7 +100,7 @@ final class MenuController
 
         $this->menus->saveMenu($menu);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Menu created',
             'menu' => $menu->toArray(),
@@ -110,22 +111,22 @@ final class MenuController
      * Update menu
      */
     #[Route('PUT', '/admin/menus/{id}')]
-    public function update(int $id, Request $request): JsonResponse
+    public function update(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $menu = $this->menus->getMenu($id);
 
         if (!$menu) {
-            return new JsonResponse(['error' => 'Menu not found'], 404);
+            return json(['error' => 'Menu not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (isset($data['name'])) {
             $menu->name = $data['name'];
         }
         if (isset($data['machine_name']) && $data['machine_name'] !== $menu->machine_name) {
             if ($this->menus->getMenuByName($data['machine_name'])) {
-                return new JsonResponse(['errors' => ['machine_name' => 'Machine name already exists']], 422);
+                return json(['errors' => ['machine_name' => 'Machine name already exists']], 422);
             }
             $menu->machine_name = $data['machine_name'];
         }
@@ -138,7 +139,7 @@ final class MenuController
 
         $this->menus->saveMenu($menu);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Menu updated',
             'menu' => $menu->toArray(),
@@ -149,17 +150,17 @@ final class MenuController
      * Delete menu
      */
     #[Route('DELETE', '/admin/menus/{id}')]
-    public function delete(int $id): JsonResponse
+    public function delete(int $id): ResponseInterface
     {
         $menu = $this->menus->getMenu($id);
 
         if (!$menu) {
-            return new JsonResponse(['error' => 'Menu not found'], 404);
+            return json(['error' => 'Menu not found'], 404);
         }
 
         $this->menus->deleteMenu($menu);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Menu deleted',
         ]);
@@ -173,19 +174,19 @@ final class MenuController
      * Get menu items
      */
     #[Route('GET', '/admin/menus/{menuId}/items')]
-    public function listItems(int $menuId, Request $request): JsonResponse
+    public function listItems(int $menuId, ServerRequestInterface $request): ResponseInterface
     {
         $menu = $this->menus->getMenu($menuId);
 
         if (!$menu) {
-            return new JsonResponse(['error' => 'Menu not found'], 404);
+            return json(['error' => 'Menu not found'], 404);
         }
 
         $flat = filter_var($request->getQueryParams()['flat'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         if ($flat) {
             $items = $this->menus->getMenuItems($menuId, null, false);
-            return new JsonResponse([
+            return json([
                 'menu_id' => $menuId,
                 'items' => array_map(fn(MenuItem $i) => $i->toArray(), $items),
             ]);
@@ -193,7 +194,7 @@ final class MenuController
 
         $tree = $this->menus->getMenuTree($menuId);
 
-        return new JsonResponse([
+        return json([
             'menu_id' => $menuId,
             'tree' => $this->formatTree($tree),
         ]);
@@ -203,40 +204,40 @@ final class MenuController
      * Get single menu item
      */
     #[Route('GET', '/admin/menu-items/{id}')]
-    public function showItem(int $id): JsonResponse
+    public function showItem(int $id): ResponseInterface
     {
         $item = $this->menus->getMenuItem($id);
 
         if (!$item) {
-            return new JsonResponse(['error' => 'Menu item not found'], 404);
+            return json(['error' => 'Menu item not found'], 404);
         }
 
-        return new JsonResponse($item->toArray());
+        return json($item->toArray());
     }
 
     /**
      * Create menu item
      */
     #[Route('POST', '/admin/menus/{menuId}/items')]
-    public function createItem(int $menuId, Request $request): JsonResponse
+    public function createItem(int $menuId, ServerRequestInterface $request): ResponseInterface
     {
         $menu = $this->menus->getMenu($menuId);
 
         if (!$menu) {
-            return new JsonResponse(['error' => 'Menu not found'], 404);
+            return json(['error' => 'Menu not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['title'])) {
-            return new JsonResponse(['errors' => ['title' => 'Title is required']], 422);
+            return json(['errors' => ['title' => 'Title is required']], 422);
         }
 
         // Validate parent
         if (!empty($data['parent_id'])) {
             $parent = $this->menus->getMenuItem($data['parent_id']);
             if (!$parent || $parent->menu_id !== $menuId) {
-                return new JsonResponse(['errors' => ['parent_id' => 'Invalid parent']], 422);
+                return json(['errors' => ['parent_id' => 'Invalid parent']], 422);
             }
         }
 
@@ -259,7 +260,7 @@ final class MenuController
 
         $this->menus->saveMenuItem($item);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Menu item created',
             'item' => $item->toArray(),
@@ -270,47 +271,73 @@ final class MenuController
      * Update menu item
      */
     #[Route('PUT', '/admin/menu-items/{id}')]
-    public function updateItem(int $id, Request $request): JsonResponse
+    public function updateItem(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $item = $this->menus->getMenuItem($id);
 
         if (!$item) {
-            return new JsonResponse(['error' => 'Menu item not found'], 404);
+            return json(['error' => 'Menu item not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         // Validate parent change
         if (isset($data['parent_id']) && $data['parent_id'] !== $item->parent_id) {
             if ($data['parent_id'] !== null) {
                 $parent = $this->menus->getMenuItem($data['parent_id']);
                 if (!$parent || $parent->menu_id !== $item->menu_id) {
-                    return new JsonResponse(['errors' => ['parent_id' => 'Invalid parent']], 422);
+                    return json(['errors' => ['parent_id' => 'Invalid parent']], 422);
                 }
                 if ($parent->id === $item->id) {
-                    return new JsonResponse(['errors' => ['parent_id' => 'Cannot be own parent']], 422);
+                    return json(['errors' => ['parent_id' => 'Cannot be own parent']], 422);
                 }
             }
             $item->parent_id = $data['parent_id'];
         }
 
-        if (isset($data['title'])) $item->title = $data['title'];
-        if (isset($data['url'])) $item->url = $data['url'];
-        if (isset($data['link_type'])) $item->link_type = $data['link_type'];
-        if (isset($data['entity_type'])) $item->entity_type = $data['entity_type'];
-        if (isset($data['entity_id'])) $item->entity_id = $data['entity_id'];
-        if (isset($data['icon'])) $item->icon = $data['icon'];
-        if (isset($data['css_class'])) $item->css_class = $data['css_class'];
-        if (isset($data['target'])) $item->target = $data['target'];
-        if (isset($data['weight'])) $item->weight = $data['weight'];
-        if (isset($data['expanded'])) $item->expanded = $data['expanded'];
-        if (isset($data['is_published'])) $item->is_published = $data['is_published'];
-        if (isset($data['attributes'])) $item->attributes = $data['attributes'];
-        if (isset($data['visibility'])) $item->visibility = $data['visibility'];
+        if (isset($data['title'])) {
+            $item->title = $data['title'];
+        }
+        if (isset($data['url'])) {
+            $item->url = $data['url'];
+        }
+        if (isset($data['link_type'])) {
+            $item->link_type = $data['link_type'];
+        }
+        if (isset($data['entity_type'])) {
+            $item->entity_type = $data['entity_type'];
+        }
+        if (isset($data['entity_id'])) {
+            $item->entity_id = $data['entity_id'];
+        }
+        if (isset($data['icon'])) {
+            $item->icon = $data['icon'];
+        }
+        if (isset($data['css_class'])) {
+            $item->css_class = $data['css_class'];
+        }
+        if (isset($data['target'])) {
+            $item->target = $data['target'];
+        }
+        if (isset($data['weight'])) {
+            $item->weight = $data['weight'];
+        }
+        if (isset($data['expanded'])) {
+            $item->expanded = $data['expanded'];
+        }
+        if (isset($data['is_published'])) {
+            $item->is_published = $data['is_published'];
+        }
+        if (isset($data['attributes'])) {
+            $item->attributes = $data['attributes'];
+        }
+        if (isset($data['visibility'])) {
+            $item->visibility = $data['visibility'];
+        }
 
         $this->menus->saveMenuItem($item);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Menu item updated',
             'item' => $item->toArray(),
@@ -321,12 +348,12 @@ final class MenuController
      * Delete menu item
      */
     #[Route('DELETE', '/admin/menu-items/{id}')]
-    public function deleteItem(int $id, Request $request): JsonResponse
+    public function deleteItem(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $item = $this->menus->getMenuItem($id);
 
         if (!$item) {
-            return new JsonResponse(['error' => 'Menu item not found'], 404);
+            return json(['error' => 'Menu item not found'], 404);
         }
 
         $deleteChildren = filter_var(
@@ -336,7 +363,7 @@ final class MenuController
 
         $this->menus->deleteMenuItem($item, $deleteChildren);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Menu item deleted',
         ]);
@@ -346,20 +373,20 @@ final class MenuController
      * Reorder menu items
      */
     #[Route('PUT', '/admin/menus/{menuId}/items/reorder')]
-    public function reorderItems(int $menuId, Request $request): JsonResponse
+    public function reorderItems(int $menuId, ServerRequestInterface $request): ResponseInterface
     {
         $menu = $this->menus->getMenu($menuId);
 
         if (!$menu) {
-            return new JsonResponse(['error' => 'Menu not found'], 404);
+            return json(['error' => 'Menu not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
         $order = $data['order'] ?? [];
 
         $this->menus->reorderItems($menuId, $order);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Menu items reordered',
         ]);

@@ -55,26 +55,41 @@ final class DimensionsWidget extends AbstractWidget
         $value = is_array($value) ? $value : [];
         $unit = $settings->getString('unit', 'cm');
         $showDepth = $settings->getBool('show_depth', true);
-        
+
         $wrapper = Html::div()->class('field-dimensions');
 
         // Width
         $wrapper->child($this->buildDimensionField(
-            $fieldId, $fieldName, 'width', 'Width',
-            $value['width'] ?? '', $unit, $context
+            $fieldId,
+            $fieldName,
+            'width',
+            'Width',
+            $value['width'] ?? '',
+            $unit,
+            $context
         ));
 
         // Height
         $wrapper->child($this->buildDimensionField(
-            $fieldId, $fieldName, 'height', 'Height',
-            $value['height'] ?? '', $unit, $context
+            $fieldId,
+            $fieldName,
+            'height',
+            'Height',
+            $value['height'] ?? '',
+            $unit,
+            $context
         ));
 
         // Depth
         if ($showDepth) {
             $wrapper->child($this->buildDimensionField(
-                $fieldId, $fieldName, 'depth', 'Depth',
-                $value['depth'] ?? '', $unit, $context
+                $fieldId,
+                $fieldName,
+                'depth',
+                'Depth',
+                $value['depth'] ?? '',
+                $unit,
+                $context
             ));
         }
 
@@ -123,7 +138,7 @@ final class DimensionsWidget extends AbstractWidget
         }
 
         $dimensions = [];
-        
+
         foreach (['width', 'height', 'depth'] as $dim) {
             if (isset($value[$dim]) && $value[$dim] !== '') {
                 $dimensions[$dim] = (float) $value[$dim];

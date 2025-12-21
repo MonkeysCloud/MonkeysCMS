@@ -61,26 +61,37 @@ final class AddressWidget extends AbstractWidget
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
         $value = is_array($value) ? $value : [];
-        
+
         $enabledFields = $settings->getArray('fields', [
             'street1', 'street2', 'city', 'state', 'postal_code', 'country'
         ]);
-        
+
         $wrapper = Html::div()->class('field-address');
 
         // Street Address 1
         if (in_array('street1', $enabledFields)) {
             $wrapper->child($this->buildSubField(
-                $fieldId, $fieldName, 'street1', 'Street Address',
-                $value['street1'] ?? '', 'text', $context
+                $fieldId,
+                $fieldName,
+                'street1',
+                'Street Address',
+                $value['street1'] ?? '',
+                'text',
+                $context
             ));
         }
 
         // Street Address 2
         if (in_array('street2', $enabledFields)) {
             $wrapper->child($this->buildSubField(
-                $fieldId, $fieldName, 'street2', 'Street Address 2',
-                $value['street2'] ?? '', 'text', $context, false
+                $fieldId,
+                $fieldName,
+                'street2',
+                'Street Address 2',
+                $value['street2'] ?? '',
+                'text',
+                $context,
+                false
             ));
         }
 
@@ -89,15 +100,25 @@ final class AddressWidget extends AbstractWidget
 
         if (in_array('city', $enabledFields)) {
             $row->child($this->buildSubField(
-                $fieldId, $fieldName, 'city', 'City',
-                $value['city'] ?? '', 'text', $context
+                $fieldId,
+                $fieldName,
+                'city',
+                'City',
+                $value['city'] ?? '',
+                'text',
+                $context
             )->addClass('field-address__col--2'));
         }
 
         if (in_array('state', $enabledFields)) {
             $row->child($this->buildSubField(
-                $fieldId, $fieldName, 'state', 'State/Province',
-                $value['state'] ?? '', 'text', $context
+                $fieldId,
+                $fieldName,
+                'state',
+                'State/Province',
+                $value['state'] ?? '',
+                'text',
+                $context
             )->addClass('field-address__col--1'));
         }
 
@@ -108,14 +129,22 @@ final class AddressWidget extends AbstractWidget
 
         if (in_array('postal_code', $enabledFields)) {
             $row2->child($this->buildSubField(
-                $fieldId, $fieldName, 'postal_code', 'Postal Code',
-                $value['postal_code'] ?? '', 'text', $context
+                $fieldId,
+                $fieldName,
+                'postal_code',
+                'Postal Code',
+                $value['postal_code'] ?? '',
+                'text',
+                $context
             )->addClass('field-address__col--1'));
         }
 
         if (in_array('country', $enabledFields)) {
             $row2->child($this->buildCountrySelect(
-                $fieldId, $fieldName, $value['country'] ?? '', $context
+                $fieldId,
+                $fieldName,
+                $value['country'] ?? '',
+                $context
             )->addClass('field-address__col--2'));
         }
 
@@ -209,7 +238,7 @@ final class AddressWidget extends AbstractWidget
 
         // Filter empty values
         $filtered = array_filter($value, fn($v) => $v !== null && $v !== '');
-        
+
         return empty($filtered) ? null : $filtered;
     }
 
@@ -228,7 +257,7 @@ final class AddressWidget extends AbstractWidget
     public function display(Field $field, FieldValue $value, RenderContext $context): WidgetOutput
     {
         $val = $value->asArray();
-        
+
         if (empty($val)) {
             $html = Html::span()
                 ->class('field-display', 'field-display--empty')
@@ -239,21 +268,21 @@ final class AddressWidget extends AbstractWidget
 
         $parts = $this->buildAddressParts($val);
         $html = $this->buildAddressHtml($parts);
-        
+
         return WidgetOutput::html($html);
     }
 
     private function buildAddressParts(array $value): array
     {
         $parts = [];
-        
+
         if (!empty($value['street1'])) {
             $parts[] = $value['street1'];
         }
         if (!empty($value['street2'])) {
             $parts[] = $value['street2'];
         }
-        
+
         $cityLine = [];
         if (!empty($value['city'])) {
             $cityLine[] = $value['city'];
@@ -267,7 +296,7 @@ final class AddressWidget extends AbstractWidget
         if (!empty($cityLine)) {
             $parts[] = implode(', ', $cityLine);
         }
-        
+
         if (!empty($value['country'])) {
             $countries = $this->getCountries();
             $parts[] = $countries[$value['country']] ?? $value['country'];

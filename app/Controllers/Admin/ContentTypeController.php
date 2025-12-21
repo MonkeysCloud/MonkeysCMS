@@ -6,13 +6,13 @@ namespace App\Controllers\Admin;
 
 use App\Cms\ContentTypes\ContentTypeManager;
 use App\Cms\Fields\FieldType;
-use MonkeysLegion\Http\Attribute\Route;
-use MonkeysLegion\Http\Response;
+use MonkeysLegion\Router\Attributes\Route;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * ContentTypeController - Admin API for managing content types
- * 
+ *
  * Endpoints:
  * - GET /admin/content-types - List all content types
  * - GET /admin/content-types/{id} - Get content type details
@@ -23,7 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * - PUT /admin/content-types/{id}/fields/{fieldName} - Update field
  * - DELETE /admin/content-types/{id}/fields/{fieldName} - Remove field
  * - GET /admin/content-types/{id}/schema - Get table schema
- * 
+ *
  * Content CRUD:
  * - GET /admin/content-types/{id}/content - List content
  * - POST /admin/content-types/{id}/content - Create content
@@ -35,7 +35,8 @@ class ContentTypeController
 {
     public function __construct(
         private readonly ContentTypeManager $contentTypeManager,
-    ) {}
+    ) {
+    }
 
     // =========================================================================
     // Content Type Management
@@ -45,7 +46,7 @@ class ContentTypeController
      * List all content types
      */
     #[Route('GET', '/admin/content-types')]
-    public function index(ServerRequestInterface $request): Response
+    public function index(ServerRequestInterface $request): ResponseInterface
     {
         $types = $this->contentTypeManager->getTypes();
 
@@ -66,7 +67,7 @@ class ContentTypeController
             ];
         }
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $formatted,
             'total' => count($formatted),
@@ -77,22 +78,22 @@ class ContentTypeController
      * Get content type details
      */
     #[Route('GET', '/admin/content-types/{id}')]
-    public function show(ServerRequestInterface $request, string $id): Response
+    public function show(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $type = $this->contentTypeManager->getType($id);
 
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
         }
 
         // Add editability info
-        $type['editable'] = $type['source'] === 'database' && 
+        $type['editable'] = $type['source'] === 'database' &&
             (!isset($type['entity']) || !$type['entity']->is_system);
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $type,
         ]);
@@ -102,13 +103,13 @@ class ContentTypeController
      * Create a new database content type
      */
     #[Route('POST', '/admin/content-types')]
-    public function store(ServerRequestInterface $request): Response
+    public function store(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
         // Validate required fields
         if (empty($data['label'])) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Label is required',
             ], 400);
@@ -117,7 +118,7 @@ class ContentTypeController
         // Check for duplicate type_id
         $typeId = $data['type_id'] ?? strtolower(preg_replace('/[^a-z0-9]+/i', '_', $data['label']));
         if ($this->contentTypeManager->hasType($typeId)) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'A content type with this ID already exists',
             ], 400);
@@ -126,13 +127,13 @@ class ContentTypeController
         try {
             $entity = $this->contentTypeManager->createDatabaseType($data);
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'data' => $entity->toArray(),
                 'message' => 'Content type created successfully',
             ], 201);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to create content type: ' . $e->getMessage(),
             ], 500);
@@ -143,27 +144,27 @@ class ContentTypeController
      * Update a database content type
      */
     #[Route('PUT', '/admin/content-types/{id}')]
-    public function update(ServerRequestInterface $request, string $id): Response
+    public function update(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
         }
 
         if ($type['source'] !== 'database') {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Code-defined content types cannot be modified',
             ], 400);
         }
 
         if ($type['entity']->is_system ?? false) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'System content types cannot be modified',
             ], 400);
@@ -172,13 +173,13 @@ class ContentTypeController
         try {
             $entity = $this->contentTypeManager->updateDatabaseType($type['entity']->id, $data);
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'data' => $entity->toArray(),
                 'message' => 'Content type updated successfully',
             ]);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to update content type: ' . $e->getMessage(),
             ], 500);
@@ -189,28 +190,28 @@ class ContentTypeController
      * Delete a database content type
      */
     #[Route('DELETE', '/admin/content-types/{id}')]
-    public function destroy(ServerRequestInterface $request, string $id): Response
+    public function destroy(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $params = $request->getQueryParams();
         $dropTable = filter_var($params['drop_table'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
         }
 
         if ($type['source'] !== 'database') {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Code-defined content types cannot be deleted',
             ], 400);
         }
 
         if ($type['entity']->is_system ?? false) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'System content types cannot be deleted',
             ], 400);
@@ -219,12 +220,12 @@ class ContentTypeController
         try {
             $this->contentTypeManager->deleteDatabaseType($type['entity']->id, $dropTable);
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'message' => 'Content type deleted successfully',
             ]);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to delete content type: ' . $e->getMessage(),
             ], 500);
@@ -239,20 +240,20 @@ class ContentTypeController
      * Add a field to a content type
      */
     #[Route('POST', '/admin/content-types/{id}/fields')]
-    public function addField(ServerRequestInterface $request, string $id): Response
+    public function addField(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
         }
 
         if ($type['source'] !== 'database') {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Cannot add fields to code-defined content types',
             ], 400);
@@ -260,14 +261,14 @@ class ContentTypeController
 
         // Validate
         if (empty($data['name'])) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Field name is required',
             ], 400);
         }
 
         if (empty($data['type'])) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Field type is required',
             ], 400);
@@ -277,7 +278,7 @@ class ContentTypeController
         try {
             FieldType::from($data['type']);
         } catch (\ValueError) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Invalid field type: ' . $data['type'],
             ], 400);
@@ -286,13 +287,13 @@ class ContentTypeController
         try {
             $field = $this->contentTypeManager->addFieldToType($type['entity']->id, $data);
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'data' => $field->toArray(),
                 'message' => 'Field added successfully',
             ], 201);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to add field: ' . $e->getMessage(),
             ], 500);
@@ -303,21 +304,21 @@ class ContentTypeController
      * Remove a field from a content type
      */
     #[Route('DELETE', '/admin/content-types/{id}/fields/{fieldName}')]
-    public function removeField(ServerRequestInterface $request, string $id, string $fieldName): Response
+    public function removeField(ServerRequestInterface $request, string $id, string $fieldName): ResponseInterface
     {
         $params = $request->getQueryParams();
         $dropColumn = filter_var($params['drop_column'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
         }
 
         if ($type['source'] !== 'database') {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Cannot remove fields from code-defined content types',
             ], 400);
@@ -325,24 +326,24 @@ class ContentTypeController
 
         try {
             $removed = $this->contentTypeManager->removeFieldFromType(
-                $type['entity']->id, 
-                $fieldName, 
+                $type['entity']->id,
+                $fieldName,
                 $dropColumn
             );
 
             if (!$removed) {
-                return Response::json([
+                return json([
                     'success' => false,
                     'error' => 'Field not found',
                 ], 404);
             }
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'message' => 'Field removed successfully',
             ]);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to remove field: ' . $e->getMessage(),
             ], 500);
@@ -353,11 +354,11 @@ class ContentTypeController
      * Get table schema for a content type
      */
     #[Route('GET', '/admin/content-types/{id}/schema')]
-    public function schema(ServerRequestInterface $request, string $id): Response
+    public function schema(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
@@ -377,7 +378,7 @@ class ContentTypeController
             ];
         }
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $schema,
         ]);
@@ -391,13 +392,13 @@ class ContentTypeController
      * List content of a specific type
      */
     #[Route('GET', '/admin/content-types/{id}/content')]
-    public function listContent(ServerRequestInterface $request, string $id): Response
+    public function listContent(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $params = $request->getQueryParams();
 
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
@@ -413,7 +414,7 @@ class ContentTypeController
                 'search' => $params['search'] ?? null,
             ]);
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'data' => $result['items'],
                 'meta' => [
@@ -424,7 +425,7 @@ class ContentTypeController
                 ],
             ]);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to list content: ' . $e->getMessage(),
             ], 500);
@@ -435,13 +436,13 @@ class ContentTypeController
      * Create content
      */
     #[Route('POST', '/admin/content-types/{id}/content')]
-    public function createContent(ServerRequestInterface $request, string $id): Response
+    public function createContent(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
@@ -454,7 +455,7 @@ class ContentTypeController
             $contentId = $this->contentTypeManager->createContent($id, $data);
 
             if (!$contentId) {
-                return Response::json([
+                return json([
                     'success' => false,
                     'error' => 'Failed to create content',
                 ], 500);
@@ -462,13 +463,13 @@ class ContentTypeController
 
             $content = $this->contentTypeManager->getContent($id, $contentId);
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'data' => $content,
                 'message' => 'Content created successfully',
             ], 201);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to create content: ' . $e->getMessage(),
             ], 500);
@@ -479,11 +480,11 @@ class ContentTypeController
      * Get single content item
      */
     #[Route('GET', '/admin/content-types/{id}/content/{contentId}')]
-    public function getContent(ServerRequestInterface $request, string $id, int $contentId): Response
+    public function getContent(ServerRequestInterface $request, string $id, int $contentId): ResponseInterface
     {
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
@@ -491,13 +492,13 @@ class ContentTypeController
 
         $content = $this->contentTypeManager->getContent($id, $contentId);
         if (!$content) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content not found',
             ], 404);
         }
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $content,
         ]);
@@ -507,13 +508,13 @@ class ContentTypeController
      * Update content
      */
     #[Route('PUT', '/admin/content-types/{id}/content/{contentId}')]
-    public function updateContent(ServerRequestInterface $request, string $id, int $contentId): Response
+    public function updateContent(ServerRequestInterface $request, string $id, int $contentId): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
@@ -523,13 +524,13 @@ class ContentTypeController
             $this->contentTypeManager->updateContent($id, $contentId, $data);
             $content = $this->contentTypeManager->getContent($id, $contentId);
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'data' => $content,
                 'message' => 'Content updated successfully',
             ]);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to update content: ' . $e->getMessage(),
             ], 500);
@@ -540,11 +541,11 @@ class ContentTypeController
      * Delete content
      */
     #[Route('DELETE', '/admin/content-types/{id}/content/{contentId}')]
-    public function deleteContent(ServerRequestInterface $request, string $id, int $contentId): Response
+    public function deleteContent(ServerRequestInterface $request, string $id, int $contentId): ResponseInterface
     {
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
@@ -554,18 +555,18 @@ class ContentTypeController
             $deleted = $this->contentTypeManager->deleteContent($id, $contentId);
 
             if (!$deleted) {
-                return Response::json([
+                return json([
                     'success' => false,
                     'error' => 'Content not found',
                 ], 404);
             }
 
-            return Response::json([
+            return json([
                 'success' => true,
                 'message' => 'Content deleted successfully',
             ]);
         } catch (\Exception $e) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Failed to delete content: ' . $e->getMessage(),
             ], 500);
@@ -576,14 +577,14 @@ class ContentTypeController
      * Bulk operations on content
      */
     #[Route('POST', '/admin/content-types/{id}/content/bulk')]
-    public function bulkAction(ServerRequestInterface $request, string $id): Response
+    public function bulkAction(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
         $action = $data['action'] ?? null;
         $ids = $data['ids'] ?? [];
 
         if (!$action || empty($ids)) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Action and IDs are required',
             ], 400);
@@ -591,7 +592,7 @@ class ContentTypeController
 
         $type = $this->contentTypeManager->getType($id);
         if (!$type) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Content type not found',
             ], 404);
@@ -622,7 +623,7 @@ class ContentTypeController
             }
         }
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => [
                 'processed' => $processed,

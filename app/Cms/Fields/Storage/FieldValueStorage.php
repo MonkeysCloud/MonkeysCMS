@@ -13,7 +13,7 @@ interface FieldValueStorageInterface
 {
     /**
      * Get field value(s) for an entity
-     * 
+     *
      * @param int $fieldId Field definition ID
      * @param string $entityType Entity type (e.g., 'node', 'user')
      * @param int $entityId Entity ID
@@ -24,14 +24,14 @@ interface FieldValueStorageInterface
 
     /**
      * Get all field values for an entity
-     * 
+     *
      * @return array<string, mixed> Field machine_name => value
      */
     public function getEntityValues(string $entityType, int $entityId, string $langcode = 'en'): array;
 
     /**
      * Set field value(s) for an entity
-     * 
+     *
      * @param int $fieldId Field definition ID
      * @param string $entityType Entity type
      * @param int $entityId Entity ID
@@ -42,7 +42,7 @@ interface FieldValueStorageInterface
 
     /**
      * Set multiple field values for an entity
-     * 
+     *
      * @param array<int, mixed> $values Field ID => value
      */
     public function setValues(string $entityType, int $entityId, array $values, string $langcode = 'en'): void;
@@ -65,7 +65,7 @@ interface FieldValueStorageInterface
 
 /**
  * FieldValueStorage - Database implementation for field value storage
- * 
+ *
  * Uses the EAV (Entity-Attribute-Value) pattern to store field values
  * with support for multiple value types and revisions.
  */
@@ -173,8 +173,8 @@ final class FieldValueStorage implements FieldValueStorageInterface
         $this->deleteValue($fieldId, $entityType, $entityId, $langcode);
 
         // Handle multiple values
-        $values = is_array($value) && ($field['multiple'] || $field['cardinality'] > 1) 
-            ? $value 
+        $values = is_array($value) && ($field['multiple'] || $field['cardinality'] > 1)
+            ? $value
             : [$value];
 
         // Respect cardinality
@@ -375,8 +375,8 @@ final class FieldValueStorage implements FieldValueStorageInterface
             'boolean' => $row['value_boolean'] !== null ? (bool) $row['value_boolean'] : null,
             'date' => $row['value_date'],
             'datetime', 'time' => $row['value_datetime'],
-            'json', 'object', 'array', 'address', 'geolocation', 'link', 'gallery', 
-            'entity_reference', 'taxonomy_reference', 'user_reference', 'repeater' => 
+            'json', 'object', 'array', 'address', 'geolocation', 'link', 'gallery',
+            'entity_reference', 'taxonomy_reference', 'user_reference', 'repeater' =>
                 $row['value_json'] ? json_decode($row['value_json'], true) : null,
             default => $row['value_string'] ?? $row['value_text'] ?? $row['value_json'],
         };
@@ -580,7 +580,7 @@ final class InMemoryFieldValueStorage implements FieldValueStorageInterface
     public function createRevision(string $entityType, int $entityId, int $revisionId): void
     {
         $revKey = "{$entityType}:{$entityId}:{$revisionId}";
-        
+
         foreach ($this->values as $key => $fieldValues) {
             if (str_starts_with($key, "{$entityType}:{$entityId}:")) {
                 $this->revisions[$revKey] = $fieldValues;

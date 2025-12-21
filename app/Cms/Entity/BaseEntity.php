@@ -6,7 +6,7 @@ namespace App\Cms\Entity;
 
 /**
  * BaseEntity - Abstract base class for all CMS entities
- * 
+ *
  * Provides common functionality for entities including:
  * - Property hydration and extraction
  * - Dirty tracking
@@ -27,7 +27,7 @@ abstract class BaseEntity implements EntityInterface, TimestampInterface
 
     /**
      * Create entity with optional data
-     * 
+     *
      * @param array<string, mixed> $data
      */
     public function __construct(array $data = [])
@@ -134,7 +134,7 @@ abstract class BaseEntity implements EntityInterface, TimestampInterface
 
     /**
      * Fill entity with data (mass assignment)
-     * 
+     *
      * @param array<string, mixed> $data
      */
     public function fill(array $data): static
@@ -164,7 +164,7 @@ abstract class BaseEntity implements EntityInterface, TimestampInterface
 
     /**
      * Convert entity to array
-     * 
+     *
      * @return array<string, mixed>
      */
     public function toArray(): array
@@ -202,7 +202,7 @@ abstract class BaseEntity implements EntityInterface, TimestampInterface
 
     /**
      * Convert entity to array for database storage
-     * 
+     *
      * @return array<string, mixed>
      */
     public function toDatabase(): array
@@ -237,7 +237,7 @@ abstract class BaseEntity implements EntityInterface, TimestampInterface
 
     /**
      * Create entity from database row
-     * 
+     *
      * @param array<string, mixed> $data
      */
     public static function fromDatabase(array $data): static

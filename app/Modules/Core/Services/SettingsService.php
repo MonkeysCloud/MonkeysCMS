@@ -10,7 +10,7 @@ use MonkeysLegion\Cache\CacheManager;
 
 /**
  * SettingsService - Manages site settings with caching
- * 
+ *
  * Uses MonkeysLegion-Cache for persistent caching of settings
  * with cache tagging support for easy invalidation.
  */
@@ -19,14 +19,15 @@ final class SettingsService
     private const CACHE_KEY = 'cms:settings';
     private const CACHE_TTL = 86400; // 24 hours
     private const CACHE_TAG = 'settings';
-    
+
     private array $localCache = [];
     private bool $loaded = false;
 
     public function __construct(
         private readonly Connection $connection,
         private readonly CacheManager $cache,
-    ) {}
+    ) {
+    }
 
     /**
      * Get a setting value
@@ -142,11 +143,11 @@ final class SettingsService
         // Try cache first
         $cacheKey = self::CACHE_KEY . ':group:' . $group;
         $cached = $this->cache->store()->get($cacheKey);
-        
+
         if ($cached !== null) {
             return $cached;
         }
-        
+
         $stmt = $this->connection->prepare(
             "SELECT `key`, value, type FROM settings WHERE `group` = :group ORDER BY `key`"
         );
@@ -267,7 +268,7 @@ final class SettingsService
         $this->loaded = false;
         $this->invalidateCache();
     }
-    
+
     /**
      * Invalidate persistent cache
      */
@@ -316,7 +317,7 @@ final class SettingsService
 
         // Try to get from cache first
         $cached = $this->cache->store()->get(self::CACHE_KEY);
-        
+
         if ($cached !== null) {
             $this->localCache = $cached;
             $this->loaded = true;
@@ -373,10 +374,18 @@ final class SettingsService
 
     private function detectType(mixed $value): string
     {
-        if (is_bool($value)) return 'bool';
-        if (is_int($value)) return 'int';
-        if (is_float($value)) return 'float';
-        if (is_array($value)) return 'json';
+        if (is_bool($value)) {
+            return 'bool';
+        }
+        if (is_int($value)) {
+            return 'int';
+        }
+        if (is_float($value)) {
+            return 'float';
+        }
+        if (is_array($value)) {
+            return 'json';
+        }
         return 'string';
     }
 

@@ -6,7 +6,7 @@ namespace App\Cms\Entity;
 
 /**
  * EntityInterface - Contract for all CMS entities
- * 
+ *
  * All entities in the CMS must implement this interface to work
  * with the EntityManager and related infrastructure.
  */
@@ -34,42 +34,42 @@ interface EntityInterface
 
     /**
      * Get fillable fields (mass assignable)
-     * 
+     *
      * @return string[]
      */
     public static function getFillable(): array;
 
     /**
      * Get hidden fields (excluded from toArray)
-     * 
+     *
      * @return string[]
      */
     public static function getHidden(): array;
 
     /**
      * Get field casts (type conversions)
-     * 
+     *
      * @return array<string, string>
      */
     public static function getCasts(): array;
 
     /**
      * Convert entity to array
-     * 
+     *
      * @return array<string, mixed>
      */
     public function toArray(): array;
 
     /**
      * Convert entity to array for database storage
-     * 
+     *
      * @return array<string, mixed>
      */
     public function toDatabase(): array;
 
     /**
      * Create entity from database row
-     * 
+     *
      * @param array<string, mixed> $data
      */
     public static function fromDatabase(array $data): static;
@@ -86,14 +86,14 @@ interface EntityInterface
 
     /**
      * Get modified attributes
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getDirty(): array;
 
     /**
      * Get original attribute values
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getOriginal(): array;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * Migration: Create settings table
  */
+
 return new class {
     public function up(\PDO $db): void
     {

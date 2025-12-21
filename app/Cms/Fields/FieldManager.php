@@ -17,30 +17,30 @@ use App\Cms\Fields\Widget\WidgetRegistry;
 
 /**
  * FieldManager - Main orchestration class for the field system
- * 
+ *
  * This class provides a unified API for working with fields, including:
  * - Field definition management
  * - Value storage and retrieval
  * - Rendering (editable forms and display)
  * - Validation
  * - Widget management
- * 
+ *
  * Usage:
  * ```php
  * $manager = FieldManager::create($pdo);
- * 
+ *
  * // Define a field
  * $field = $manager->defineField('title', 'string')
  *     ->required()
  *     ->withWidget('text_input')
  *     ->save();
- * 
+ *
  * // Store a value
  * $manager->setValue($field, 'node', 1, 'Hello World');
- * 
+ *
  * // Render form
  * echo $manager->renderForm($field, $value);
- * 
+ *
  * // Validate
  * $result = $manager->validate($field, $value);
  * ```
@@ -121,7 +121,7 @@ final class FieldManager
 
     /**
      * Get all fields
-     * 
+     *
      * @return FieldDefinition[]
      */
     public function getAllFields(): array
@@ -131,7 +131,7 @@ final class FieldManager
 
     /**
      * Get fields for an entity type
-     * 
+     *
      * @return FieldDefinition[]
      */
     public function getFieldsForEntity(string $entityType, ?int $bundleId = null): array
@@ -174,7 +174,7 @@ final class FieldManager
 
     /**
      * Get all field values for an entity
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getEntityValues(string $entityType, int $entityId, string $langcode = 'en'): array
@@ -193,7 +193,7 @@ final class FieldManager
 
     /**
      * Set multiple field values for an entity
-     * 
+     *
      * @param array<int, mixed> $values Field ID => value
      */
     public function setValues(string $entityType, int $entityId, array $values, string $langcode = 'en'): void
@@ -238,7 +238,7 @@ final class FieldManager
 
     /**
      * Render multiple fields as a form
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array<string, mixed> $values
      * @param array<string, array<string>> $errors
@@ -297,7 +297,7 @@ final class FieldManager
 
     /**
      * Validate multiple field values
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array<string, mixed> $values
      * @return array<string, ValidationResult>
@@ -309,7 +309,7 @@ final class FieldManager
 
     /**
      * Validate values for an entity
-     * 
+     *
      * @return array<string, ValidationResult>
      */
     public function validateEntityValues(string $entityType, array $values, ?int $bundleId = null): array
@@ -320,7 +320,7 @@ final class FieldManager
 
     /**
      * Check if all field values are valid
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array<string, mixed> $values
      */
@@ -365,7 +365,7 @@ final class FieldManager
 
     /**
      * Get available widgets for a field type
-     * 
+     *
      * @return WidgetInterface[]
      */
     public function getWidgetsForType(string $type): array
@@ -409,7 +409,7 @@ final class FieldManager
 
     /**
      * Get all CSS assets needed for current fields
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @return string[]
      */
@@ -428,7 +428,7 @@ final class FieldManager
 
     /**
      * Get all JS assets needed for current fields
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @return string[]
      */
@@ -447,7 +447,7 @@ final class FieldManager
 
     /**
      * Render asset tags (CSS and JS)
-     * 
+     *
      * @param FieldDefinition[] $fields
      */
     public function renderAssetTags(array $fields): string

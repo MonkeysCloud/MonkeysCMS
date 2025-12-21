@@ -6,7 +6,7 @@ namespace App\Cms\Fields\Definition;
 
 /**
  * FieldCollection - Collection of field definitions
- * 
+ *
  * Provides iteration, filtering, and sorting capabilities for fields.
  * Implements domain logic for field management.
  */
@@ -82,7 +82,7 @@ final class FieldCollection implements \IteratorAggregate, \Countable
 
     /**
      * Get all fields as array
-     * 
+     *
      * @return Field[]
      */
     public function all(): array
@@ -92,7 +92,7 @@ final class FieldCollection implements \IteratorAggregate, \Countable
 
     /**
      * Get machine names
-     * 
+     *
      * @return string[]
      */
     public function getMachineNames(): array
@@ -203,35 +203,35 @@ final class FieldCollection implements \IteratorAggregate, \Countable
 
     /**
      * Group fields by their 'group' setting
-     * 
+     *
      * @return array<string, self>
      */
     public function groupByGroup(): array
     {
         $groups = [];
-        
+
         foreach ($this->fields as $field) {
             $group = $field->getSetting('group', 'General');
-            
+
             if (!isset($groups[$group])) {
                 $groups[$group] = [];
             }
-            
+
             $groups[$group][$field->getMachineName()] = $field;
         }
-        
+
         return array_map(fn($fields) => new self($fields), $groups);
     }
 
     /**
      * Group fields by type category
-     * 
+     *
      * @return array<string, self>
      */
     public function groupByCategory(): array
     {
         $categories = [];
-        
+
         foreach ($this->fields as $field) {
             $category = match (true) {
                 $field->getType()->isText() => 'Text',
@@ -242,14 +242,14 @@ final class FieldCollection implements \IteratorAggregate, \Countable
                 $field->getType()->isReference() => 'Reference',
                 default => 'Other',
             };
-            
+
             if (!isset($categories[$category])) {
                 $categories[$category] = [];
             }
-            
+
             $categories[$category][$field->getMachineName()] = $field;
         }
-        
+
         return array_map(fn($fields) => new self($fields), $categories);
     }
 
@@ -259,7 +259,7 @@ final class FieldCollection implements \IteratorAggregate, \Countable
 
     /**
      * Map over fields
-     * 
+     *
      * @template T
      * @param callable(Field): T $fn
      * @return array<T>
@@ -271,7 +271,7 @@ final class FieldCollection implements \IteratorAggregate, \Countable
 
     /**
      * Reduce fields to a single value
-     * 
+     *
      * @template T
      * @param callable(T, Field): T $fn
      * @param T $initial

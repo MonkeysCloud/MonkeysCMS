@@ -12,7 +12,7 @@ use MonkeysLegion\Database\Connection;
 
 /**
  * PermissionService - Handles all authorization logic
- * 
+ *
  * Provides methods for checking user permissions against entities
  * and managing permission assignments.
  */
@@ -24,7 +24,8 @@ final class PermissionService
 
     public function __construct(
         private readonly Connection $connection,
-    ) {}
+    ) {
+    }
 
     /**
      * Set the current user context
@@ -220,7 +221,7 @@ final class PermissionService
 
     /**
      * Get all permissions for an entity type
-     * 
+     *
      * @return Permission[]
      */
     public function getEntityPermissions(string $entityType): array
@@ -229,7 +230,7 @@ final class PermissionService
             "SELECT * FROM permissions WHERE entity_type = :entity_type ORDER BY weight, name"
         );
         $stmt->execute(['entity_type' => $entityType]);
-        
+
         $permissions = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $permission = new Permission();
@@ -242,7 +243,7 @@ final class PermissionService
 
     /**
      * Get all permissions grouped by group
-     * 
+     *
      * @return array<string, Permission[]>
      */
     public function getAllPermissionsGrouped(): array
@@ -263,7 +264,7 @@ final class PermissionService
 
     /**
      * Get role's permissions
-     * 
+     *
      * @return Permission[]
      */
     public function getRolePermissions(Role $role): array
@@ -338,7 +339,7 @@ final class PermissionService
 
     /**
      * Set role permissions (replaces all existing)
-     * 
+     *
      * @param int[] $permissionIds
      */
     public function setRolePermissions(Role $role, array $permissionIds): void
@@ -422,7 +423,7 @@ final class PermissionService
 
     /**
      * Set user roles (replaces all existing)
-     * 
+     *
      * @param int[] $roleIds
      */
     public function setUserRoles(User $user, array $roleIds): void
@@ -472,17 +473,17 @@ final class PermissionService
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $role = new Role();
             $role->hydrate($row);
-            
+
             // Load role's permissions
             $role->permissions = $this->getRolePermissions($role);
-            
+
             $user->roles[] = $role;
         }
     }
 
     /**
      * Register permissions for an entity type
-     * 
+     *
      * @param string[] $actions
      */
     public function registerEntityPermissions(
@@ -531,7 +532,7 @@ final class PermissionService
     {
         $class = get_class($entity);
         $reflection = new \ReflectionClass($class);
-        
+
         // Try to get from ContentType attribute
         $attributes = $reflection->getAttributes(\App\Cms\Attributes\ContentType::class);
         if (!empty($attributes)) {
@@ -546,7 +547,7 @@ final class PermissionService
 
     /**
      * Assert current user has permission (throws if not)
-     * 
+     *
      * @throws \RuntimeException
      */
     public function authorize(string $permission): void
@@ -558,7 +559,7 @@ final class PermissionService
 
     /**
      * Assert current user can perform action on entity
-     * 
+     *
      * @throws \RuntimeException
      */
     public function authorizeEntity(string $action, BaseEntity $entity): void

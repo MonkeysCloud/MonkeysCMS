@@ -6,12 +6,12 @@ namespace App\Cms\Fields\Http;
 
 /**
  * Field API Routes
- * 
+ *
  * This file defines all API routes for the field widget system.
  * Import this into your application's router configuration.
- * 
+ *
  * Example usage with a PSR-7 compatible router:
- * 
+ *
  * ```php
  * $router->group('/api/fields', function($router) {
  *     FieldRoutes::register($router);
@@ -22,7 +22,7 @@ final class FieldRoutes
 {
     /**
      * Register all field-related routes
-     * 
+     *
      * @param object $router Any router with get/post/put/delete methods
      */
     public static function register(object $router): void
@@ -56,9 +56,9 @@ final class FieldRoutes
 
     /**
      * Get route definitions as an array
-     * 
+     *
      * Useful for frameworks that use array-based route definitions.
-     * 
+     *
      * @return array<array{method: string, path: string, handler: array}>
      */
     public static function getDefinitions(): array

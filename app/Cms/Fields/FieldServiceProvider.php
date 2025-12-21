@@ -12,7 +12,7 @@ use Psr\Container\ContainerInterface;
 
 /**
  * FieldServiceProvider - Registers field-related services in the container
- * 
+ *
  * This provider sets up the field widget system with all its dependencies:
  * - FieldValidator - For validating field values
  * - WidgetRegistry - For managing widgets
@@ -22,7 +22,7 @@ final class FieldServiceProvider
 {
     /**
      * Get service definitions for the container
-     * 
+     *
      * @return array<string, callable>
      */
     public static function getDefinitions(): array

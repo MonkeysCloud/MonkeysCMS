@@ -11,7 +11,7 @@ use App\Cms\Fields\Widget\WidgetRegistry;
 
 /**
  * FieldCommands - CLI commands for field management
- * 
+ *
  * Usage:
  *   php artisan fields:migrate       - Run field migrations
  *   php artisan fields:list          - List all fields
@@ -127,7 +127,11 @@ class FieldCommands
             $this->output("\n" . str_repeat('=', 80));
             $this->output(sprintf(
                 "%-5s %-20s %-25s %-15s %-8s",
-                "ID", "Name", "Machine Name", "Type", "Required"
+                "ID",
+                "Name",
+                "Machine Name",
+                "Type",
+                "Required"
             ));
             $this->output(str_repeat('-', 80));
 
@@ -165,8 +169,8 @@ class FieldCommands
             );
             $type = $options['type'] ?? $this->prompt("Field type", "string");
             $description = $options['description'] ?? $this->prompt("Description", "");
-            $required = isset($options['required']) 
-                ? (bool) $options['required'] 
+            $required = isset($options['required'])
+                ? (bool) $options['required']
                 : $this->confirm("Required?", false);
 
             // Create field definition
@@ -208,8 +212,8 @@ class FieldCommands
 
             $repo = $this->getRepository();
 
-            $field = $id 
-                ? $repo->find((int) $id) 
+            $field = $id
+                ? $repo->find((int) $id)
                 : $repo->findByMachineName($machineName);
 
             if (!$field) {
@@ -390,8 +394,8 @@ class FieldCommands
             }
 
             $repo = $this->getRepository();
-            $field = $id 
-                ? $repo->find((int) $id) 
+            $field = $id
+                ? $repo->find((int) $id)
                 : $repo->findByMachineName($machineName);
 
             if (!$field) {
@@ -492,9 +496,9 @@ class FieldCommands
     {
         $suffix = $default !== null ? " [{$default}]" : "";
         echo "{$question}{$suffix}: ";
-        
+
         $input = trim(fgets(STDIN));
-        
+
         return $input !== '' ? $input : $default;
     }
 
@@ -505,13 +509,13 @@ class FieldCommands
     {
         $suffix = $default ? " [Y/n]" : " [y/N]";
         echo "{$question}{$suffix}: ";
-        
+
         $input = strtolower(trim(fgets(STDIN)));
-        
+
         if ($input === '') {
             return $default;
         }
-        
+
         return in_array($input, ['y', 'yes', '1', 'true']);
     }
 
@@ -534,7 +538,7 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($argv[0] ?? '')
 
     for ($i = 2; $i < count($argv); $i++) {
         $arg = $argv[$i];
-        
+
         if (str_starts_with($arg, '--')) {
             $parts = explode('=', substr($arg, 2), 2);
             $options[$parts[0]] = $parts[1] ?? true;
@@ -563,7 +567,7 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($argv[0] ?? '')
             'import' => $commands->import($options),
             'show' => $commands->show($options),
             'attach' => $commands->attach($options),
-            default => (function() use ($command) {
+            default => (function () use ($command) {
                 echo "Unknown command: {$command}\n\n";
                 echo "Available commands:\n";
                 echo "  migrate    - Run database migrations\n";

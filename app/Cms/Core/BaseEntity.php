@@ -13,16 +13,16 @@ use ReflectionProperty;
 
 /**
  * BaseEntity - Abstract base class for all CMS content types
- * 
+ *
  * Provides common functionality for all CMS entities:
  * - Automatic ID management
  * - Created/Updated timestamps
  * - Hydration from database arrays
  * - Serialization to arrays
  * - Dirty tracking for optimized updates
- * 
+ *
  * Every content type entity should extend this class.
- * 
+ *
  * @example
  * ```php
  * #[ContentType(tableName: 'products', label: 'Product')]
@@ -67,10 +67,10 @@ abstract class BaseEntity
 
     /**
      * Hydrate the entity from a database row array
-     * 
+     *
      * This method maps database column values to entity properties,
      * handling type coercion for dates, booleans, and JSON fields.
-     * 
+     *
      * @param array<string, mixed> $data Associative array from database
      * @return static
      */
@@ -88,11 +88,11 @@ abstract class BaseEntity
 
             $actualPropertyName = $reflection->hasProperty($propertyName) ? $propertyName : $column;
             $property = $reflection->getProperty($actualPropertyName);
-            
+
             // Get the property type for proper casting
             $type = $property->getType();
             $typeName = $type?->getName();
-            
+
             // Handle null values
             if ($value === null) {
                 if ($type?->allowsNull()) {
@@ -108,11 +108,11 @@ abstract class BaseEntity
                 'bool' => (bool) $value || $value === '1',
                 'string' => (string) $value,
                 'array' => is_string($value) ? json_decode($value, true) : (array) $value,
-                DateTimeImmutable::class => $value instanceof DateTimeImmutable 
-                    ? $value 
+                DateTimeImmutable::class => $value instanceof DateTimeImmutable
+                    ? $value
                     : new DateTimeImmutable($value),
-                \DateTime::class => $value instanceof \DateTime 
-                    ? $value 
+                \DateTime::class => $value instanceof \DateTime
+                    ? $value
                     : new \DateTime($value),
                 default => $value,
             };
@@ -128,7 +128,7 @@ abstract class BaseEntity
 
     /**
      * Convert entity to an associative array for database storage
-     * 
+     *
      * @param bool $includeNulls Whether to include null values
      * @return array<string, mixed>
      */
@@ -165,7 +165,7 @@ abstract class BaseEntity
 
     /**
      * Get only the modified fields since last hydration
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getDirtyFields(): array
@@ -180,9 +180,9 @@ abstract class BaseEntity
 
             // Compare values (handling object comparison)
             $hasChanged = match (true) {
-                $currentValue instanceof DateTimeImmutable && $originalValue instanceof DateTimeImmutable 
+                $currentValue instanceof DateTimeImmutable && $originalValue instanceof DateTimeImmutable
                     => $currentValue->getTimestamp() !== $originalValue->getTimestamp(),
-                is_object($currentValue) && is_object($originalValue) 
+                is_object($currentValue) && is_object($originalValue)
                     => $currentValue != $originalValue,
                 default => $currentValue !== $originalValue,
             };
@@ -216,7 +216,7 @@ abstract class BaseEntity
     public function markPersisted(): void
     {
         $this->isNew = false;
-        
+
         // Update original values to current state
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
@@ -238,11 +238,11 @@ abstract class BaseEntity
     public function prePersist(): void
     {
         $now = new DateTimeImmutable();
-        
+
         if ($this->created_at === null) {
             $this->created_at = $now;
         }
-        
+
         $this->updated_at = $now;
     }
 
@@ -264,7 +264,7 @@ abstract class BaseEntity
 
     /**
      * Get the ContentType attribute metadata from this entity
-     * 
+     *
      * @return ContentType|null
      */
     public static function getContentTypeMetadata(): ?ContentType

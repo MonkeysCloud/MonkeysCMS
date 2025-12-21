@@ -6,29 +6,28 @@ namespace App\Controllers\Admin;
 
 use App\Cms\Modules\ModuleException;
 use App\Cms\Modules\ModuleManager;
-use Laminas\Diactoros\Response\JsonResponse;
-use MonkeysLegion\Router\Attribute\Route;
+use MonkeysLegion\Router\Attributes\Route;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * ModuleController - Admin API for managing CMS modules
- * 
+ *
  * This controller provides REST endpoints for:
  * - Listing available and enabled modules
  * - Enabling/disabling modules (with auto-sync)
  * - Viewing module details and dependencies
- * 
+ *
  * Security Note: In production, protect these endpoints with admin authentication!
- * 
+ *
  * @example
  * ```bash
  * # List all modules
  * curl -X GET http://localhost/admin/modules
- * 
+ *
  * # Enable a module
  * curl -X POST http://localhost/admin/modules/Custom/Ecommerce/enable
- * 
+ *
  * # Disable a module
  * curl -X POST http://localhost/admin/modules/Custom/Ecommerce/disable
  * ```
@@ -38,11 +37,12 @@ final class ModuleController
 {
     public function __construct(
         private readonly ModuleManager $moduleManager,
-    ) {}
+    ) {
+    }
 
     /**
      * List all available modules
-     * 
+     *
      * @return ResponseInterface JSON list of modules with their status
      */
     #[Route('GET', '/', name: 'index')]
@@ -50,7 +50,7 @@ final class ModuleController
     {
         $modules = $this->moduleManager->getAvailableModules();
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'data' => [
                 'modules' => $modules,
@@ -68,7 +68,7 @@ final class ModuleController
     {
         $enabled = $this->moduleManager->getEnabledModules();
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'data' => $enabled,
         ]);
@@ -81,7 +81,7 @@ final class ModuleController
     public function details(string $module): ResponseInterface
     {
         if (!$this->moduleManager->moduleExists($module)) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => "Module '{$module}' not found",
             ], 404);
@@ -91,7 +91,7 @@ final class ModuleController
         $moduleData = $modules[$module] ?? null;
 
         if ($moduleData === null) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Module data not available',
             ], 404);
@@ -104,7 +104,7 @@ final class ModuleController
             $entities = [];
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'data' => array_merge($moduleData, [
                 'discovered_entities' => $entities,
@@ -114,7 +114,7 @@ final class ModuleController
 
     /**
      * Enable a module
-     * 
+     *
      * This is the key endpoint that triggers the auto-sync feature:
      * 1. ModuleManager discovers entity classes in the module
      * 2. SchemaGenerator creates SQL from entity attributes
@@ -132,7 +132,7 @@ final class ModuleController
             // Enable the module
             $result = $this->moduleManager->enable($module, $syncSchema);
 
-            return new JsonResponse([
+            return json([
                 'success' => true,
                 'message' => "Module '{$module}' enabled successfully",
                 'data' => [
@@ -142,12 +142,12 @@ final class ModuleController
                 ],
             ]);
         } catch (ModuleException $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => $e->getMessage(),
             ], 400);
         } catch (\Exception $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Failed to enable module: ' . $e->getMessage(),
             ], 500);
@@ -156,7 +156,7 @@ final class ModuleController
 
     /**
      * Disable a module
-     * 
+     *
      * By default, this does NOT remove database tables - data is preserved.
      * Pass {"remove_tables": true} in body to drop tables (dangerous!).
      */
@@ -169,7 +169,7 @@ final class ModuleController
 
             // Require confirmation for table removal
             if ($removeTables && !($body['confirm_removal'] ?? false)) {
-                return new JsonResponse([
+                return json([
                     'success' => false,
                     'error' => 'Table removal requires explicit confirmation',
                     'message' => 'Set "confirm_removal": true to proceed with data deletion',
@@ -178,7 +178,7 @@ final class ModuleController
 
             $result = $this->moduleManager->disable($module, $removeTables);
 
-            return new JsonResponse([
+            return json([
                 'success' => true,
                 'message' => "Module '{$module}' disabled successfully",
                 'data' => [
@@ -187,12 +187,12 @@ final class ModuleController
                 ],
             ]);
         } catch (ModuleException $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => $e->getMessage(),
             ], 400);
         } catch (\Exception $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Failed to disable module: ' . $e->getMessage(),
             ], 500);
@@ -201,7 +201,7 @@ final class ModuleController
 
     /**
      * Re-sync schema for a module
-     * 
+     *
      * Useful after making changes to entity attributes.
      * This runs ALTER TABLE statements to sync schema changes.
      */
@@ -210,7 +210,7 @@ final class ModuleController
     {
         try {
             if (!$this->moduleManager->isEnabled($module)) {
-                return new JsonResponse([
+                return json([
                     'success' => false,
                     'error' => 'Module must be enabled before syncing schema',
                 ], 400);
@@ -224,7 +224,7 @@ final class ModuleController
                 $synced[] = $entityClass;
             }
 
-            return new JsonResponse([
+            return json([
                 'success' => true,
                 'message' => 'Schema synchronized successfully',
                 'data' => [
@@ -233,7 +233,7 @@ final class ModuleController
                 ],
             ]);
         } catch (\Exception $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Schema sync failed: ' . $e->getMessage(),
             ], 500);
@@ -242,7 +242,7 @@ final class ModuleController
 
     /**
      * Preview schema SQL without executing
-     * 
+     *
      * Useful for reviewing what tables/columns will be created.
      */
     #[Route('GET', '/{module:.+}/schema-preview', name: 'schema.preview')]
@@ -250,16 +250,16 @@ final class ModuleController
     {
         try {
             if (!$this->moduleManager->moduleExists($module)) {
-                return new JsonResponse([
+                return json([
                     'success' => false,
                     'error' => "Module '{$module}' not found",
                 ], 404);
             }
 
             $entities = $this->moduleManager->discoverEntities($module);
-            
+
             if (empty($entities)) {
-                return new JsonResponse([
+                return json([
                     'success' => true,
                     'data' => [
                         'module' => $module,
@@ -277,7 +277,7 @@ final class ModuleController
                 $sqlStatements[$entityClass] = $schemaGenerator->generateSql($entityClass);
             }
 
-            return new JsonResponse([
+            return json([
                 'success' => true,
                 'data' => [
                     'module' => $module,
@@ -286,7 +286,7 @@ final class ModuleController
                 ],
             ]);
         } catch (\Exception $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Failed to generate schema preview: ' . $e->getMessage(),
             ], 500);

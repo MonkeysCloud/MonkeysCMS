@@ -13,31 +13,31 @@ use ReflectionClass;
 
 /**
  * CmsRepository - Generic repository for CMS content entities
- * 
+ *
  * This repository provides CRUD operations for any CMS entity without
  * requiring entity-specific repository classes.
- * 
+ *
  * Key features:
  * - Generic save/find/delete for any entity
  * - Query builder integration for complex queries
  * - Automatic hydration and serialization
  * - Pagination support
  * - Search across multiple fields
- * 
+ *
  * Unlike Drupal's entity API (complex, hook-based), this is simple
  * and predictable - just call save($entity).
- * 
+ *
  * Unlike WordPress (everything through wp_insert_post), this works
  * with proper typed entities and any content type.
- * 
+ *
  * @example
  * ```php
  * $repo = new CmsRepository($database, $queryBuilder);
- * 
+ *
  * $product = new Product();
  * $product->name = 'Widget';
  * $repo->save($product);
- * 
+ *
  * $found = $repo->find(Product::class, $product->id);
  * ```
  */
@@ -50,11 +50,12 @@ final class CmsRepository
     public function __construct(
         private readonly Connection $connection,
         private readonly QueryBuilder $qb,
-    ) {}
+    ) {
+    }
 
     /**
      * Save an entity (insert or update)
-     * 
+     *
      * @template T of BaseEntity
      * @param T $entity The entity to save
      * @return T The saved entity with ID populated
@@ -73,7 +74,7 @@ final class CmsRepository
 
     /**
      * Find an entity by ID
-     * 
+     *
      * @template T of BaseEntity
      * @param class-string<T> $entityClass Fully qualified class name
      * @param int|string $id Primary key value
@@ -82,7 +83,7 @@ final class CmsRepository
     public function find(string $entityClass, int|string $id): ?BaseEntity
     {
         $tableName = $this->getTableName($entityClass);
-        
+
         $row = $this->qb
             ->from($tableName)
             ->where('id', '=', $id)
@@ -99,7 +100,7 @@ final class CmsRepository
 
     /**
      * Find entities by criteria
-     * 
+     *
      * @template T of BaseEntity
      * @param class-string<T> $entityClass
      * @param array<string, mixed> $criteria Column => value pairs
@@ -116,7 +117,7 @@ final class CmsRepository
         ?int $offset = null,
     ): array {
         $tableName = $this->getTableName($entityClass);
-        
+
         $query = $this->qb->from($tableName);
 
         foreach ($criteria as $column => $value) {
@@ -151,7 +152,7 @@ final class CmsRepository
 
     /**
      * Find a single entity by criteria
-     * 
+     *
      * @template T of BaseEntity
      * @param class-string<T> $entityClass
      * @param array<string, mixed> $criteria
@@ -165,7 +166,7 @@ final class CmsRepository
 
     /**
      * Find all entities of a type
-     * 
+     *
      * @template T of BaseEntity
      * @param class-string<T> $entityClass
      * @param array<string, string> $orderBy
@@ -178,7 +179,7 @@ final class CmsRepository
 
     /**
      * Delete an entity
-     * 
+     *
      * @param BaseEntity $entity
      * @return bool True if deleted successfully
      */
@@ -200,7 +201,7 @@ final class CmsRepository
 
     /**
      * Delete entities by criteria
-     * 
+     *
      * @param class-string<BaseEntity> $entityClass
      * @param array<string, mixed> $criteria
      * @return int Number of deleted rows
@@ -208,7 +209,7 @@ final class CmsRepository
     public function deleteBy(string $entityClass, array $criteria): int
     {
         $tableName = $this->getTableName($entityClass);
-        
+
         $query = $this->qb->from($tableName);
 
         foreach ($criteria as $column => $value) {
@@ -226,7 +227,7 @@ final class CmsRepository
 
     /**
      * Count entities
-     * 
+     *
      * @param class-string<BaseEntity> $entityClass
      * @param array<string, mixed> $criteria
      * @return int
@@ -234,7 +235,7 @@ final class CmsRepository
     public function count(string $entityClass, array $criteria = []): int
     {
         $tableName = $this->getTableName($entityClass);
-        
+
         $query = $this->qb->from($tableName);
 
         foreach ($criteria as $column => $value) {
@@ -252,7 +253,7 @@ final class CmsRepository
 
     /**
      * Paginated query results
-     * 
+     *
      * @template T of BaseEntity
      * @param class-string<T> $entityClass
      * @param int $page Current page (1-indexed)
@@ -285,7 +286,7 @@ final class CmsRepository
 
     /**
      * Full-text search across searchable fields
-     * 
+     *
      * @template T of BaseEntity
      * @param class-string<T> $entityClass
      * @param string $query Search query
@@ -300,7 +301,7 @@ final class CmsRepository
         int $limit = 50,
     ): array {
         $tableName = $this->getTableName($entityClass);
-        
+
         // If no fields specified, find searchable fields from entity
         if (empty($fields)) {
             $fields = $this->getSearchableFields($entityClass);
@@ -313,9 +314,9 @@ final class CmsRepository
         // Build LIKE query for each field
         $qb = $this->qb->from($tableName);
         $searchTerm = '%' . $query . '%';
-        
+
         // Use OR conditions for each field
-        $qb->where(function($q) use ($fields, $searchTerm) {
+        $qb->where(function ($q) use ($fields, $searchTerm) {
             foreach ($fields as $i => $field) {
                 if ($i === 0) {
                     $q->where($field, 'LIKE', $searchTerm);
@@ -337,7 +338,7 @@ final class CmsRepository
 
     /**
      * Execute a raw query and hydrate results
-     * 
+     *
      * @template T of BaseEntity
      * @param class-string<T> $entityClass
      * @param string $sql Raw SQL query
@@ -370,7 +371,7 @@ final class CmsRepository
     private function insert(BaseEntity $entity, string $tableName): BaseEntity
     {
         $data = $entity->toArray();
-        
+
         // Remove ID if null (let auto-increment handle it)
         if (isset($data['id']) && $data['id'] === null) {
             unset($data['id']);
@@ -442,7 +443,7 @@ final class CmsRepository
 
         $reflection = new ReflectionClass($entityClass);
         $attrs = $reflection->getAttributes(ContentType::class);
-        
+
         if (!empty($attrs)) {
             return $attrs[0]->newInstance()->tableName;
         }
@@ -453,7 +454,7 @@ final class CmsRepository
 
     /**
      * Get searchable fields from entity definition
-     * 
+     *
      * @return array<string>
      */
     private function getSearchableFields(string $entityClass): array
@@ -463,7 +464,7 @@ final class CmsRepository
 
         foreach ($reflection->getProperties() as $property) {
             $attrs = $property->getAttributes(\App\Cms\Attributes\Field::class);
-            
+
             if (!empty($attrs)) {
                 $field = $attrs[0]->newInstance();
                 if ($field->searchable) {

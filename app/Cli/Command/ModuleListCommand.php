@@ -10,7 +10,7 @@ use MonkeysLegion\Cli\Console\Command;
 
 /**
  * ModuleListCommand - List all CMS modules
- * 
+ *
  * Usage: ./monkeys cms:module:list
  */
 #[CommandAttr('cms:module:list', 'List all available CMS modules and their status')]
@@ -36,7 +36,7 @@ final class ModuleListCommand extends Command
 
         // Group by category (Contrib/Custom)
         $grouped = ['Custom' => [], 'Contrib' => [], 'Other' => []];
-        
+
         foreach ($modules as $name => $info) {
             if (str_starts_with($name, 'Custom/')) {
                 $grouped['Custom'][$name] = $info;
@@ -53,28 +53,28 @@ final class ModuleListCommand extends Command
             }
 
             $this->line("  {$category}:");
-            
+
             foreach ($categoryModules as $name => $info) {
                 $status = ($info['enabled'] ?? false) ? "\033[32m✓\033[0m" : "\033[90m○\033[0m";
                 $version = $info['version'] ?? '1.0.0';
                 $description = $info['description'] ?? '';
-                
+
                 // Format output
                 $shortName = str_replace([$category . '/', 'Custom/', 'Contrib/'], '', $name);
                 $this->line("    {$status} {$shortName} (v{$version})");
-                
+
                 if (!empty($description)) {
                     $this->line("      {$description}");
                 }
             }
-            
+
             $this->line('');
         }
 
         // Summary
         $enabledCount = count($this->moduleManager->getEnabledModules());
         $totalCount = count($modules);
-        
+
         $this->line("Total: {$enabledCount}/{$totalCount} modules enabled");
 
         return self::SUCCESS;

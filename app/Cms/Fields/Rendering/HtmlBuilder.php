@@ -6,7 +6,7 @@ namespace App\Cms\Fields\Rendering;
 
 /**
  * HtmlBuilder - Fluent HTML element builder
- * 
+ *
  * Provides a clean OOP way to build HTML elements with proper escaping.
  */
 final class HtmlBuilder
@@ -95,11 +95,11 @@ final class HtmlBuilder
         $option = (new self('option'))
             ->attr('value', $value)
             ->text($label);
-        
+
         if ($selected) {
             $option->attr('selected', true);
         }
-        
+
         return $option;
     }
 
@@ -291,7 +291,7 @@ final class HtmlBuilder
     public function render(): string
     {
         $html = '<' . $this->escape($this->tag);
-        
+
         // Render attributes
         foreach ($this->attributes as $name => $value) {
             if ($value === true) {
@@ -300,13 +300,13 @@ final class HtmlBuilder
                 $html .= ' ' . $this->escape($name) . '="' . $this->escape($value) . '"';
             }
         }
-        
+
         if ($this->selfClosing && empty($this->content)) {
             return $html . '>';
         }
-        
+
         $html .= '>';
-        
+
         // Render content
         foreach ($this->content as $item) {
             $html .= match ($item['type']) {
@@ -315,9 +315,9 @@ final class HtmlBuilder
                 'builder' => $item['value']->render(),
             };
         }
-        
+
         $html .= '</' . $this->escape($this->tag) . '>';
-        
+
         return $html;
     }
 

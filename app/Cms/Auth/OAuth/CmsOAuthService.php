@@ -14,7 +14,7 @@ use MonkeysLegion\Auth\OAuth\GitHubProvider;
 
 /**
  * CmsOAuthService - OAuth integration for MonkeysCMS
- * 
+ *
  * Wraps MonkeysLegion-Auth OAuth with CMS-specific functionality:
  * - Provider management
  * - User linking
@@ -72,13 +72,13 @@ class CmsOAuthService
 
     /**
      * Get available providers
-     * 
+     *
      * @return string[]
      */
     public function getAvailableProviders(): array
     {
         $providers = [];
-        
+
         if (!empty($this->config['google']['client_id'])) {
             $providers[] = 'google';
         }
@@ -109,7 +109,7 @@ class CmsOAuthService
     {
         // Verify state
         $sessionState = $this->session->pull('oauth_state');
-        
+
         if (!$sessionState || !hash_equals($sessionState, $state)) {
             return new OAuthResult(
                 success: false,
@@ -133,14 +133,13 @@ class CmsOAuthService
 
             // Log the user in
             $tokens = $this->auth->getAuthService()->issueTokenPair($user);
-            
+
             return new OAuthResult(
                 success: true,
                 user: $user,
                 tokens: $tokens,
                 isNewUser: $this->isNewUser,
             );
-
         } catch (\Exception $e) {
             return new OAuthResult(
                 success: false,
@@ -158,11 +157,11 @@ class CmsOAuthService
     {
         // Check if OAuth account is already linked
         $existingLink = $this->findOAuthAccount($provider, $oauthUser->providerId);
-        
+
         if ($existingLink) {
             // Update tokens
             $this->updateOAuthTokens($existingLink['id'], $oauthUser);
-            
+
             return $this->userProvider->findById($existingLink['user_id']);
         }
 
@@ -312,7 +311,7 @@ class CmsOAuthService
 
             // Check if already linked to another user
             $existing = $this->findOAuthAccount($provider, $oauthUser->providerId);
-            
+
             if ($existing && $existing['user_id'] !== $user->getId()) {
                 return new OAuthResult(
                     success: false,
@@ -325,7 +324,6 @@ class CmsOAuthService
             }
 
             return new OAuthResult(success: true, user: $user);
-
         } catch (\Exception $e) {
             return new OAuthResult(
                 success: false,
@@ -341,7 +339,7 @@ class CmsOAuthService
     {
         // Ensure user has password or other OAuth account
         $accounts = $this->getLinkedAccounts($userId);
-        
+
         if (count($accounts) <= 1) {
             // Check if user has a password
             $user = $this->userProvider->findById($userId);
@@ -374,7 +372,8 @@ class OAuthResult
         public readonly ?object $tokens = null,
         public readonly bool $isNewUser = false,
         public readonly ?string $error = null,
-    ) {}
+    ) {
+    }
 
     public function failed(): bool
     {

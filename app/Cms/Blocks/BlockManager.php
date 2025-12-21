@@ -12,22 +12,22 @@ use MonkeysLegion\Cache\CacheManager;
 
 /**
  * BlockManager - Registry and manager for all block types
- * 
+ *
  * Manages both:
  * - Code-defined block types (PHP classes implementing BlockTypeInterface)
  * - Database-defined block types (stored in block_types table)
- * 
+ *
  * @example
  * ```php
  * // Register code-defined type
  * $manager->registerType(new HtmlBlock());
- * 
+ *
  * // Get all available types
  * $types = $manager->getTypes();
- * 
+ *
  * // Get a specific type
  * $type = $manager->getType('html');
- * 
+ *
  * // Create a database-defined type
  * $manager->createDatabaseType([
  *     'label' => 'FAQ Block',
@@ -52,7 +52,8 @@ final class BlockManager
     public function __construct(
         private readonly Connection $connection,
         private readonly ?CacheManager $cache = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Register a code-defined block type
@@ -74,7 +75,7 @@ final class BlockManager
 
     /**
      * Get all block types (code + database)
-     * 
+     *
      * @return array<string, array{
      *     id: string,
      *     label: string,
@@ -88,9 +89,9 @@ final class BlockManager
     public function getTypes(): array
     {
         $this->ensureInitialized();
-        
+
         $types = [];
-        
+
         // Code-defined types
         foreach ($this->codeTypes as $id => $type) {
             $types[$id] = [
@@ -104,7 +105,7 @@ final class BlockManager
                 'class' => get_class($type),
             ];
         }
-        
+
         // Database-defined types
         foreach ($this->dbTypes as $id => $type) {
             $types[$id] = [
@@ -118,7 +119,7 @@ final class BlockManager
                 'entity' => $type,
             ];
         }
-        
+
         // Sort by category then label
         uasort($types, function ($a, $b) {
             $catCmp = strcmp($a['category'], $b['category']);
@@ -127,7 +128,7 @@ final class BlockManager
             }
             return strcmp($a['label'], $b['label']);
         });
-        
+
         return $types;
     }
 
@@ -138,7 +139,7 @@ final class BlockManager
     {
         $types = $this->getTypes();
         $grouped = [];
-        
+
         foreach ($types as $type) {
             $category = $type['category'];
             if (!isset($grouped[$category])) {
@@ -146,9 +147,9 @@ final class BlockManager
             }
             $grouped[$category][] = $type;
         }
-        
+
         ksort($grouped);
-        
+
         return $grouped;
     }
 
@@ -158,7 +159,7 @@ final class BlockManager
     public function getType(string $id): ?array
     {
         $this->ensureInitialized();
-        
+
         // Check code types first
         if (isset($this->codeTypes[$id])) {
             $type = $this->codeTypes[$id];
@@ -173,7 +174,7 @@ final class BlockManager
                 'instance' => $type,
             ];
         }
-        
+
         // Check database types
         if (isset($this->dbTypes[$id])) {
             $type = $this->dbTypes[$id];
@@ -188,7 +189,7 @@ final class BlockManager
                 'entity' => $type,
             ];
         }
-        
+
         return null;
     }
 
@@ -237,10 +238,10 @@ final class BlockManager
         $entity->css_assets = $data['css_assets'] ?? [];
         $entity->js_assets = $data['js_assets'] ?? [];
         $entity->enabled = $data['enabled'] ?? true;
-        
+
         // Save the entity
         $entity->prePersist();
-        
+
         $stmt = $this->connection->prepare("
             INSERT INTO block_types (
                 type_id, label, description, icon, category, template,
@@ -252,7 +253,7 @@ final class BlockManager
                 :cache_ttl, :css_assets, :js_assets, :weight, :created_at, :updated_at
             )
         ");
-        
+
         $stmt->execute([
             'type_id' => $entity->type_id,
             'label' => $entity->label,
@@ -271,20 +272,20 @@ final class BlockManager
             'created_at' => $entity->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $entity->updated_at->format('Y-m-d H:i:s'),
         ]);
-        
+
         $entity->id = (int) $this->connection->lastInsertId();
-        
+
         // Add fields if provided
         if (!empty($data['fields'])) {
             foreach ($data['fields'] as $fieldData) {
                 $this->addFieldToType($entity->id, $fieldData);
             }
         }
-        
+
         // Update cache
         $this->dbTypes[$entity->type_id] = $entity;
         $this->invalidateCache();
-        
+
         return $entity;
     }
 
@@ -298,17 +299,39 @@ final class BlockManager
             return null;
         }
 
-        if (isset($data['label'])) $entity->label = $data['label'];
-        if (isset($data['description'])) $entity->description = $data['description'];
-        if (isset($data['icon'])) $entity->icon = $data['icon'];
-        if (isset($data['category'])) $entity->category = $data['category'];
-        if (isset($data['template'])) $entity->template = $data['template'];
-        if (isset($data['default_settings'])) $entity->default_settings = $data['default_settings'];
-        if (isset($data['allowed_regions'])) $entity->allowed_regions = $data['allowed_regions'];
-        if (isset($data['cache_ttl'])) $entity->cache_ttl = $data['cache_ttl'];
-        if (isset($data['css_assets'])) $entity->css_assets = $data['css_assets'];
-        if (isset($data['js_assets'])) $entity->js_assets = $data['js_assets'];
-        if (isset($data['enabled'])) $entity->enabled = $data['enabled'];
+        if (isset($data['label'])) {
+            $entity->label = $data['label'];
+        }
+        if (isset($data['description'])) {
+            $entity->description = $data['description'];
+        }
+        if (isset($data['icon'])) {
+            $entity->icon = $data['icon'];
+        }
+        if (isset($data['category'])) {
+            $entity->category = $data['category'];
+        }
+        if (isset($data['template'])) {
+            $entity->template = $data['template'];
+        }
+        if (isset($data['default_settings'])) {
+            $entity->default_settings = $data['default_settings'];
+        }
+        if (isset($data['allowed_regions'])) {
+            $entity->allowed_regions = $data['allowed_regions'];
+        }
+        if (isset($data['cache_ttl'])) {
+            $entity->cache_ttl = $data['cache_ttl'];
+        }
+        if (isset($data['css_assets'])) {
+            $entity->css_assets = $data['css_assets'];
+        }
+        if (isset($data['js_assets'])) {
+            $entity->js_assets = $data['js_assets'];
+        }
+        if (isset($data['enabled'])) {
+            $entity->enabled = $data['enabled'];
+        }
 
         $entity->updated_at = new \DateTimeImmutable();
 
@@ -474,17 +497,17 @@ final class BlockManager
     public function renderBlock(Block $block, array $context = []): string
     {
         $typeId = $block->block_type;
-        
+
         // Try code-defined type first
         if (isset($this->codeTypes[$typeId])) {
             return $this->codeTypes[$typeId]->render($block, $context);
         }
-        
+
         // Try database-defined type
         if (isset($this->dbTypes[$typeId])) {
             return $this->renderDatabaseBlock($this->dbTypes[$typeId], $block, $context);
         }
-        
+
         // Fallback: render as basic content
         return $block->getRenderedBody();
     }
@@ -503,17 +526,17 @@ final class BlockManager
             include $type->template;
             return ob_get_clean() ?: '';
         }
-        
+
         // Default rendering
         $html = '<div class="block block--' . htmlspecialchars($type->type_id) . '">';
-        
+
         if ($block->show_title && $block->title) {
             $html .= '<h3 class="block__title">' . htmlspecialchars($block->title) . '</h3>';
         }
-        
+
         $html .= '<div class="block__content">';
         $html .= $block->getRenderedBody();
-        
+
         // Render custom fields
         foreach ($type->fields as $field) {
             $value = $block->settings[$field->machine_name] ?? null;
@@ -524,9 +547,9 @@ final class BlockManager
                 $html .= '</div>';
             }
         }
-        
+
         $html .= '</div></div>';
-        
+
         return $html;
     }
 
@@ -570,10 +593,10 @@ final class BlockManager
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $entity = new BlockTypeEntity();
             $entity->hydrate($row);
-            
+
             // Load fields
             $entity->fields = $this->loadTypeFields($entity->id);
-            
+
             $this->dbTypes[$entity->type_id] = $entity;
         }
 
@@ -649,7 +672,7 @@ final class BlockManager
         if ($this->cache) {
             $this->cache->store()->delete(self::CACHE_KEY);
         }
-        
+
         // Force reload on next access
         $this->initialized = false;
         $this->dbTypes = [];

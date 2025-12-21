@@ -6,7 +6,7 @@ namespace App\Cms\Fields\Rendering;
 
 /**
  * RenderResult - Encapsulates the result of field rendering
- * 
+ *
  * Contains the rendered HTML and any assets required by the widget.
  */
 final class RenderResult
@@ -14,7 +14,8 @@ final class RenderResult
     private function __construct(
         private readonly string $html,
         private readonly AssetCollection $assets,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a render result
@@ -71,7 +72,7 @@ final class RenderResult
     {
         $assets = clone $this->assets;
         $assets->merge($other->assets);
-        
+
         return new self(
             $this->html . $other->html,
             $assets

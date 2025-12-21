@@ -13,7 +13,7 @@ use MonkeysLegion\Cli\IO\Output;
 
 /**
  * CacheGetCommand - Get a value from cache
- * 
+ *
  * Usage:
  *   php monkeys cache:get user:123
  *   php monkeys cache:get user:123 --store=redis
@@ -27,7 +27,8 @@ class CacheGetCommand
 {
     public function __construct(
         private readonly CacheManager $cacheManager,
-    ) {}
+    ) {
+    }
 
     #[Argument(name: 'key', description: 'Cache key to retrieve')]
     public string $key;
@@ -41,7 +42,7 @@ class CacheGetCommand
     public function __invoke(Input $input, Output $output): int
     {
         try {
-            $store = $this->store 
+            $store = $this->store
                 ? $this->cacheManager->store($this->store)
                 : $this->cacheManager->store();
 
@@ -59,13 +60,13 @@ class CacheGetCommand
                 case 'json':
                     $output->writeln(json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
                     break;
-                    
+
                 case 'var_dump':
                     ob_start();
                     var_dump($value);
                     $output->writeln(ob_get_clean());
                     break;
-                    
+
                 case 'text':
                 default:
                     if (is_array($value) || is_object($value)) {

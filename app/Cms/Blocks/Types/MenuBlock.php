@@ -99,15 +99,15 @@ class MenuBlock extends AbstractBlockType
 
         // Get menu tree
         $menuTree = $this->getMenuTree($menuId, $context['user'] ?? null);
-        
+
         if (empty($menuTree)) {
             return '<div class="menu-block menu-block--empty">Menu is empty</div>';
         }
 
         $currentPath = $context['current_path'] ?? '/';
-        
+
         $styleClass = "menu-block--{$displayStyle}";
-        
+
         $html = "<nav class=\"menu-block {$styleClass}\" role=\"navigation\">";
         $html .= $this->renderMenuItems($menuTree, [
             'depth' => $depth,
@@ -140,7 +140,7 @@ class MenuBlock extends AbstractBlockType
         foreach ($items as $item) {
             $isActive = $activeTrail && $this->isActivePath($item['url'] ?? '', $currentPath);
             $hasChildren = !empty($item['children']);
-            
+
             $itemClasses = ['menu-block__item'];
             if ($isActive) {
                 $itemClasses[] = 'menu-block__item--active';
@@ -153,7 +153,7 @@ class MenuBlock extends AbstractBlockType
             }
 
             $html .= '<li class="' . implode(' ', $itemClasses) . '">';
-            
+
             // Link
             $linkClasses = ['menu-block__link'];
             if ($isActive) {
@@ -166,7 +166,7 @@ class MenuBlock extends AbstractBlockType
             }
 
             $target = !empty($item['target']) ? " target=\"{$item['target']}\"" : '';
-            
+
             $html .= "<a href=\"{$this->escape($item['url'] ?? '#')}\" class=\"" . implode(' ', $linkClasses) . "\"{$target}>";
             $html .= $icon;
             $html .= "<span class=\"menu-block__title\">{$this->escape($item['title'])}</span>";
@@ -191,16 +191,16 @@ class MenuBlock extends AbstractBlockType
     {
         $menuUrl = rtrim($menuUrl, '/');
         $currentPath = rtrim($currentPath, '/');
-        
+
         if ($menuUrl === $currentPath) {
             return true;
         }
-        
+
         // Check if current path starts with menu URL (for parent highlighting)
         if ($menuUrl !== '' && str_starts_with($currentPath, $menuUrl . '/')) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -212,7 +212,7 @@ class MenuBlock extends AbstractBlockType
                 return $this->convertToTree($menu->items);
             }
         }
-        
+
         // Fallback: return empty array
         return [];
     }
@@ -220,7 +220,7 @@ class MenuBlock extends AbstractBlockType
     private function convertToTree(array $items): array
     {
         $tree = [];
-        
+
         foreach ($items as $item) {
             $node = [
                 'title' => $item->title,
@@ -230,26 +230,26 @@ class MenuBlock extends AbstractBlockType
                 'expanded' => $item->expanded,
                 'children' => [],
             ];
-            
+
             if (!empty($item->children)) {
                 $node['children'] = $this->convertToTree($item->children);
             }
-            
+
             $tree[] = $node;
         }
-        
+
         return $tree;
     }
 
     public function getCacheTags(Block $block): array
     {
         $tags = parent::getCacheTags($block);
-        
+
         $menuId = $this->getFieldValue($block, 'menu_id');
         if ($menuId) {
             $tags[] = 'menu:' . $menuId;
         }
-        
+
         return $tags;
     }
 

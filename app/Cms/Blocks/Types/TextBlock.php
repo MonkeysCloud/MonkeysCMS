@@ -66,7 +66,7 @@ class TextBlock extends AbstractBlockType
         $content = $this->getFieldValue($block, 'content', '');
         $format = $this->getFieldValue($block, 'format', 'html');
         $textAlign = $this->getFieldValue($block, 'text_align', 'left');
-        
+
         // Use block body if available
         if (!empty($block->body)) {
             $content = $block->body;
@@ -96,7 +96,7 @@ class TextBlock extends AbstractBlockType
         $text = preg_replace('/\[(.+?)\]\((.+?)\)/', '<a href="$2">$1</a>', $text);
         $text = preg_replace('/^- (.+)$/m', '<li>$1</li>', $text);
         $text = preg_replace('/(<li>.*<\/li>)/s', '<ul>$1</ul>', $text);
-        
+
         return nl2br($text);
     }
 }

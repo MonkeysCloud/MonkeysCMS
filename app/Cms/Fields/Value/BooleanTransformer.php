@@ -12,7 +12,8 @@ final class BooleanTransformer implements ValueTransformerInterface
     public function __construct(
         private readonly string $trueLabel = 'Yes',
         private readonly string $falseLabel = 'No',
-    ) {}
+    ) {
+    }
 
     public function toForm(FieldValue $value): FieldValue
     {

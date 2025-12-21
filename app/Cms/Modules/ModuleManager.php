@@ -14,24 +14,24 @@ use ReflectionClass;
 
 /**
  * ModuleManager - Central hub for CMS module lifecycle management
- * 
+ *
  * This class handles:
  * - Enabling/disabling modules via API or admin UI
  * - Auto-discovery of module entities
  * - Automatic database schema synchronization (the "auto-sync" feature)
  * - Module dependency resolution
  * - Module state persistence
- * 
+ *
  * Key improvements over Drupal:
  * - No hook_install() or hook_update_N() - schema syncs automatically from entities
  * - No drush updb needed - just enable the module
  * - Instant schema changes, no waiting for cron
- * 
+ *
  * Key improvements over WordPress:
  * - Proper module isolation (namespaces, not global functions)
  * - No activation hooks that can fail silently
  * - Real dependency management
- * 
+ *
  * @example
  * ```php
  * $moduleManager = $container->get(ModuleManager::class);
@@ -78,14 +78,14 @@ final class ModuleManager
     ) {
         $this->modulesBasePath = $basePath ?: (defined('ML_BASE_PATH') ? ML_BASE_PATH : getcwd());
         $this->modulesStatePath = $this->modulesBasePath . '/storage/modules.json';
-        
+
         $this->loadModuleStates();
         $this->discoverAvailableModules();
     }
 
     /**
      * Enable a module and sync its database schema
-     * 
+     *
      * @param string $moduleName Module name (e.g., 'Ecommerce', 'Contrib/SeoPack')
      * @param bool $syncSchema Whether to automatically sync database schema
      * @return bool True if module was enabled successfully
@@ -152,7 +152,7 @@ final class ModuleManager
 
     /**
      * Disable a module
-     * 
+     *
      * @param string $moduleName Module name
      * @param bool $removeTables Whether to drop module tables (dangerous!)
      * @return bool True if module was disabled successfully
@@ -203,7 +203,7 @@ final class ModuleManager
 
     /**
      * Discover all entity classes in a module's Entities folder
-     * 
+     *
      * @param string $moduleName Module name
      * @return array<string> List of fully qualified entity class names
      */
@@ -235,7 +235,7 @@ final class ModuleManager
                 if (class_exists($fqcn)) {
                     $reflection = new ReflectionClass($fqcn);
                     $attrs = $reflection->getAttributes(ContentType::class);
-                    
+
                     if (!empty($attrs)) {
                         $entities[] = $fqcn;
                         $this->log('debug', "Discovered entity: {$fqcn}");
@@ -249,7 +249,7 @@ final class ModuleManager
 
     /**
      * Synchronize database schema for a single entity
-     * 
+     *
      * @param string $entityClass Fully qualified entity class name
      */
     public function syncEntitySchema(string $entityClass): void
@@ -258,7 +258,7 @@ final class ModuleManager
 
         try {
             $sql = $this->schemaGenerator->generateSql($entityClass);
-            
+
             // Execute each statement
             $statements = array_filter(
                 explode(';', $sql),
@@ -295,13 +295,13 @@ final class ModuleManager
 
     /**
      * Get list of all available modules
-     * 
+     *
      * @return array<string, array<string, mixed>> Module name => metadata
      */
     public function getAvailableModules(): array
     {
         $modules = [];
-        
+
         foreach ($this->availableModules as $name => $path) {
             $modules[$name] = array_merge(
                 $this->getModuleMetadata($name),
@@ -317,7 +317,7 @@ final class ModuleManager
 
     /**
      * Get list of enabled modules
-     * 
+     *
      * @return array<string>
      */
     public function getEnabledModules(): array
@@ -336,7 +336,7 @@ final class ModuleManager
     private function discoverAvailableModules(): void
     {
         $this->availableModules = [];
-        
+
         $modulesPath = $this->modulesBasePath . '/app/Modules';
 
         // Scan Contrib modules
@@ -367,16 +367,18 @@ final class ModuleManager
 
         foreach ($dirs as $dir) {
             $dirName = basename($dir);
-            
+
             // Skip Contrib/Custom folders when scanning flat
             if ($prefix === '' && in_array($dirName, ['Contrib', 'Custom'], true)) {
                 continue;
             }
 
             // Check for module.mlc, module.json, or Loader.php
-            if (file_exists($dir . '/module.mlc') || 
-                file_exists($dir . '/module.json') || 
-                file_exists($dir . '/Loader.php')) {
+            if (
+                file_exists($dir . '/module.mlc') ||
+                file_exists($dir . '/module.json') ||
+                file_exists($dir . '/Loader.php')
+            ) {
                 $moduleName = $prefix . $dirName;
                 $this->availableModules[$moduleName] = $dir;
             }
@@ -389,7 +391,7 @@ final class ModuleManager
     private function getModulePath(string $moduleName): string
     {
         $moduleName = $this->normalizeModuleName($moduleName);
-        
+
         if (!isset($this->availableModules[$moduleName])) {
             throw new ModuleException("Module '{$moduleName}' not found");
         }
@@ -399,7 +401,7 @@ final class ModuleManager
 
     /**
      * Get module metadata from module.mlc or module.json
-     * 
+     *
      * @return array<string, mixed>
      */
     private function getModuleMetadata(string $moduleName): array
@@ -438,7 +440,7 @@ final class ModuleManager
         if ($content === false) {
             return [];
         }
-        
+
         $parser = new Parser();
         return $parser->parse($content);
     }
@@ -464,7 +466,7 @@ final class ModuleManager
 
     /**
      * Check module dependencies
-     * 
+     *
      * @throws ModuleException If dependencies are not met
      */
     private function checkDependencies(string $moduleName, array $metadata): void
@@ -482,7 +484,7 @@ final class ModuleManager
 
     /**
      * Find modules that depend on a given module
-     * 
+     *
      * @return array<string>
      */
     private function findDependentModules(string $moduleName): array
@@ -540,7 +542,7 @@ final class ModuleManager
 
             $reflection = new ReflectionClass($entityClass);
             $attrs = $reflection->getAttributes(ContentType::class);
-            
+
             if (!empty($attrs)) {
                 $contentType = $attrs[0]->newInstance();
                 $tableName = $contentType->tableName;
@@ -552,7 +554,7 @@ final class ModuleManager
 
                 // Drop main table
                 $this->database->pdo()->exec("DROP TABLE IF EXISTS `{$tableName}`;");
-                
+
                 $this->log('warning', "Dropped table: {$tableName}");
             }
         }

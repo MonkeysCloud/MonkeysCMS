@@ -16,7 +16,7 @@ interface ValidationRuleInterface
 
     /**
      * Validate a value
-     * 
+     *
      * @param mixed $value The value to validate
      * @param mixed $parameter Rule-specific parameter (e.g., max length, pattern)
      * @param ValidationContext $context Additional context

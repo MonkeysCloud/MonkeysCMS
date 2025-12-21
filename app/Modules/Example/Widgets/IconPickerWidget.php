@@ -9,9 +9,9 @@ use App\Cms\Fields\Widgets\AbstractFieldWidget;
 
 /**
  * IconPickerWidget - Icon selector with search
- * 
+ *
  * Allows selecting icons from various icon sets (Heroicons, FontAwesome, etc.)
- * 
+ *
  * @example
  * ```php
  * // Field definition with icon picker
@@ -43,19 +43,19 @@ class IconPickerWidget extends AbstractFieldWidget
     {
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
-        
+
         $iconSet = $field->getSetting('icon_set', 'heroicons');
         $showSearch = $field->getSetting('show_search', true);
         $showCategories = $field->getSetting('show_categories', true);
         $columns = $field->getSetting('columns', 8);
-        
+
         $icons = $this->getIcons($iconSet);
         $categories = $this->getCategories($iconSet);
         $iconsJson = json_encode($icons);
-        
+
         $currentIcon = $value ?? '';
         $previewHtml = $currentIcon ? $this->renderIcon($currentIcon, $iconSet) : '<span class="icon-picker__empty">No icon</span>';
-        
+
         $inputHtml = <<<HTML
 <div class="field-icon-picker" id="{$fieldId}_wrapper" data-icon-set="{$this->escape($iconSet)}">
     <input type="hidden" name="{$this->escape($fieldName)}" id="{$fieldId}" value="{$this->escape($currentIcon)}">
@@ -87,22 +87,22 @@ HTML;
         }
 
         $inputHtml .= '<div class="icon-picker__grid" id="' . $fieldId . '_grid" style="grid-template-columns: repeat(' . $columns . ', 1fr);">';
-        
+
         foreach ($icons as $icon) {
             $name = $icon['name'];
             $iconHtml = $this->renderIcon($name, $iconSet);
             $category = $icon['category'] ?? '';
             $selected = $name === $currentIcon ? ' icon-picker__icon--selected' : '';
-            
+
             $inputHtml .= '<div class="icon-picker__icon' . $selected . '" data-name="' . $this->escape($name) . '" data-category="' . $this->escape($category) . '" onclick="window.selectIcon(\'' . $fieldId . '\', \'' . $this->escape($name) . '\')" title="' . $this->escape($name) . '">';
             $inputHtml .= $iconHtml;
             $inputHtml .= '</div>';
         }
-        
+
         $inputHtml .= '</div>';
         $inputHtml .= '</div>';
         $inputHtml .= '</div>';
-        
+
         return $this->renderWrapper($field, $inputHtml, $context);
     }
 
@@ -111,11 +111,11 @@ HTML;
         if ($this->isEmpty($value)) {
             return '<span class="field-display field-display--empty">—</span>';
         }
-        
+
         $iconSet = $field->getSetting('icon_set', 'heroicons');
-        
-        return '<span class="field-display field-display--icon">' . 
-               $this->renderIcon($value, $iconSet) . 
+
+        return '<span class="field-display field-display--icon">' .
+               $this->renderIcon($value, $iconSet) .
                ' <span class="icon-name">' . $this->escape($value) . '</span></span>';
     }
 
@@ -126,18 +126,18 @@ HTML;
     {
         // In production, this would load actual SVG icons
         // For demo, we use simple representations
-        
+
         switch ($iconSet) {
             case 'heroicons':
                 return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' .
                        $this->getHeroIconPath($name) . '</svg>';
-            
+
             case 'fontawesome':
                 return '<i class="fa fa-' . $this->escape($name) . '"></i>';
-            
+
             case 'emoji':
                 return '<span class="emoji-icon">' . $this->getEmoji($name) . '</span>';
-            
+
             default:
                 return '<span class="icon-placeholder">' . substr($name, 0, 2) . '</span>';
         }
@@ -170,7 +170,7 @@ HTML;
             'clock' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
             'camera' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>',
         ];
-        
+
         return $paths[$name] ?? '<circle cx="12" cy="12" r="8"/>';
     }
 
@@ -185,7 +185,7 @@ HTML;
             'calendar' => '📅', 'clock' => '🕐', 'folder' => '📁', 'document' => '📄',
             'check' => '✓', 'x' => '✗', 'plus' => '➕', 'minus' => '➖',
         ];
-        
+
         return $emojis[$name] ?? '❓';
     }
 

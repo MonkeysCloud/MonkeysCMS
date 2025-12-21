@@ -8,10 +8,10 @@ use App\Modules\Core\Entities\Block;
 
 /**
  * BlockTypeInterface - Interface for code-defined block types
- * 
+ *
  * Implement this interface to create a new block type in code.
  * Block types define the structure and behavior of blocks.
- * 
+ *
  * @example
  * ```php
  * #[BlockType(
@@ -60,7 +60,7 @@ interface BlockTypeInterface
 
     /**
      * Get field definitions for this block type
-     * 
+     *
      * @return array<string, array{
      *     type: string,
      *     label: string,
@@ -80,7 +80,7 @@ interface BlockTypeInterface
 
     /**
      * Render the block to HTML
-     * 
+     *
      * @param Block $block The block instance
      * @param array $context Additional context variables
      * @return string The rendered HTML
@@ -89,7 +89,7 @@ interface BlockTypeInterface
 
     /**
      * Validate block data before saving
-     * 
+     *
      * @param array $data The block data to validate
      * @return array<string, string> Array of field => error message
      */
@@ -97,7 +97,7 @@ interface BlockTypeInterface
 
     /**
      * Process block data before saving
-     * 
+     *
      * @param array $data The block data
      * @return array The processed data
      */
@@ -105,7 +105,7 @@ interface BlockTypeInterface
 
     /**
      * Get cache tags for this block
-     * 
+     *
      * @param Block $block The block instance
      * @return array Cache tags
      */

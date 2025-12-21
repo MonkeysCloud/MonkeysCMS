@@ -13,7 +13,7 @@ use App\Cms\Fields\Validation\ValidationResult;
 
 /**
  * WidgetRegistry - Central registry for field widgets
- * 
+ *
  * Manages widget registration, resolution, and provides
  * a unified API for field rendering and validation.
  */
@@ -21,10 +21,10 @@ final class WidgetRegistry
 {
     /** @var array<string, WidgetInterface> */
     private array $widgets = [];
-    
+
     /** @var array<string, string> */
     private array $typeDefaults = [];
-    
+
     private AssetCollection $collectedAssets;
 
     public function __construct(
@@ -48,7 +48,7 @@ final class WidgetRegistry
 
     /**
      * Register multiple widgets
-     * 
+     *
      * @param WidgetInterface[] $widgets
      */
     public function registerMany(array $widgets): self
@@ -67,14 +67,14 @@ final class WidgetRegistry
         if (!isset($this->widgets[$widgetId])) {
             throw new \InvalidArgumentException("Widget '{$widgetId}' not found");
         }
-        
+
         $this->typeDefaults[$fieldType] = $widgetId;
         return $this;
     }
 
     /**
      * Set multiple type defaults
-     * 
+     *
      * @param array<string, string> $defaults [fieldType => widgetId]
      */
     public function setTypeDefaults(array $defaults): self
@@ -107,7 +107,7 @@ final class WidgetRegistry
 
     /**
      * Get all registered widgets
-     * 
+     *
      * @return array<string, WidgetInterface>
      */
     public function all(): array
@@ -117,28 +117,28 @@ final class WidgetRegistry
 
     /**
      * Get widgets that support a field type
-     * 
+     *
      * @return array<string, WidgetInterface>
      */
     public function getForType(string $fieldType): array
     {
         $matching = [];
-        
+
         foreach ($this->widgets as $id => $widget) {
             if (in_array($fieldType, $widget->getSupportedTypes(), true)) {
                 $matching[$id] = $widget;
             }
         }
-        
+
         // Sort by priority (highest first)
         uasort($matching, fn($a, $b) => $b->getPriority() <=> $a->getPriority());
-        
+
         return $matching;
     }
 
     /**
      * Get the appropriate widget for a field
-     * 
+     *
      * Resolution order:
      * 1. Field's explicit widget setting
      * 2. Type default
@@ -151,18 +151,18 @@ final class WidgetRegistry
         if ($field->widget && isset($this->widgets[$field->widget])) {
             return $this->widgets[$field->widget];
         }
-        
+
         // 2. Check type default
         if (isset($this->typeDefaults[$field->field_type])) {
             return $this->widgets[$this->typeDefaults[$field->field_type]];
         }
-        
+
         // 3. Get highest priority widget for type
         $typeWidgets = $this->getForType($field->field_type);
         if (!empty($typeWidgets)) {
             return reset($typeWidgets);
         }
-        
+
         // 4. Fallback
         return $this->widgets['text_input'] ?? throw new \RuntimeException('No widgets available');
     }
@@ -181,10 +181,10 @@ final class WidgetRegistry
     ): RenderResult {
         $widget = $this->resolve($field);
         $result = $widget->render($field, $value, $context);
-        
+
         // Collect assets
         $this->collectedAssets->merge($result->getAssets());
-        
+
         return $result;
     }
 
@@ -202,7 +202,7 @@ final class WidgetRegistry
 
     /**
      * Render multiple fields
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array $values Values indexed by machine_name
      */
@@ -212,13 +212,13 @@ final class WidgetRegistry
         RenderContext $context
     ): RenderResult {
         $combinedResult = RenderResult::empty();
-        
+
         foreach ($fields as $field) {
             $value = $values[$field->machine_name] ?? $field->default_value;
             $result = $this->renderField($field, $value, $context);
             $combinedResult = $combinedResult->combine($result);
         }
-        
+
         return $combinedResult;
     }
 
@@ -237,7 +237,7 @@ final class WidgetRegistry
 
     /**
      * Prepare multiple field values for storage
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array $values Submitted values
      * @return array Prepared values indexed by machine_name
@@ -245,12 +245,12 @@ final class WidgetRegistry
     public function prepareValues(array $fields, array $values): array
     {
         $prepared = [];
-        
+
         foreach ($fields as $field) {
             $value = $values[$field->machine_name] ?? null;
             $prepared[$field->machine_name] = $this->prepareValue($field, $value);
         }
-        
+
         return $prepared;
     }
 
@@ -269,24 +269,24 @@ final class WidgetRegistry
 
     /**
      * Validate a single field value
-     * 
+     *
      * @return array<string> Error messages
      */
     public function validateField(FieldDefinition $field, mixed $value): array
     {
         // Field-level validation
         $fieldErrors = $this->validator->validateField($field, $value);
-        
+
         // Widget-level validation
         $widget = $this->resolve($field);
         $widgetResult = $widget->validate($field, $value);
-        
+
         return array_merge($fieldErrors, $widgetResult->getErrors());
     }
 
     /**
      * Validate multiple field values
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array $values Values indexed by machine_name
      * @return array<string, array<string>> Errors indexed by machine_name
@@ -294,16 +294,16 @@ final class WidgetRegistry
     public function validateFields(array $fields, array $values): array
     {
         $allErrors = [];
-        
+
         foreach ($fields as $field) {
             $value = $values[$field->machine_name] ?? null;
             $errors = $this->validateField($field, $value);
-            
+
             if (!empty($errors)) {
                 $allErrors[$field->machine_name] = $errors;
             }
         }
-        
+
         return $allErrors;
     }
 
@@ -334,58 +334,58 @@ final class WidgetRegistry
 
     /**
      * Get widgets grouped by category
-     * 
+     *
      * @return array<string, WidgetMetadata[]>
      */
     public function getGroupedByCategory(): array
     {
         $grouped = [];
-        
+
         foreach ($this->widgets as $widget) {
             $metadata = $widget->getMetadata();
             $category = $metadata->category;
-            
+
             if (!isset($grouped[$category])) {
                 $grouped[$category] = [];
             }
-            
+
             $grouped[$category][] = $metadata;
         }
-        
+
         ksort($grouped);
-        
+
         return $grouped;
     }
 
     /**
      * Get widget options for a field type (for select dropdowns)
-     * 
+     *
      * @return array<string, string> [widgetId => label]
      */
     public function getOptionsForType(string $fieldType): array
     {
         $options = [];
-        
+
         foreach ($this->getForType($fieldType) as $id => $widget) {
             $options[$id] = $widget->getLabel();
         }
-        
+
         return $options;
     }
 
     /**
      * Get all widget metadata
-     * 
+     *
      * @return array<string, WidgetMetadata>
      */
     public function getAllMetadata(): array
     {
         $metadata = [];
-        
+
         foreach ($this->widgets as $id => $widget) {
             $metadata[$id] = $widget->getMetadata();
         }
-        
+
         return $metadata;
     }
 }

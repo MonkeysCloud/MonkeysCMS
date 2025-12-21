@@ -6,7 +6,7 @@ namespace App\Cms\Fields\Value;
 
 /**
  * FieldValue - Immutable value object representing a field's value
- * 
+ *
  * Encapsulates the raw value along with type information and
  * provides type-safe access methods.
  */
@@ -16,7 +16,8 @@ final class FieldValue
         private readonly mixed $value,
         private readonly string $type,
         private readonly bool $isEmpty,
-    ) {}
+    ) {
+    }
 
     // =========================================================================
     // Static Constructors
@@ -108,15 +109,15 @@ final class FieldValue
         if ($this->value === null) {
             return '';
         }
-        
+
         if (is_array($this->value)) {
             return json_encode($this->value);
         }
-        
+
         if ($this->value instanceof \DateTimeInterface) {
             return $this->value->format('Y-m-d H:i:s');
         }
-        
+
         return (string) $this->value;
     }
 
@@ -140,12 +141,12 @@ final class FieldValue
         if (is_array($this->value)) {
             return $this->value;
         }
-        
+
         if (is_string($this->value) && $this->value !== '') {
             $decoded = json_decode($this->value, true);
             return is_array($decoded) ? $decoded : [$this->value];
         }
-        
+
         return $this->value !== null ? [$this->value] : [];
     }
 
@@ -154,7 +155,7 @@ final class FieldValue
         if ($this->value instanceof \DateTimeInterface) {
             return $this->value->format($format);
         }
-        
+
         if (is_string($this->value) && $this->value !== '') {
             try {
                 return (new \DateTimeImmutable($this->value))->format($format);
@@ -162,7 +163,7 @@ final class FieldValue
                 return null;
             }
         }
-        
+
         return null;
     }
 
@@ -171,11 +172,11 @@ final class FieldValue
         if ($this->value instanceof \DateTimeImmutable) {
             return $this->value;
         }
-        
+
         if ($this->value instanceof \DateTime) {
             return \DateTimeImmutable::createFromMutable($this->value);
         }
-        
+
         if (is_string($this->value) && $this->value !== '') {
             try {
                 return new \DateTimeImmutable($this->value);
@@ -183,7 +184,7 @@ final class FieldValue
                 return null;
             }
         }
-        
+
         return null;
     }
 
@@ -196,7 +197,7 @@ final class FieldValue
         if ($this->isEmpty) {
             return $this;
         }
-        
+
         return self::of($fn($this->value), $this->type);
     }
 
@@ -205,7 +206,7 @@ final class FieldValue
         if ($this->isEmpty) {
             return self::of($default, $this->type);
         }
-        
+
         return $this;
     }
 
@@ -219,7 +220,7 @@ final class FieldValue
         if ($this->isEmpty || !$predicate($this->value)) {
             return self::null($this->type);
         }
-        
+
         return $this;
     }
 
@@ -257,8 +258,8 @@ final class FieldValue
 
     private static function checkEmpty(mixed $value): bool
     {
-        return $value === null 
-            || $value === '' 
+        return $value === null
+            || $value === ''
             || (is_array($value) && empty($value));
     }
 }

@@ -185,7 +185,7 @@ class User extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->display_name)) {
             $this->display_name = $this->username;
         }
@@ -281,25 +281,25 @@ class User extends BaseEntity
 
     /**
      * Get all permissions (from roles + direct)
-     * 
+     *
      * @return Permission[]
      */
     public function getAllPermissions(): array
     {
         $permissions = [];
-        
+
         // Collect from roles
         foreach ($this->roles as $role) {
             foreach ($role->permissions as $permission) {
                 $permissions[$permission->slug] = $permission;
             }
         }
-        
+
         // Add direct permissions
         foreach ($this->directPermissions as $permission) {
             $permissions[$permission->slug] = $permission;
         }
-        
+
         return array_values($permissions);
     }
 
@@ -335,15 +335,15 @@ class User extends BaseEntity
     public function toArray(): array
     {
         $data = parent::toArray();
-        
+
         // Never expose password hash
         unset($data['password_hash']);
-        
+
         // Add computed fields
         $data['full_name'] = $this->getFullName();
         $data['is_active'] = $this->isActive();
         $data['is_verified'] = $this->isEmailVerified();
-        
+
         return $data;
     }
 

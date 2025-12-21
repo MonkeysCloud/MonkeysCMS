@@ -18,7 +18,7 @@ use App\Cms\Fields\Widget\WidgetRegistry;
 
 /**
  * FieldWidgetSystemTest - Comprehensive test suite for the field widget system
- * 
+ *
  * Usage:
  *   php FieldWidgetSystemTest.php
  */
@@ -103,7 +103,7 @@ class FieldWidgetSystemTest
 
     private function testWidgetRegistryCreation(): void
     {
-        $this->test("Widget registry can be created", function() {
+        $this->test("Widget registry can be created", function () {
             $registry = WidgetFactory::create();
             return $registry instanceof WidgetRegistry;
         });
@@ -111,9 +111,9 @@ class FieldWidgetSystemTest
 
     private function testWidgetRegistration(): void
     {
-        $this->test("Widgets are registered on creation", function() {
+        $this->test("Widgets are registered on creation", function () {
             $registry = WidgetFactory::create();
-            return $registry->has('text_input') 
+            return $registry->has('text_input')
                 && $registry->has('textarea')
                 && $registry->has('select')
                 && $registry->has('checkbox');
@@ -122,7 +122,7 @@ class FieldWidgetSystemTest
 
     private function testWidgetRetrieval(): void
     {
-        $this->test("Widgets can be retrieved by ID", function() {
+        $this->test("Widgets can be retrieved by ID", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->get('text_input');
             return $widget !== null && $widget->getId() === 'text_input';
@@ -131,19 +131,19 @@ class FieldWidgetSystemTest
 
     private function testTypeDefaults(): void
     {
-        $this->test("Type defaults are set correctly", function() {
+        $this->test("Type defaults are set correctly", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->getForType('string');
             return $widget->getId() === 'text_input';
         });
 
-        $this->test("Email type uses email widget", function() {
+        $this->test("Email type uses email widget", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->getForType('email');
             return $widget->getId() === 'email';
         });
 
-        $this->test("Boolean type uses switch widget", function() {
+        $this->test("Boolean type uses switch widget", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->getForType('boolean');
             return $widget->getId() === 'switch';
@@ -156,14 +156,14 @@ class FieldWidgetSystemTest
 
     private function testFieldDefinitionCreation(): void
     {
-        $this->test("Field definition can be created from array", function() {
+        $this->test("Field definition can be created from array", function () {
             $field = new FieldDefinition([
                 'name' => 'Title',
                 'machine_name' => 'field_title',
                 'field_type' => 'string',
                 'required' => true,
             ]);
-            
+
             return $field->getName() === 'Title'
                 && $field->getMachineName() === 'field_title'
                 && $field->getType() === 'string'
@@ -173,7 +173,7 @@ class FieldWidgetSystemTest
 
     private function testFieldDefinitionFluent(): void
     {
-        $this->test("Field definition supports fluent interface", function() {
+        $this->test("Field definition supports fluent interface", function () {
             $field = (new FieldDefinition([
                 'name' => 'Email',
                 'machine_name' => 'field_email',
@@ -191,16 +191,16 @@ class FieldWidgetSystemTest
 
     private function testFieldDefinitionSerialization(): void
     {
-        $this->test("Field definition can be serialized to array", function() {
+        $this->test("Field definition can be serialized to array", function () {
             $field = new FieldDefinition([
                 'name' => 'Title',
                 'machine_name' => 'field_title',
                 'field_type' => 'string',
                 'required' => true,
             ]);
-            
+
             $array = $field->toArray();
-            
+
             return isset($array['name'])
                 && isset($array['machine_name'])
                 && isset($array['field_type']);
@@ -213,7 +213,7 @@ class FieldWidgetSystemTest
 
     private function testRequiredValidation(): void
     {
-        $this->test("Required field fails with empty value", function() {
+        $this->test("Required field fails with empty value", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Title',
@@ -221,12 +221,12 @@ class FieldWidgetSystemTest
                 'field_type' => 'string',
                 'required' => true,
             ]);
-            
+
             $result = $validator->validate($field, '');
             return !$result->isValid();
         });
 
-        $this->test("Required field passes with value", function() {
+        $this->test("Required field passes with value", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Title',
@@ -234,7 +234,7 @@ class FieldWidgetSystemTest
                 'field_type' => 'string',
                 'required' => true,
             ]);
-            
+
             $result = $validator->validate($field, 'Hello');
             return $result->isValid();
         });
@@ -242,26 +242,26 @@ class FieldWidgetSystemTest
 
     private function testEmailValidation(): void
     {
-        $this->test("Invalid email fails validation", function() {
+        $this->test("Invalid email fails validation", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Email',
                 'machine_name' => 'field_email',
                 'field_type' => 'email',
             ]);
-            
+
             $result = $validator->validate($field, 'not-an-email');
             return !$result->isValid();
         });
 
-        $this->test("Valid email passes validation", function() {
+        $this->test("Valid email passes validation", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Email',
                 'machine_name' => 'field_email',
                 'field_type' => 'email',
             ]);
-            
+
             $result = $validator->validate($field, 'test@example.com');
             return $result->isValid();
         });
@@ -269,26 +269,26 @@ class FieldWidgetSystemTest
 
     private function testUrlValidation(): void
     {
-        $this->test("Invalid URL fails validation", function() {
+        $this->test("Invalid URL fails validation", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Website',
                 'machine_name' => 'field_website',
                 'field_type' => 'url',
             ]);
-            
+
             $result = $validator->validate($field, 'not-a-url');
             return !$result->isValid();
         });
 
-        $this->test("Valid URL passes validation", function() {
+        $this->test("Valid URL passes validation", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Website',
                 'machine_name' => 'field_website',
                 'field_type' => 'url',
             ]);
-            
+
             $result = $validator->validate($field, 'https://example.com');
             return $result->isValid();
         });
@@ -296,7 +296,7 @@ class FieldWidgetSystemTest
 
     private function testLengthValidation(): void
     {
-        $this->test("Value exceeding max length fails", function() {
+        $this->test("Value exceeding max length fails", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Title',
@@ -304,7 +304,7 @@ class FieldWidgetSystemTest
                 'field_type' => 'string',
                 'settings' => ['max_length' => 10],
             ]);
-            
+
             $result = $validator->validate($field, 'This is way too long');
             return !$result->isValid();
         });
@@ -312,7 +312,7 @@ class FieldWidgetSystemTest
 
     private function testNumericValidation(): void
     {
-        $this->test("Number outside range fails", function() {
+        $this->test("Number outside range fails", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Age',
@@ -320,12 +320,12 @@ class FieldWidgetSystemTest
                 'field_type' => 'integer',
                 'settings' => ['min' => 0, 'max' => 150],
             ]);
-            
+
             $result = $validator->validate($field, 200);
             return !$result->isValid();
         });
 
-        $this->test("Number within range passes", function() {
+        $this->test("Number within range passes", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Age',
@@ -333,7 +333,7 @@ class FieldWidgetSystemTest
                 'field_type' => 'integer',
                 'settings' => ['min' => 0, 'max' => 150],
             ]);
-            
+
             $result = $validator->validate($field, 25);
             return $result->isValid();
         });
@@ -341,7 +341,7 @@ class FieldWidgetSystemTest
 
     private function testPatternValidation(): void
     {
-        $this->test("Value not matching pattern fails", function() {
+        $this->test("Value not matching pattern fails", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Code',
@@ -349,12 +349,12 @@ class FieldWidgetSystemTest
                 'field_type' => 'string',
                 'validation' => ['pattern' => '/^[A-Z]{3}$/'],
             ]);
-            
+
             $result = $validator->validate($field, 'abc');
             return !$result->isValid();
         });
 
-        $this->test("Value matching pattern passes", function() {
+        $this->test("Value matching pattern passes", function () {
             $validator = new FieldValidator();
             $field = new FieldDefinition([
                 'name' => 'Code',
@@ -362,7 +362,7 @@ class FieldWidgetSystemTest
                 'field_type' => 'string',
                 'validation' => ['pattern' => '/^[A-Z]{3}$/'],
             ]);
-            
+
             $result = $validator->validate($field, 'ABC');
             return $result->isValid();
         });
@@ -370,9 +370,9 @@ class FieldWidgetSystemTest
 
     private function testMultipleFieldValidation(): void
     {
-        $this->test("Multiple fields can be validated at once", function() {
+        $this->test("Multiple fields can be validated at once", function () {
             $validator = new FieldValidator();
-            
+
             $fields = [
                 new FieldDefinition([
                     'name' => 'Title',
@@ -386,14 +386,14 @@ class FieldWidgetSystemTest
                     'field_type' => 'email',
                 ]),
             ];
-            
+
             $values = [
                 'field_title' => '',
                 'field_email' => 'invalid',
             ];
-            
+
             $results = $validator->validateMultiple($fields, $values);
-            
+
             return !$results['field_title']->isValid() && !$results['field_email']->isValid();
         });
     }
@@ -404,20 +404,20 @@ class FieldWidgetSystemTest
 
     private function testTextInputRendering(): void
     {
-        $this->test("Text input widget renders correctly", function() {
+        $this->test("Text input widget renders correctly", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->get('text_input');
-            
+
             $field = new FieldDefinition([
                 'name' => 'Title',
                 'machine_name' => 'field_title',
                 'field_type' => 'string',
             ]);
-            
+
             $context = RenderContext::create();
             $result = $widget->render($field, 'Hello', $context);
             $html = $result->getHtml();
-            
+
             return str_contains($html, 'input')
                 && str_contains($html, 'type="text"')
                 && str_contains($html, 'Hello');
@@ -426,20 +426,20 @@ class FieldWidgetSystemTest
 
     private function testTextareaRendering(): void
     {
-        $this->test("Textarea widget renders correctly", function() {
+        $this->test("Textarea widget renders correctly", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->get('textarea');
-            
+
             $field = new FieldDefinition([
                 'name' => 'Body',
                 'machine_name' => 'field_body',
                 'field_type' => 'text',
             ]);
-            
+
             $context = RenderContext::create();
             $result = $widget->render($field, 'Content here', $context);
             $html = $result->getHtml();
-            
+
             return str_contains($html, 'textarea')
                 && str_contains($html, 'Content here');
         });
@@ -447,10 +447,10 @@ class FieldWidgetSystemTest
 
     private function testSelectRendering(): void
     {
-        $this->test("Select widget renders with options", function() {
+        $this->test("Select widget renders with options", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->get('select');
-            
+
             $field = new FieldDefinition([
                 'name' => 'Category',
                 'machine_name' => 'field_category',
@@ -462,11 +462,11 @@ class FieldWidgetSystemTest
                     ],
                 ],
             ]);
-            
+
             $context = RenderContext::create();
             $result = $widget->render($field, 'blog', $context);
             $html = $result->getHtml();
-            
+
             return str_contains($html, 'select')
                 && str_contains($html, 'News')
                 && str_contains($html, 'Blog');
@@ -475,20 +475,20 @@ class FieldWidgetSystemTest
 
     private function testCheckboxRendering(): void
     {
-        $this->test("Checkbox widget renders correctly", function() {
+        $this->test("Checkbox widget renders correctly", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->get('checkbox');
-            
+
             $field = new FieldDefinition([
                 'name' => 'Published',
                 'machine_name' => 'field_published',
                 'field_type' => 'boolean',
             ]);
-            
+
             $context = RenderContext::create();
             $result = $widget->render($field, true, $context);
             $html = $result->getHtml();
-            
+
             return str_contains($html, 'checkbox')
                 && str_contains($html, 'checked');
         });
@@ -496,21 +496,21 @@ class FieldWidgetSystemTest
 
     private function testNumberRendering(): void
     {
-        $this->test("Number widget renders correctly", function() {
+        $this->test("Number widget renders correctly", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->get('number');
-            
+
             $field = new FieldDefinition([
                 'name' => 'Quantity',
                 'machine_name' => 'field_quantity',
                 'field_type' => 'integer',
                 'settings' => ['min' => 0, 'max' => 100],
             ]);
-            
+
             $context = RenderContext::create();
             $result = $widget->render($field, 42, $context);
             $html = $result->getHtml();
-            
+
             return str_contains($html, 'type="number"')
                 && str_contains($html, '42');
         });
@@ -518,20 +518,20 @@ class FieldWidgetSystemTest
 
     private function testDateRendering(): void
     {
-        $this->test("Date widget renders correctly", function() {
+        $this->test("Date widget renders correctly", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->get('date');
-            
+
             $field = new FieldDefinition([
                 'name' => 'Birth Date',
                 'machine_name' => 'field_birth_date',
                 'field_type' => 'date',
             ]);
-            
+
             $context = RenderContext::create();
             $result = $widget->render($field, '2024-01-15', $context);
             $html = $result->getHtml();
-            
+
             return str_contains($html, 'type="date"')
                 && str_contains($html, '2024-01-15');
         });
@@ -539,20 +539,20 @@ class FieldWidgetSystemTest
 
     private function testDisplayRendering(): void
     {
-        $this->test("Display mode renders non-editable", function() {
+        $this->test("Display mode renders non-editable", function () {
             $registry = WidgetFactory::create();
             $widget = $registry->get('text_input');
-            
+
             $field = new FieldDefinition([
                 'name' => 'Title',
                 'machine_name' => 'field_title',
                 'field_type' => 'string',
             ]);
-            
+
             $context = RenderContext::create();
             $result = $widget->renderDisplay($field, 'Hello World', $context);
             $html = $result->getHtml();
-            
+
             return str_contains($html, 'Hello World')
                 && !str_contains($html, '<input');
         });
@@ -564,10 +564,10 @@ class FieldWidgetSystemTest
 
     private function testFormBuilderBasic(): void
     {
-        $this->test("Form builder creates form with fields", function() {
+        $this->test("Form builder creates form with fields", function () {
             $registry = WidgetFactory::create();
             $builder = new FormBuilder($registry);
-            
+
             $fields = [
                 new FieldDefinition([
                     'name' => 'Title',
@@ -581,9 +581,9 @@ class FieldWidgetSystemTest
                     'field_type' => 'text',
                 ]),
             ];
-            
+
             $html = $builder->build($fields, []);
-            
+
             return str_contains($html, '<form')
                 && str_contains($html, 'field_title')
                 && str_contains($html, 'field_body');
@@ -592,10 +592,10 @@ class FieldWidgetSystemTest
 
     private function testFormBuilderWithErrors(): void
     {
-        $this->test("Form builder shows validation errors", function() {
+        $this->test("Form builder shows validation errors", function () {
             $registry = WidgetFactory::create();
             $builder = new FormBuilder($registry);
-            
+
             $fields = [
                 new FieldDefinition([
                     'name' => 'Title',
@@ -604,21 +604,21 @@ class FieldWidgetSystemTest
                     'required' => true,
                 ]),
             ];
-            
+
             $errors = ['field_title' => ['Title is required']];
-            
+
             $html = $builder->build($fields, [], $errors);
-            
+
             return str_contains($html, 'Title is required');
         });
     }
 
     private function testFormBuilderGrouping(): void
     {
-        $this->test("Form builder supports field groups", function() {
+        $this->test("Form builder supports field groups", function () {
             $registry = WidgetFactory::create();
             $builder = new FormBuilder($registry);
-            
+
             $fields = [
                 new FieldDefinition([
                     'name' => 'Title',
@@ -633,14 +633,14 @@ class FieldWidgetSystemTest
                     'settings' => ['group' => 'advanced'],
                 ]),
             ];
-            
+
             $html = $builder->build($fields, [], [], [
                 'groups' => [
                     'basic' => ['label' => 'Basic Info'],
                     'advanced' => ['label' => 'Advanced'],
                 ],
             ]);
-            
+
             return str_contains($html, 'Basic Info') || str_contains($html, 'field_title');
         });
     }
@@ -651,51 +651,51 @@ class FieldWidgetSystemTest
 
     private function testInMemoryRepository(): void
     {
-        $this->test("In-memory repository saves and retrieves fields", function() {
+        $this->test("In-memory repository saves and retrieves fields", function () {
             $repo = new InMemoryFieldRepository();
-            
+
             $field = new FieldDefinition([
                 'name' => 'Title',
                 'machine_name' => 'field_title',
                 'field_type' => 'string',
             ]);
-            
+
             $repo->save($field);
-            
+
             $retrieved = $repo->find($field->getId());
-            
-            return $retrieved !== null 
+
+            return $retrieved !== null
                 && $retrieved->getMachineName() === 'field_title';
         });
 
-        $this->test("In-memory repository finds by machine name", function() {
+        $this->test("In-memory repository finds by machine name", function () {
             $repo = new InMemoryFieldRepository();
-            
+
             $field = new FieldDefinition([
                 'name' => 'Email',
                 'machine_name' => 'field_email',
                 'field_type' => 'email',
             ]);
-            
+
             $repo->save($field);
-            
+
             $retrieved = $repo->findByMachineName('field_email');
-            
+
             return $retrieved !== null;
         });
 
-        $this->test("In-memory repository deletes fields", function() {
+        $this->test("In-memory repository deletes fields", function () {
             $repo = new InMemoryFieldRepository();
-            
+
             $field = new FieldDefinition([
                 'name' => 'Temp',
                 'machine_name' => 'field_temp',
                 'field_type' => 'string',
             ]);
-            
+
             $repo->save($field);
             $repo->delete($field);
-            
+
             return $repo->find($field->getId()) === null;
         });
     }
@@ -706,7 +706,7 @@ class FieldWidgetSystemTest
 
     private function testFieldManagerCreation(): void
     {
-        $this->test("Field manager can be created for testing", function() {
+        $this->test("Field manager can be created for testing", function () {
             $manager = FieldManager::createForTesting();
             return $manager instanceof FieldManager;
         });
@@ -714,14 +714,14 @@ class FieldWidgetSystemTest
 
     private function testFieldManagerDefineField(): void
     {
-        $this->test("Field manager can define fields fluently", function() {
+        $this->test("Field manager can define fields fluently", function () {
             $manager = FieldManager::createForTesting();
-            
+
             $field = $manager->defineField('title', 'string')
                 ->name('Title')
                 ->required()
                 ->build();
-            
+
             return $field->getName() === 'Title'
                 && $field->getMachineName() === 'field_title'
                 && $field->isRequired();
@@ -734,12 +734,12 @@ class FieldWidgetSystemTest
 
     private function testServiceProvider(): void
     {
-        $this->test("Service provider creates widget registry", function() {
+        $this->test("Service provider creates widget registry", function () {
             $registry = FieldServiceProvider::createWidgetRegistry();
             return $registry instanceof WidgetRegistry;
         });
 
-        $this->test("Service provider creates form builder", function() {
+        $this->test("Service provider creates form builder", function () {
             $builder = FieldServiceProvider::createFormBuilder();
             return $builder instanceof FormBuilder;
         });
@@ -753,7 +753,7 @@ class FieldWidgetSystemTest
     {
         try {
             $result = $test();
-            
+
             if ($result) {
                 $this->passed++;
                 echo "  ✓ {$name}\n";
@@ -774,7 +774,7 @@ class FieldWidgetSystemTest
 if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($argv[0] ?? '')) {
     // Autoload
     require_once __DIR__ . '/../../../../vendor/autoload.php';
-    
+
     $test = new FieldWidgetSystemTest();
     exit($test->run());
 }

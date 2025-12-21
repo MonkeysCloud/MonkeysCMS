@@ -14,9 +14,9 @@ use MonkeysLegion\Router\Attributes\Route;
 
 /**
  * ApiAuthController - API authentication endpoints
- * 
+ *
  * Provides token-based authentication for API consumers.
- * 
+ *
  * Endpoints:
  * - POST /api/auth/login - Get access/refresh tokens
  * - POST /api/auth/refresh - Refresh access token
@@ -46,15 +46,15 @@ class ApiAuthController
 
     /**
      * Login and get tokens
-     * 
+     *
      * POST /api/auth/login
-     * 
+     *
      * Request:
      * {
      *   "email": "user@example.com",
      *   "password": "secret"
      * }
-     * 
+     *
      * Response:
      * {
      *   "access_token": "...",
@@ -123,9 +123,9 @@ class ApiAuthController
 
     /**
      * Verify 2FA and complete login
-     * 
+     *
      * POST /api/auth/2fa/verify
-     * 
+     *
      * Request:
      * {
      *   "challenge_token": "...",
@@ -165,9 +165,9 @@ class ApiAuthController
 
     /**
      * Refresh access token
-     * 
+     *
      * POST /api/auth/refresh
-     * 
+     *
      * Request:
      * {
      *   "refresh_token": "..."
@@ -202,7 +202,7 @@ class ApiAuthController
 
     /**
      * Logout / revoke tokens
-     * 
+     *
      * POST /api/auth/logout
      */
     /**
@@ -223,7 +223,7 @@ class ApiAuthController
 
     /**
      * Get authenticated user
-     * 
+     *
      * GET /api/auth/me
      */
     /**
@@ -247,9 +247,9 @@ class ApiAuthController
 
     /**
      * Register new user
-     * 
+     *
      * POST /api/auth/register
-     * 
+     *
      * Request:
      * {
      *   "email": "user@example.com",
@@ -302,7 +302,7 @@ class ApiAuthController
 
     /**
      * Request password reset
-     * 
+     *
      * POST /api/auth/password/forgot
      */
     /**
@@ -328,7 +328,7 @@ class ApiAuthController
 
     /**
      * Reset password
-     * 
+     *
      * POST /api/auth/password/reset
      */
     /**
@@ -363,7 +363,7 @@ class ApiAuthController
 
     /**
      * Change password (authenticated)
-     * 
+     *
      * PUT /api/auth/password
      */
     /**
@@ -406,7 +406,7 @@ class ApiAuthController
 
     /**
      * List API keys
-     * 
+     *
      * GET /api/auth/api-keys
      */
     /**
@@ -426,7 +426,7 @@ class ApiAuthController
 
     /**
      * Create API key
-     * 
+     *
      * POST /api/auth/api-keys
      */
     /**
@@ -466,7 +466,7 @@ class ApiAuthController
 
     /**
      * Revoke API key
-     * 
+     *
      * DELETE /api/auth/api-keys/{id}
      */
     /**
@@ -499,7 +499,7 @@ class ApiAuthController
     private function getClientIp(ServerRequestInterface $request): ?string
     {
         $headers = ['X-Forwarded-For', 'X-Real-IP', 'REMOTE_ADDR'];
-        
+
         foreach ($headers as $header) {
             $value = $request->getHeaderLine($header);
             if ($value) {

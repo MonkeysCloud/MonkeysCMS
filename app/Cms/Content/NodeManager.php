@@ -11,27 +11,27 @@ use App\Cms\Fields\Storage\FieldValueStorageInterface;
 
 /**
  * NodeManager - Content operations manager
- * 
+ *
  * Provides high-level operations for managing content nodes:
  * - CRUD with field value integration
  * - Revision management
  * - Publishing workflow
  * - Content querying
- * 
+ *
  * Usage:
  * ```php
  * $manager = new NodeManager($entityManager, $fieldStorage);
- * 
+ *
  * // Create node with fields
  * $node = $manager->create('article', [
  *     'title' => 'Hello World',
  *     'body' => 'Content here...',
  *     'tags' => ['news', 'featured'],
  * ], $userId);
- * 
+ *
  * // Publish
  * $manager->publish($node);
- * 
+ *
  * // Query
  * $articles = $manager->findPublished('article', 10);
  * ```
@@ -56,7 +56,7 @@ class NodeManager
 
     /**
      * Create a new node
-     * 
+     *
      * @param string $type Content type machine name
      * @param array<string, mixed> $data Node data including field values
      * @param int|null $authorId Author user ID
@@ -102,7 +102,7 @@ class NodeManager
 
     /**
      * Update a node
-     * 
+     *
      * @param Node $node Node to update
      * @param array<string, mixed> $data Updated data
      * @param string|null $revisionMessage Revision log message
@@ -199,7 +199,7 @@ class NodeManager
 
     /**
      * Find node by ID or throw
-     * 
+     *
      * @throws \App\Cms\Entity\EntityNotFoundException
      */
     public function findOrFail(int $id): Node
@@ -231,7 +231,7 @@ class NodeManager
 
     /**
      * Find published nodes
-     * 
+     *
      * @param string|null $type Content type filter
      * @param int|null $limit Result limit
      * @return Node[]
@@ -257,7 +257,7 @@ class NodeManager
 
     /**
      * Find nodes by type
-     * 
+     *
      * @return Node[]
      */
     public function findByType(string $type, ?int $limit = null): array
@@ -277,7 +277,7 @@ class NodeManager
 
     /**
      * Find nodes by author
-     * 
+     *
      * @return Node[]
      */
     public function findByAuthor(int $authorId, ?int $limit = null): array
@@ -317,7 +317,7 @@ class NodeManager
 
     /**
      * Get paginated nodes
-     * 
+     *
      * @return array{data: Node[], total: int, page: int, per_page: int, last_page: int}
      */
     public function paginate(
@@ -419,7 +419,7 @@ class NodeManager
     public function processScheduled(): int
     {
         $now = new \DateTimeImmutable();
-        
+
         $nodes = $this->query()
             ->where('status', NodeStatus::SCHEDULED)
             ->where('published_at', '<=', $now->format('Y-m-d H:i:s'))
@@ -455,7 +455,7 @@ class NodeManager
 
     /**
      * Get revisions for a node
-     * 
+     *
      * @return NodeRevision[]
      */
     public function getRevisions(Node $node): array
@@ -493,7 +493,7 @@ class NodeManager
 
         // Restore data
         $data = $revision->getData();
-        
+
         $node->setTitle($data['title'] ?? $node->getTitle());
         $node->setSlug($data['slug'] ?? $node->getSlug());
         // Don't restore status - keep current
@@ -536,7 +536,7 @@ class NodeManager
 
     /**
      * Load field values for multiple nodes
-     * 
+     *
      * @param Node[] $nodes
      * @return Node[]
      */
@@ -555,7 +555,7 @@ class NodeManager
 
     /**
      * Save field values for a node
-     * 
+     *
      * @param array<string, mixed> $fields
      */
     private function saveFieldValues(Node $node, array $fields): void
@@ -583,7 +583,7 @@ class NodeManager
         // This is a simplified implementation
         // In production, query the field_definitions table
         static $fieldMap = [];
-        
+
         if (isset($fieldMap[$fieldName])) {
             return $fieldMap[$fieldName];
         }
@@ -641,7 +641,7 @@ class NodeManager
 
     /**
      * Get content statistics
-     * 
+     *
      * @return array<string, int>
      */
     public function getStatistics(): array
@@ -707,7 +707,7 @@ class NodeManager
 
         $data = $node->toArray();
         unset($data['id']);
-        
+
         $data['title'] = $newTitle ?? $data['title'] . ' (Copy)';
         $data['slug'] = null; // Will be regenerated
         $data['status'] = NodeStatus::DRAFT;

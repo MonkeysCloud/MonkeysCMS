@@ -14,7 +14,7 @@ interface ValidatingWidgetInterface extends WidgetInterface
 {
     /**
      * Validate a value
-     * 
+     *
      * @return string[] Error messages
      */
     public function validate(Field $field, FieldValue $value): array;

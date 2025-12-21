@@ -7,9 +7,9 @@ namespace App\Controllers\Admin;
 use App\Modules\Core\Entities\Vocabulary;
 use App\Modules\Core\Entities\Term;
 use App\Modules\Core\Services\TaxonomyService;
-use MonkeysLegion\Http\Attribute\Route;
-use MonkeysLegion\Http\Request;
-use MonkeysLegion\Http\JsonResponse;
+use MonkeysLegion\Router\Attributes\Route;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * TaxonomyController - Admin API for vocabulary and term management
@@ -18,7 +18,8 @@ final class TaxonomyController
 {
     public function __construct(
         private readonly TaxonomyService $taxonomy,
-    ) {}
+    ) {
+    }
 
     // ─────────────────────────────────────────────────────────────
     // Vocabulary Endpoints
@@ -28,11 +29,11 @@ final class TaxonomyController
      * List all vocabularies
      */
     #[Route('GET', '/admin/vocabularies')]
-    public function listVocabularies(): JsonResponse
+    public function listVocabularies(): ResponseInterface
     {
         $vocabularies = $this->taxonomy->getAllVocabularies();
 
-        return new JsonResponse([
+        return json([
             'vocabularies' => array_map(fn($v) => array_merge($v->toArray(), [
                 'term_count' => count($this->taxonomy->getTerms($v->id)),
             ]), $vocabularies),
@@ -43,17 +44,17 @@ final class TaxonomyController
      * Get single vocabulary
      */
     #[Route('GET', '/admin/vocabularies/{id}')]
-    public function showVocabulary(int $id): JsonResponse
+    public function showVocabulary(int $id): ResponseInterface
     {
         $vocabulary = $this->taxonomy->getVocabulary($id);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
         $vocabulary->terms = $this->taxonomy->getTerms($id);
 
-        return new JsonResponse(array_merge($vocabulary->toArray(), [
+        return json(array_merge($vocabulary->toArray(), [
             'terms' => array_map(fn($t) => $t->toArray(), $vocabulary->terms),
             'term_tree' => $this->formatTermTree($vocabulary->getTermTree()),
         ]));
@@ -63,17 +64,17 @@ final class TaxonomyController
      * Get vocabulary by machine name
      */
     #[Route('GET', '/admin/vocabularies/by-name/{machineName}')]
-    public function showVocabularyByName(string $machineName): JsonResponse
+    public function showVocabularyByName(string $machineName): ResponseInterface
     {
         $vocabulary = $this->taxonomy->getVocabularyByMachineName($machineName);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
         $vocabulary->terms = $this->taxonomy->getTerms($vocabulary->id);
 
-        return new JsonResponse(array_merge($vocabulary->toArray(), [
+        return json(array_merge($vocabulary->toArray(), [
             'terms' => array_map(fn($t) => $t->toArray(), $vocabulary->terms),
         ]));
     }
@@ -82,12 +83,12 @@ final class TaxonomyController
      * Create vocabulary
      */
     #[Route('POST', '/admin/vocabularies')]
-    public function createVocabulary(Request $request): JsonResponse
+    public function createVocabulary(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['name'])) {
-            return new JsonResponse(['errors' => ['name' => 'Name is required']], 422);
+            return json(['errors' => ['name' => 'Name is required']], 422);
         }
 
         // Generate machine name if not provided
@@ -96,7 +97,7 @@ final class TaxonomyController
         // Check uniqueness
         $existing = $this->taxonomy->getVocabularyByMachineName($machineName);
         if ($existing) {
-            return new JsonResponse(['errors' => ['machine_name' => 'Machine name already exists']], 422);
+            return json(['errors' => ['machine_name' => 'Machine name already exists']], 422);
         }
 
         $vocabulary = new Vocabulary();
@@ -112,7 +113,7 @@ final class TaxonomyController
 
         $this->taxonomy->saveVocabulary($vocabulary);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Vocabulary created successfully',
             'vocabulary' => $vocabulary->toArray(),
@@ -123,15 +124,15 @@ final class TaxonomyController
      * Update vocabulary
      */
     #[Route('PUT', '/admin/vocabularies/{id}')]
-    public function updateVocabulary(int $id, Request $request): JsonResponse
+    public function updateVocabulary(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $vocabulary = $this->taxonomy->getVocabulary($id);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (isset($data['name'])) {
             $vocabulary->name = $data['name'];
@@ -140,7 +141,7 @@ final class TaxonomyController
             // Check uniqueness
             $existing = $this->taxonomy->getVocabularyByMachineName($data['machine_name']);
             if ($existing) {
-                return new JsonResponse(['errors' => ['machine_name' => 'Machine name already exists']], 422);
+                return json(['errors' => ['machine_name' => 'Machine name already exists']], 422);
             }
             $vocabulary->machine_name = $data['machine_name'];
         }
@@ -168,7 +169,7 @@ final class TaxonomyController
 
         $this->taxonomy->saveVocabulary($vocabulary);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Vocabulary updated successfully',
             'vocabulary' => $vocabulary->toArray(),
@@ -179,17 +180,17 @@ final class TaxonomyController
      * Delete vocabulary
      */
     #[Route('DELETE', '/admin/vocabularies/{id}')]
-    public function deleteVocabulary(int $id): JsonResponse
+    public function deleteVocabulary(int $id): ResponseInterface
     {
         $vocabulary = $this->taxonomy->getVocabulary($id);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
         $this->taxonomy->deleteVocabulary($vocabulary);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Vocabulary deleted successfully',
         ]);
@@ -199,11 +200,11 @@ final class TaxonomyController
      * Get vocabularies for an entity type
      */
     #[Route('GET', '/admin/vocabularies/for-entity/{entityType}')]
-    public function getVocabulariesForEntity(string $entityType): JsonResponse
+    public function getVocabulariesForEntity(string $entityType): ResponseInterface
     {
         $vocabularies = $this->taxonomy->getVocabulariesForEntity($entityType);
 
-        return new JsonResponse([
+        return json([
             'entity_type' => $entityType,
             'vocabularies' => array_map(fn($v) => array_merge($v->toArray(), [
                 'options' => $this->taxonomy->getTermOptions($v->id, $v->hierarchical),
@@ -219,19 +220,19 @@ final class TaxonomyController
      * List terms in vocabulary
      */
     #[Route('GET', '/admin/vocabularies/{vocabularyId}/terms')]
-    public function listTerms(int $vocabularyId, Request $request): JsonResponse
+    public function listTerms(int $vocabularyId, ServerRequestInterface $request): ResponseInterface
     {
         $vocabulary = $this->taxonomy->getVocabulary($vocabularyId);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
         $flat = $request->getQueryParams()['flat'] ?? null;
 
         if ($flat) {
             $terms = $this->taxonomy->getTerms($vocabularyId);
-            return new JsonResponse([
+            return json([
                 'vocabulary_id' => $vocabularyId,
                 'terms' => array_map(fn($t) => $t->toArray(), $terms),
             ]);
@@ -240,7 +241,7 @@ final class TaxonomyController
         // Return as tree
         $tree = $this->taxonomy->getTermTree($vocabularyId);
 
-        return new JsonResponse([
+        return json([
             'vocabulary_id' => $vocabularyId,
             'vocabulary_name' => $vocabulary->name,
             'hierarchical' => $vocabulary->hierarchical,
@@ -252,18 +253,18 @@ final class TaxonomyController
      * Get single term
      */
     #[Route('GET', '/admin/terms/{id}')]
-    public function showTerm(int $id): JsonResponse
+    public function showTerm(int $id): ResponseInterface
     {
         $term = $this->taxonomy->getTerm($id);
 
         if (!$term) {
-            return new JsonResponse(['error' => 'Term not found'], 404);
+            return json(['error' => 'Term not found'], 404);
         }
 
         // Load children
         $term->children = $this->taxonomy->getChildTerms($id);
 
-        return new JsonResponse(array_merge($term->toArray(), [
+        return json(array_merge($term->toArray(), [
             'children' => array_map(fn($t) => $t->toArray(), $term->children),
             'usage_count' => $this->taxonomy->countTermEntities($id),
         ]));
@@ -273,29 +274,29 @@ final class TaxonomyController
      * Create term
      */
     #[Route('POST', '/admin/vocabularies/{vocabularyId}/terms')]
-    public function createTerm(int $vocabularyId, Request $request): JsonResponse
+    public function createTerm(int $vocabularyId, ServerRequestInterface $request): ResponseInterface
     {
         $vocabulary = $this->taxonomy->getVocabulary($vocabularyId);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['name'])) {
-            return new JsonResponse(['errors' => ['name' => 'Name is required']], 422);
+            return json(['errors' => ['name' => 'Name is required']], 422);
         }
 
         // Validate parent if hierarchical
         if (!empty($data['parent_id'])) {
             if (!$vocabulary->hierarchical) {
-                return new JsonResponse(['errors' => ['parent_id' => 'Vocabulary does not support hierarchy']], 422);
+                return json(['errors' => ['parent_id' => 'Vocabulary does not support hierarchy']], 422);
             }
 
             $parent = $this->taxonomy->getTerm($data['parent_id']);
             if (!$parent || $parent->vocabulary_id !== $vocabularyId) {
-                return new JsonResponse(['errors' => ['parent_id' => 'Invalid parent term']], 422);
+                return json(['errors' => ['parent_id' => 'Invalid parent term']], 422);
             }
         }
 
@@ -316,7 +317,7 @@ final class TaxonomyController
 
         $this->taxonomy->saveTerm($term);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Term created successfully',
             'term' => $term->toArray(),
@@ -327,15 +328,15 @@ final class TaxonomyController
      * Update term
      */
     #[Route('PUT', '/admin/terms/{id}')]
-    public function updateTerm(int $id, Request $request): JsonResponse
+    public function updateTerm(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $term = $this->taxonomy->getTerm($id);
 
         if (!$term) {
-            return new JsonResponse(['error' => 'Term not found'], 404);
+            return json(['error' => 'Term not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         // Validate parent change
         if (isset($data['parent_id']) && $data['parent_id'] !== $term->parent_id) {
@@ -343,17 +344,17 @@ final class TaxonomyController
 
             if ($data['parent_id'] !== null) {
                 if (!$vocabulary->hierarchical) {
-                    return new JsonResponse(['errors' => ['parent_id' => 'Vocabulary does not support hierarchy']], 422);
+                    return json(['errors' => ['parent_id' => 'Vocabulary does not support hierarchy']], 422);
                 }
 
                 $parent = $this->taxonomy->getTerm($data['parent_id']);
                 if (!$parent || $parent->vocabulary_id !== $term->vocabulary_id) {
-                    return new JsonResponse(['errors' => ['parent_id' => 'Invalid parent term']], 422);
+                    return json(['errors' => ['parent_id' => 'Invalid parent term']], 422);
                 }
 
                 // Prevent circular reference
                 if ($parent->isDescendantOf($term)) {
-                    return new JsonResponse(['errors' => ['parent_id' => 'Cannot set descendant as parent']], 422);
+                    return json(['errors' => ['parent_id' => 'Cannot set descendant as parent']], 422);
                 }
             }
 
@@ -396,7 +397,7 @@ final class TaxonomyController
 
         $this->taxonomy->saveTerm($term);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Term updated successfully',
             'term' => $term->toArray(),
@@ -407,12 +408,12 @@ final class TaxonomyController
      * Delete term
      */
     #[Route('DELETE', '/admin/terms/{id}')]
-    public function deleteTerm(int $id, Request $request): JsonResponse
+    public function deleteTerm(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $term = $this->taxonomy->getTerm($id);
 
         if (!$term) {
-            return new JsonResponse(['error' => 'Term not found'], 404);
+            return json(['error' => 'Term not found'], 404);
         }
 
         $deleteChildren = filter_var(
@@ -422,7 +423,7 @@ final class TaxonomyController
 
         $this->taxonomy->deleteTerm($term, $deleteChildren);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Term deleted successfully',
         ]);
@@ -432,7 +433,7 @@ final class TaxonomyController
      * Search terms
      */
     #[Route('GET', '/admin/terms/search')]
-    public function searchTerms(Request $request): JsonResponse
+    public function searchTerms(ServerRequestInterface $request): ResponseInterface
     {
         $query = $request->getQueryParams()['q'] ?? '';
         $vocabularyId = isset($request->getQueryParams()['vocabulary_id'])
@@ -441,12 +442,12 @@ final class TaxonomyController
         $limit = (int) ($request->getQueryParams()['limit'] ?? 20);
 
         if (empty($query)) {
-            return new JsonResponse(['terms' => []]);
+            return json(['terms' => []]);
         }
 
         $terms = $this->taxonomy->searchTerms($query, $vocabularyId, $limit);
 
-        return new JsonResponse([
+        return json([
             'terms' => array_map(fn($t) => $t->toArray(), $terms),
         ]);
     }
@@ -455,15 +456,15 @@ final class TaxonomyController
      * Reorder terms
      */
     #[Route('PUT', '/admin/vocabularies/{vocabularyId}/terms/reorder')]
-    public function reorderTerms(int $vocabularyId, Request $request): JsonResponse
+    public function reorderTerms(int $vocabularyId, ServerRequestInterface $request): ResponseInterface
     {
         $vocabulary = $this->taxonomy->getVocabulary($vocabularyId);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
         $order = $data['order'] ?? [];
 
         // Update weights based on order
@@ -475,7 +476,7 @@ final class TaxonomyController
             }
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Terms reordered successfully',
         ]);
@@ -489,7 +490,7 @@ final class TaxonomyController
      * Get terms for an entity
      */
     #[Route('GET', '/admin/entity-terms/{entityType}/{entityId}')]
-    public function getEntityTerms(string $entityType, int $entityId): JsonResponse
+    public function getEntityTerms(string $entityType, int $entityId): ResponseInterface
     {
         $terms = $this->taxonomy->getEntityTerms($entityType, $entityId);
 
@@ -499,7 +500,7 @@ final class TaxonomyController
             $grouped[$term->vocabulary_id][] = $term->toArray();
         }
 
-        return new JsonResponse([
+        return json([
             'entity_type' => $entityType,
             'entity_id' => $entityId,
             'terms' => array_map(fn($t) => $t->toArray(), $terms),
@@ -515,20 +516,20 @@ final class TaxonomyController
         string $entityType,
         int $entityId,
         int $vocabularyId,
-        Request $request
-    ): JsonResponse {
+        ServerRequestInterface $request
+    ): ResponseInterface {
         $vocabulary = $this->taxonomy->getVocabulary($vocabularyId);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
         $termIds = $data['term_ids'] ?? [];
 
         $this->taxonomy->setEntityTerms($entityType, $entityId, $vocabularyId, $termIds);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Entity terms updated',
         ]);
@@ -538,17 +539,17 @@ final class TaxonomyController
      * Add term to entity
      */
     #[Route('POST', '/admin/entity-terms/{entityType}/{entityId}')]
-    public function addTermToEntity(string $entityType, int $entityId, Request $request): JsonResponse
+    public function addTermToEntity(string $entityType, int $entityId, ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['term_id'])) {
-            return new JsonResponse(['errors' => ['term_id' => 'Term ID is required']], 422);
+            return json(['errors' => ['term_id' => 'Term ID is required']], 422);
         }
 
         $this->taxonomy->addTermToEntity($entityType, $entityId, $data['term_id'], $data['weight'] ?? null);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Term added to entity',
         ]);
@@ -558,11 +559,11 @@ final class TaxonomyController
      * Remove term from entity
      */
     #[Route('DELETE', '/admin/entity-terms/{entityType}/{entityId}/{termId}')]
-    public function removeTermFromEntity(string $entityType, int $entityId, int $termId): JsonResponse
+    public function removeTermFromEntity(string $entityType, int $entityId, int $termId): ResponseInterface
     {
         $this->taxonomy->removeTermFromEntity($entityType, $entityId, $termId);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Term removed from entity',
         ]);
@@ -572,17 +573,17 @@ final class TaxonomyController
      * Get term options for forms
      */
     #[Route('GET', '/admin/vocabularies/{vocabularyId}/options')]
-    public function getTermOptions(int $vocabularyId): JsonResponse
+    public function getTermOptions(int $vocabularyId): ResponseInterface
     {
         $vocabulary = $this->taxonomy->getVocabulary($vocabularyId);
 
         if (!$vocabulary) {
-            return new JsonResponse(['error' => 'Vocabulary not found'], 404);
+            return json(['error' => 'Vocabulary not found'], 404);
         }
 
         $options = $this->taxonomy->getTermOptions($vocabularyId, $vocabulary->hierarchical);
 
-        return new JsonResponse([
+        return json([
             'vocabulary_id' => $vocabularyId,
             'vocabulary_name' => $vocabulary->name,
             'multiple' => $vocabulary->multiple,

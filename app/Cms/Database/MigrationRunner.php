@@ -6,12 +6,12 @@ namespace App\Cms\Database;
 
 /**
  * MigrationRunner - Executes database migrations
- * 
+ *
  * Manages the migration lifecycle:
  * - Running pending migrations
  * - Rolling back migrations
  * - Tracking migration status
- * 
+ *
  * Usage:
  * ```php
  * $runner = new MigrationRunner($pdo, __DIR__ . '/migrations');
@@ -46,7 +46,7 @@ class MigrationRunner
 
     /**
      * Run all pending migrations
-     * 
+     *
      * @return string[] Migrated files
      */
     public function migrate(): array
@@ -78,7 +78,7 @@ class MigrationRunner
 
     /**
      * Rollback the last batch of migrations
-     * 
+     *
      * @return string[] Rolled back files
      */
     public function rollback(): array
@@ -86,7 +86,7 @@ class MigrationRunner
         $this->ensureMigrationsTable();
 
         $batch = $this->getLastBatchNumber();
-        
+
         if ($batch === 0) {
             $this->log("Nothing to rollback.");
             return [];
@@ -110,7 +110,7 @@ class MigrationRunner
 
     /**
      * Rollback all migrations
-     * 
+     *
      * @return string[] Rolled back files
      */
     public function reset(): array
@@ -135,7 +135,7 @@ class MigrationRunner
 
     /**
      * Drop all tables and re-run all migrations
-     * 
+     *
      * @return string[] Migrated files
      */
     public function fresh(): array
@@ -164,7 +164,7 @@ class MigrationRunner
 
     /**
      * Get migration status
-     * 
+     *
      * @return array<array{migration: string, batch: int|null, status: string}>
      */
     public function status(): array
@@ -269,7 +269,7 @@ class MigrationRunner
 
     /**
      * Get list of run migrations
-     * 
+     *
      * @return string[]
      */
     private function getRunMigrations(): array
@@ -282,7 +282,7 @@ class MigrationRunner
 
     /**
      * Get run migrations with batch numbers
-     * 
+     *
      * @return array<string, int>
      */
     private function getRunMigrationsWithBatch(): array
@@ -290,7 +290,7 @@ class MigrationRunner
         $stmt = $this->db->query(
             "SELECT migration, batch FROM {$this->migrationsTable}"
         );
-        
+
         $result = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $result[$row['migration']] = (int) $row['batch'];
@@ -301,7 +301,7 @@ class MigrationRunner
 
     /**
      * Get pending migrations
-     * 
+     *
      * @return string[]
      */
     private function getPendingMigrations(): array
@@ -324,7 +324,7 @@ class MigrationRunner
 
     /**
      * Get all migration files
-     * 
+     *
      * @return string[]
      */
     private function getMigrationFiles(): array
@@ -339,7 +339,7 @@ class MigrationRunner
 
     /**
      * Get migrations for a specific batch
-     * 
+     *
      * @return string[]
      */
     private function getMigrationsForBatch(int $batch): array
@@ -424,7 +424,7 @@ abstract class Migration
                 $nullable = ($def['nullable'] ?? false) ? '' : 'NOT NULL';
                 $default = isset($def['default']) ? "DEFAULT " . $this->formatDefault($def['default']) : '';
                 $extra = $def['extra'] ?? '';
-                
+
                 $defs[] = trim("{$col} {$type} {$nullable} {$default} {$extra}");
 
                 if ($def['index'] ?? false) {
@@ -438,8 +438,8 @@ abstract class Migration
 
         // Add primary key
         if (isset($options['primary'])) {
-            $pk = is_array($options['primary']) 
-                ? implode(', ', $options['primary']) 
+            $pk = is_array($options['primary'])
+                ? implode(', ', $options['primary'])
                 : $options['primary'];
             $defs[] = "PRIMARY KEY ({$pk})";
         }
@@ -455,11 +455,11 @@ abstract class Migration
         $defs = array_merge($defs, $indexes);
 
         $sql = "CREATE TABLE {$name} (\n  " . implode(",\n  ", $defs) . "\n)";
-        
+
         if (isset($options['engine'])) {
             $sql .= " ENGINE={$options['engine']}";
         }
-        
+
         if (isset($options['charset'])) {
             $sql .= " DEFAULT CHARSET={$options['charset']}";
         }
@@ -682,7 +682,7 @@ class Blueprint
     {
         $keys = array_keys($this->columns);
         $lastKey = end($keys);
-        
+
         if (is_string($value) && $value !== 'CURRENT_TIMESTAMP') {
             $value = "'{$value}'";
         } elseif (is_null($value)) {
@@ -690,7 +690,7 @@ class Blueprint
         } elseif (is_bool($value)) {
             $value = $value ? '1' : '0';
         }
-        
+
         $this->columns[$lastKey] .= " DEFAULT {$value}";
         return $this;
     }

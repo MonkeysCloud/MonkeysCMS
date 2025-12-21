@@ -9,10 +9,10 @@ use App\Cms\Fields\Widgets\FieldWidgetManager;
 
 /**
  * FormBuilder - Builds and renders forms from field definitions
- * 
+ *
  * Generates complete forms for content types, block types, and
  * other entities with dynamic field configurations.
- * 
+ *
  * @example
  * ```php
  * // Build a form
@@ -24,10 +24,10 @@ use App\Cms\Fields\Widgets\FieldWidgetManager;
  *     ->addGroup('meta', 'Meta Information', ['slug', 'meta_title', 'meta_description'])
  *     ->addGroup('taxonomy', 'Categories', ['tags', 'categories'])
  *     ->build();
- * 
+ *
  * // Render the form
  * echo $form->render();
- * 
+ *
  * // Process submission
  * $values = $formBuilder->processSubmission($fields, $_POST);
  * $errors = $formBuilder->validate($fields, $values);
@@ -36,7 +36,7 @@ use App\Cms\Fields\Widgets\FieldWidgetManager;
 class FormBuilder
 {
     private FieldWidgetManager $widgetManager;
-    
+
     private string $formId = '';
     private string $action = '';
     private string $method = 'POST';
@@ -56,7 +56,7 @@ class FormBuilder
 
     /**
      * Create a new form builder instance
-     * 
+     *
      * @param string $formId Unique form identifier
      * @param array<FieldDefinition> $fields Field definitions
      */
@@ -65,7 +65,7 @@ class FormBuilder
         $builder = new self($this->widgetManager);
         $builder->formId = $formId;
         $builder->fields = $fields;
-        
+
         // Check for file upload fields
         foreach ($fields as $field) {
             if (in_array($field->field_type, ['image', 'file', 'gallery', 'video'])) {
@@ -73,7 +73,7 @@ class FormBuilder
                 break;
             }
         }
-        
+
         return $builder;
     }
 
@@ -199,7 +199,7 @@ class FormBuilder
     {
         $context['form_id'] = $context['form_id'] ?? 'form';
         $context['errors'] = $context['errors'] ?? [];
-        
+
         return $this->widgetManager->renderField($field, $value, $context);
     }
 }
@@ -222,7 +222,8 @@ class Form
         private readonly ?string $submitLabel,
         private readonly ?string $cancelUrl,
         private readonly FieldWidgetManager $widgetManager,
-    ) {}
+    ) {
+    }
 
     /**
      * Render the complete form
@@ -234,7 +235,7 @@ class Form
         $html .= $this->renderActions();
         $html .= $this->renderFormClose();
         $html .= $this->renderAssets();
-        
+
         return $html;
     }
 
@@ -249,20 +250,20 @@ class Form
             'method' => $this->method === 'GET' ? 'GET' : 'POST',
             'class' => 'cms-form',
         ];
-        
+
         if ($this->hasFiles) {
             $attrs['enctype'] = 'multipart/form-data';
         }
-        
+
         $attrs = array_merge($attrs, $this->attributes);
-        
+
         $html = '<form ' . $this->buildAttributes($attrs) . '>';
-        
+
         // Method spoofing for PUT/PATCH/DELETE
         if (!in_array($this->method, ['GET', 'POST'])) {
             $html .= '<input type="hidden" name="_method" value="' . $this->escape($this->method) . '">';
         }
-        
+
         return $html;
     }
 
@@ -282,7 +283,7 @@ class Form
         if (empty($this->groups)) {
             return $this->renderUngroupedFields();
         }
-        
+
         return $this->renderGroupedFields();
     }
 
@@ -292,17 +293,17 @@ class Form
     private function renderUngroupedFields(): string
     {
         $html = '<div class="cms-form__fields">';
-        
+
         $context = [
             'form_id' => $this->formId,
             'errors' => $this->errors,
         ];
-        
+
         foreach ($this->fields as $field) {
             $value = $this->values[$field->machine_name] ?? $field->default_value;
             $html .= $this->widgetManager->renderField($field, $value, $context);
         }
-        
+
         $html .= '</div>';
         return $html;
     }
@@ -315,37 +316,37 @@ class Form
         // Sort groups by weight
         $sortedGroups = $this->groups;
         uasort($sortedGroups, fn($a, $b) => $a['weight'] <=> $b['weight']);
-        
+
         // Index fields by machine name
         $fieldIndex = [];
         foreach ($this->fields as $field) {
             $fieldIndex[$field->machine_name] = $field;
         }
-        
+
         // Track rendered fields
         $renderedFields = [];
-        
+
         $context = [
             'form_id' => $this->formId,
             'errors' => $this->errors,
         ];
-        
+
         $html = '<div class="cms-form__groups">';
-        
+
         foreach ($sortedGroups as $groupId => $group) {
             $collapsedClass = $group['collapsed'] ? ' cms-form__group--collapsed' : '';
-            
+
             $html .= '<fieldset class="cms-form__group' . $collapsedClass . '" id="' . $this->escape($this->formId . '_group_' . $groupId) . '">';
             $html .= '<legend class="cms-form__group-legend">';
             $html .= '<button type="button" class="cms-form__group-toggle">' . $this->escape($group['label']) . '</button>';
             $html .= '</legend>';
-            
+
             if ($group['description']) {
                 $html .= '<div class="cms-form__group-description">' . $this->escape($group['description']) . '</div>';
             }
-            
+
             $html .= '<div class="cms-form__group-content">';
-            
+
             foreach ($group['fields'] as $fieldName) {
                 if (isset($fieldIndex[$fieldName])) {
                     $field = $fieldIndex[$fieldName];
@@ -354,11 +355,11 @@ class Form
                     $renderedFields[$fieldName] = true;
                 }
             }
-            
+
             $html .= '</div>';
             $html .= '</fieldset>';
         }
-        
+
         // Render any ungrouped fields
         $ungrouped = [];
         foreach ($this->fields as $field) {
@@ -366,21 +367,21 @@ class Form
                 $ungrouped[] = $field;
             }
         }
-        
+
         if (!empty($ungrouped)) {
             $html .= '<fieldset class="cms-form__group">';
             $html .= '<legend class="cms-form__group-legend">Other</legend>';
             $html .= '<div class="cms-form__group-content">';
-            
+
             foreach ($ungrouped as $field) {
                 $value = $this->values[$field->machine_name] ?? $field->default_value;
                 $html .= $this->widgetManager->renderField($field, $value, $context);
             }
-            
+
             $html .= '</div>';
             $html .= '</fieldset>';
         }
-        
+
         $html .= '</div>';
         return $html;
     }
@@ -391,14 +392,14 @@ class Form
     public function renderActions(): string
     {
         $submitLabel = $this->submitLabel ?? 'Save';
-        
+
         $html = '<div class="cms-form__actions">';
         $html .= '<button type="submit" class="cms-form__submit btn btn-primary">' . $this->escape($submitLabel) . '</button>';
-        
+
         if ($this->cancelUrl) {
             $html .= '<a href="' . $this->escape($this->cancelUrl) . '" class="cms-form__cancel btn btn-secondary">Cancel</a>';
         }
-        
+
         $html .= '</div>';
         return $html;
     }
@@ -409,22 +410,22 @@ class Form
     public function renderAssets(): string
     {
         $html = '';
-        
+
         // CSS
         $cssAssets = $this->widgetManager->getCssAssets();
         foreach ($cssAssets as $css) {
             $html .= '<link rel="stylesheet" href="' . $this->escape($css) . '">';
         }
-        
+
         // JS
         $jsAssets = $this->widgetManager->getJsAssets();
         foreach ($jsAssets as $js) {
             $html .= '<script src="' . $this->escape($js) . '" defer></script>';
         }
-        
+
         // Init scripts
         $html .= $this->widgetManager->getInitScripts();
-        
+
         return $html;
     }
 

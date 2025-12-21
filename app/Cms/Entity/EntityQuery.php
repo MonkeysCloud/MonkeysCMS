@@ -6,7 +6,7 @@ namespace App\Cms\Entity;
 
 /**
  * EntityQuery - Fluent query builder for entities
- * 
+ *
  * Provides a chainable API for building database queries:
  * ```php
  * $query->where('status', 'published')
@@ -66,7 +66,7 @@ class EntityQuery
 
     /**
      * Set columns to select
-     * 
+     *
      * @param string|array<string> $columns
      */
     public function select(string|array $columns = ['*']): static
@@ -119,7 +119,7 @@ class EntityQuery
 
     /**
      * Add a where IN clause
-     * 
+     *
      * @param array<mixed> $values
      */
     public function whereIn(string $column, array $values, string $boolean = 'AND'): static
@@ -136,7 +136,7 @@ class EntityQuery
 
     /**
      * Add a where NOT IN clause
-     * 
+     *
      * @param array<mixed> $values
      */
     public function whereNotIn(string $column, array $values, string $boolean = 'AND'): static
@@ -426,7 +426,7 @@ class EntityQuery
 
     /**
      * Execute query and get all results
-     * 
+     *
      * @return array<EntityInterface>
      */
     public function get(): array
@@ -457,13 +457,13 @@ class EntityQuery
 
     /**
      * Get first result or throw exception
-     * 
+     *
      * @throws EntityNotFoundException
      */
     public function firstOrFail(): EntityInterface
     {
         $result = $this->first();
-        
+
         if ($result === null) {
             throw new EntityNotFoundException("Entity not found: {$this->entityClass}");
         }
@@ -481,13 +481,13 @@ class EntityQuery
 
     /**
      * Find by primary key or throw
-     * 
+     *
      * @throws EntityNotFoundException
      */
     public function findOrFail(int $id): EntityInterface
     {
         $result = $this->find($id);
-        
+
         if ($result === null) {
             throw new EntityNotFoundException("Entity not found: {$this->entityClass} #{$id}");
         }
@@ -570,7 +570,7 @@ class EntityQuery
 
     /**
      * Get paginated results
-     * 
+     *
      * @return array{data: array<EntityInterface>, total: int, page: int, per_page: int, last_page: int}
      */
     public function paginate(int $perPage = 15, int $page = 1): array
@@ -616,7 +616,7 @@ class EntityQuery
 
     /**
      * Get column values as array
-     * 
+     *
      * @return array<mixed>
      */
     public function pluck(string $column, ?string $key = null): array
@@ -818,7 +818,7 @@ class EntityQuery
 
     /**
      * Get bindings
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getBindings(): array

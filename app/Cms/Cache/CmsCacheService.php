@@ -10,22 +10,22 @@ use MonkeysLegion\Cache\Contracts\Store;
 
 /**
  * CmsCacheService - CMS-specific caching layer
- * 
+ *
  * Wraps MonkeysLegion-Cache with CMS-specific functionality:
  * - Automatic cache tagging for entities
  * - Content cache invalidation
  * - Query result caching
  * - Template/view caching
  * - Menu/navigation caching
- * 
+ *
  * @example
  * ```php
  * // Cache entity data with automatic tagging
  * $cache->entity('user', 123, fn() => $this->loadUser(123));
- * 
+ *
  * // Cache query results
  * $cache->query('articles', ['status' => 'published'], fn() => $this->getArticles());
- * 
+ *
  * // Invalidate all caches for an entity type
  * $cache->invalidateEntity('user');
  * ```
@@ -42,7 +42,7 @@ final class CmsCacheService
     private const TAG_MODULE = 'module';
     private const TAG_TAXONOMY = 'taxonomy';
     private const TAG_MEDIA = 'media';
-    
+
     // Default TTLs
     private const TTL_SHORT = 300;      // 5 minutes
     private const TTL_MEDIUM = 3600;    // 1 hour
@@ -62,7 +62,7 @@ final class CmsCacheService
 
     /**
      * Cache an entity by type and ID
-     * 
+     *
      * @param string $entityType Entity type (user, article, etc.)
      * @param int|string $id Entity ID
      * @param callable $callback Function to load entity if not cached
@@ -73,7 +73,7 @@ final class CmsCacheService
     {
         $key = $this->entityKey($entityType, $id);
         $tags = [self::TAG_ENTITY, "{$entityType}"];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -84,29 +84,29 @@ final class CmsCacheService
     {
         $result = [];
         $missing = [];
-        
+
         foreach ($ids as $id) {
             $key = $this->entityKey($entityType, $id);
             $cached = $this->cacheManager->store()->get($key);
-            
+
             if ($cached !== null) {
                 $result[$id] = $cached;
             } else {
                 $missing[] = $id;
             }
         }
-        
+
         if (!empty($missing)) {
             $loaded = $callback($missing);
             $tags = [self::TAG_ENTITY, "{$entityType}"];
-            
+
             foreach ($loaded as $id => $entity) {
                 $key = $this->entityKey($entityType, $id);
                 $this->setWithTags($key, $entity, $tags, $ttl);
                 $result[$id] = $entity;
             }
         }
-        
+
         return $result;
     }
 
@@ -137,7 +137,7 @@ final class CmsCacheService
 
     /**
      * Cache a database query result
-     * 
+     *
      * @param string $name Query identifier
      * @param array $params Query parameters (used in cache key)
      * @param callable $callback Function to execute query
@@ -148,7 +148,7 @@ final class CmsCacheService
     {
         $key = $this->queryKey($name, $params);
         $tags = [self::TAG_QUERY, "query:{$name}"];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -188,7 +188,7 @@ final class CmsCacheService
     {
         $key = "content:{$contentType}:{$id}";
         $tags = [self::TAG_CONTENT, "content:{$contentType}"];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -199,7 +199,7 @@ final class CmsCacheService
     {
         $key = "page:" . md5($url);
         $tags = [self::TAG_CONTENT, 'pages'];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -234,7 +234,7 @@ final class CmsCacheService
     {
         $key = "menu:{$menuName}";
         $tags = [self::TAG_MENU, "menu:{$menuName}"];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -266,7 +266,7 @@ final class CmsCacheService
     {
         $key = "taxonomy:{$vocabulary}";
         $tags = [self::TAG_TAXONOMY, "taxonomy:{$vocabulary}"];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -290,7 +290,7 @@ final class CmsCacheService
     {
         $key = "settings:{$group}";
         $tags = [self::TAG_SETTINGS];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -313,7 +313,7 @@ final class CmsCacheService
     {
         $key = "theme:{$themeName}";
         $tags = [self::TAG_THEME];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -344,7 +344,7 @@ final class CmsCacheService
     {
         $key = "media:{$id}";
         $tags = [self::TAG_MEDIA];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -371,7 +371,7 @@ final class CmsCacheService
     {
         $key = "module:{$moduleName}";
         $tags = [self::TAG_MODULE];
-        
+
         return $this->rememberWithTags($key, $tags, $ttl, $callback);
     }
 
@@ -511,14 +511,14 @@ final class CmsCacheService
     {
         try {
             $cached = $this->cacheManager->tags($tags)->get($key);
-            
+
             if ($cached !== null) {
                 return $cached;
             }
-            
+
             $value = $callback();
             $this->cacheManager->tags($tags)->set($key, $value, $ttl);
-            
+
             return $value;
         } catch (\Exception) {
             // Fall back to regular remember
@@ -614,7 +614,7 @@ final class CmsCacheService
     public function preCache(string $type, callable $dataProvider, int $ttl = self::TTL_LONG): void
     {
         $data = $dataProvider();
-        
+
         foreach ($data as $key => $value) {
             $this->set("{$type}:{$key}", $value, $ttl);
         }

@@ -48,15 +48,17 @@ class PasswordResetController
 
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->session->flash('error', 'Please enter a valid email address');
-            return $this->redirect('/password/forgot');
+            return redirect('/password/forgot');
         }
 
         // Always show success to prevent email enumeration
         $this->auth->sendPasswordReset($email);
 
-        $this->session->flash('success', 
-            'If an account exists with that email, you will receive a password reset link shortly.');
-        return $this->redirect('/password/forgot');
+        $this->session->flash(
+            'success',
+            'If an account exists with that email, you will receive a password reset link shortly.'
+        );
+        return redirect('/password/forgot');
     }
 
     /**
@@ -86,47 +88,44 @@ class PasswordResetController
         // Validate
         if (empty($token)) {
             $this->session->flash('error', 'Invalid reset token');
-            return $this->redirect('/password/forgot');
+            return redirect('/password/forgot');
         }
 
         if (empty($password)) {
             $this->session->flash('error', 'Password is required');
-            return $this->redirect("/password/reset/{$token}");
+            return redirect("/password/reset/{$token}");
         }
 
         if (strlen($password) < 8) {
             $this->session->flash('error', 'Password must be at least 8 characters');
-            return $this->redirect("/password/reset/{$token}");
+            return redirect("/password/reset/{$token}");
         }
 
         if ($password !== $confirmation) {
             $this->session->flash('error', 'Passwords do not match');
-            return $this->redirect("/password/reset/{$token}");
+            return redirect("/password/reset/{$token}");
         }
 
         // Attempt reset
         if ($this->auth->resetPassword($token, $password)) {
             $this->session->flash('success', 'Password reset successfully! You can now log in.');
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $this->session->flash('error', 'Invalid or expired reset token');
-        return $this->redirect('/password/forgot');
+        return redirect('/password/forgot');
     }
 
     // =========================================================================
     // Helpers
     // =========================================================================
 
-    private function redirect(string $url, int $status = 302): ResponseInterface
-    {
-        return new \Nyholm\Psr7\Response($status, ['Location' => $url]);
-    }
+
 
     private function view(string $template, array $data = []): ResponseInterface
     {
         $html = $this->renderTemplate($template, $data);
-        return new \Nyholm\Psr7\Response(200, ['Content-Type' => 'text/html'], $html);
+        return response($html, 200, ['Content-Type' => 'text/html']);
     }
 
     private function renderTemplate(string $template, array $data): string
@@ -197,8 +196,8 @@ HTML;
         $token = $data['token'] ?? '';
         $error = $data['error'] ?? '';
 
-        $errorHtml = $error 
-            ? "<div class=\"bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4\">{$error}</div>" 
+        $errorHtml = $error
+            ? "<div class=\"bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4\">{$error}</div>"
             : '';
 
         return <<<HTML

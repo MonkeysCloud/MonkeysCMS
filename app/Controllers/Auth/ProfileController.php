@@ -37,9 +37,9 @@ class ProfileController
     public function show(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         return $this->view('profile/show', [
@@ -57,9 +57,9 @@ class ProfileController
     public function edit(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         return $this->view('profile/edit', [
@@ -76,9 +76,9 @@ class ProfileController
     public function update(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $data = $request->getParsedBody();
@@ -96,17 +96,17 @@ class ProfileController
 
         if (!empty($errors)) {
             $this->session->flash('errors', $errors);
-            return $this->redirect('/profile/edit');
+            return redirect('/profile/edit');
         }
 
         // Update user
         $user->setDisplayName($data['display_name'] ?? null);
         $user->setBio($data['bio'] ?? null);
-        
+
         $this->userProvider->save($user);
 
         $this->session->flash('success', 'Profile updated successfully');
-        return $this->redirect('/profile');
+        return redirect('/profile');
     }
 
     /**
@@ -116,9 +116,9 @@ class ProfileController
     public function showEmailForm(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         return $this->view('profile/email', [
@@ -135,9 +135,9 @@ class ProfileController
     public function updateEmail(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $data = $request->getParsedBody();
@@ -147,19 +147,19 @@ class ProfileController
         // Validate
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->session->flash('error', 'Invalid email address');
-            return $this->redirect('/profile/email');
+            return redirect('/profile/email');
         }
 
         if (!$user->verifyPassword($password)) {
             $this->session->flash('error', 'Invalid password');
-            return $this->redirect('/profile/email');
+            return redirect('/profile/email');
         }
 
         // Check if email already exists
         $existing = $this->userProvider->findByEmail($email);
         if ($existing && $existing->getId() !== $user->getId()) {
             $this->session->flash('error', 'Email already in use');
-            return $this->redirect('/profile/email');
+            return redirect('/profile/email');
         }
 
         // Update email
@@ -168,7 +168,7 @@ class ProfileController
         $this->userProvider->save($user);
 
         $this->session->flash('success', 'Email updated successfully');
-        return $this->redirect('/profile');
+        return redirect('/profile');
     }
 
     /**
@@ -178,9 +178,9 @@ class ProfileController
     public function showPasswordForm(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         return $this->view('profile/password', [
@@ -196,9 +196,9 @@ class ProfileController
     public function updatePassword(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $data = $request->getParsedBody();
@@ -209,21 +209,21 @@ class ProfileController
         // Validate
         if (strlen($new) < 8) {
             $this->session->flash('error', 'New password must be at least 8 characters');
-            return $this->redirect('/profile/password');
+            return redirect('/profile/password');
         }
 
         if ($new !== $confirm) {
             $this->session->flash('error', 'Passwords do not match');
-            return $this->redirect('/profile/password');
+            return redirect('/profile/password');
         }
 
         if (!$this->auth->changePassword($current, $new)) {
             $this->session->flash('error', 'Current password is incorrect');
-            return $this->redirect('/profile/password');
+            return redirect('/profile/password');
         }
 
         $this->session->flash('success', 'Password changed successfully');
-        return $this->redirect('/profile');
+        return redirect('/profile');
     }
 
     /**
@@ -233,9 +233,9 @@ class ProfileController
     public function showSessions(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $sessions = $this->userProvider->getUserSessions($user->getId());
@@ -255,21 +255,21 @@ class ProfileController
     public function revokeSession(ServerRequestInterface $request, string $sessionId): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         // Don't allow revoking current session
         if ($sessionId === $this->session->getId()) {
             $this->session->flash('error', 'Cannot revoke current session. Use logout instead.');
-            return $this->redirect('/profile/sessions');
+            return redirect('/profile/sessions');
         }
 
         $this->userProvider->deleteSession($sessionId);
 
         $this->session->flash('success', 'Session revoked successfully');
-        return $this->redirect('/profile/sessions');
+        return redirect('/profile/sessions');
     }
 
     /**
@@ -279,9 +279,9 @@ class ProfileController
     public function revokeAllSessions(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $data = $request->getParsedBody();
@@ -289,17 +289,17 @@ class ProfileController
 
         if (!$user->verifyPassword($password)) {
             $this->session->flash('error', 'Invalid password');
-            return $this->redirect('/profile/sessions');
+            return redirect('/profile/sessions');
         }
 
         // Increment token version to invalidate all JWT tokens
         $this->userProvider->incrementTokenVersion($user->getId());
-        
+
         // Delete all sessions except current
         $this->userProvider->deleteAllSessions($user->getId());
 
         $this->session->flash('success', 'All other sessions have been revoked');
-        return $this->redirect('/profile/sessions');
+        return redirect('/profile/sessions');
     }
 
     /**
@@ -309,9 +309,9 @@ class ProfileController
     public function showLinkedAccounts(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         // TODO: Get linked accounts
@@ -333,9 +333,9 @@ class ProfileController
     public function delete(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $data = $request->getParsedBody();
@@ -344,12 +344,12 @@ class ProfileController
 
         if ($confirmation !== 'DELETE') {
             $this->session->flash('error', 'Please type DELETE to confirm');
-            return $this->redirect('/profile');
+            return redirect('/profile');
         }
 
         if (!$user->verifyPassword($password)) {
             $this->session->flash('error', 'Invalid password');
-            return $this->redirect('/profile');
+            return redirect('/profile');
         }
 
         // Soft delete user
@@ -358,22 +358,19 @@ class ProfileController
         // Logout
         $this->auth->logout();
 
-        return $this->redirect('/');
+        return redirect('/');
     }
 
     // =========================================================================
     // Helpers
     // =========================================================================
 
-    private function redirect(string $url, int $status = 302): ResponseInterface
-    {
-        return new \Nyholm\Psr7\Response($status, ['Location' => $url]);
-    }
+
 
     private function view(string $template, array $data = []): ResponseInterface
     {
         $html = $this->renderTemplate($template, $data);
-        return new \Nyholm\Psr7\Response(200, ['Content-Type' => 'text/html'], $html);
+        return response($html, 200, ['Content-Type' => 'text/html']);
     }
 
     private function renderTemplate(string $template, array $data): string

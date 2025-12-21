@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * Migration: Create nodes table (content)
  */
+
 return new class {
     public function up(\PDO $db): void
     {

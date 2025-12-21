@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * Migration: Create blocks tables
  */
+
 return new class {
     public function up(\PDO $db): void
     {

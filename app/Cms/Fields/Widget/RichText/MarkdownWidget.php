@@ -60,7 +60,7 @@ final class MarkdownWidget extends AbstractWidget
         $rows = $settings->getInt('rows', 15);
         $showPreview = $settings->getBool('show_preview', true);
         $showToolbar = $settings->getBool('show_toolbar', true);
-        
+
         $wrapper = Html::div()
             ->class('field-markdown')
             ->data('field-id', $fieldId);

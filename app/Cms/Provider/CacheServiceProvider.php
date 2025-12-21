@@ -10,7 +10,7 @@ use MonkeysLegion\Di\ContainerInterface;
 
 /**
  * CacheServiceProvider - Bootstraps MonkeysLegion-Cache
- * 
+ *
  * This provider initializes the cache system and sets up:
  * - CacheManager with configured stores
  * - Cache facade for static access
@@ -20,7 +20,8 @@ final class CacheServiceProvider
 {
     public function __construct(
         private readonly ContainerInterface $container,
-    ) {}
+    ) {
+    }
 
     /**
      * Boot the cache service
@@ -29,10 +30,10 @@ final class CacheServiceProvider
     {
         // Get the cache manager from container
         $cacheManager = $this->container->get(CacheManager::class);
-        
+
         // Initialize the Cache facade
         Cache::setInstance($cacheManager);
-        
+
         // Optionally warm up cache with frequently accessed data
         $this->warmUpCache($cacheManager);
     }
@@ -48,14 +49,14 @@ final class CacheServiceProvider
         // - Navigation menus
         // - User permissions
         // - System configuration
-        
+
         // Only warm up in production
         $environment = $_ENV['APP_ENV'] ?? 'production';
-        
+
         if ($environment !== 'production') {
             return;
         }
-        
+
         // Cache warming logic can be added here
         // Example:
         // $cacheManager->store()->set('app:booted', time(), 86400);
@@ -69,14 +70,14 @@ final class CacheServiceProvider
         return [
             'default' => $_ENV['CACHE_DRIVER'] ?? 'file',
             'prefix' => $_ENV['CACHE_PREFIX'] ?? 'monkeyscms',
-            
+
             'stores' => [
                 'file' => [
                     'driver' => 'file',
                     'path' => $basePath . '/storage/cache',
                     'prefix' => $_ENV['CACHE_PREFIX'] ?? 'ml_cache',
                 ],
-                
+
                 'redis' => [
                     'driver' => 'redis',
                     'host' => $_ENV['REDIS_HOST'] ?? '127.0.0.1',
@@ -86,7 +87,7 @@ final class CacheServiceProvider
                     'prefix' => $_ENV['CACHE_PREFIX'] ?? 'ml_cache',
                     'timeout' => 2.5,
                 ],
-                
+
                 'memcached' => [
                     'driver' => 'memcached',
                     'persistent_id' => $_ENV['MEMCACHED_PERSISTENT_ID'] ?? 'monkeyscms',
@@ -99,7 +100,7 @@ final class CacheServiceProvider
                         ],
                     ],
                 ],
-                
+
                 'array' => [
                     'driver' => 'array',
                     'prefix' => $_ENV['CACHE_PREFIX'] ?? 'ml_cache',

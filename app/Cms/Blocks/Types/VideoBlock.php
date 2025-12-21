@@ -164,13 +164,19 @@ class VideoBlock extends AbstractBlockType
         }
 
         $params = [];
-        if ($autoplay) $params['autoplay'] = '1';
+        if ($autoplay) {
+            $params['autoplay'] = '1';
+        }
         if ($loop) {
             $params['loop'] = '1';
             $params['playlist'] = $videoId;
         }
-        if ($muted) $params['mute'] = '1';
-        if (!$controls) $params['controls'] = '0';
+        if ($muted) {
+            $params['mute'] = '1';
+        }
+        if (!$controls) {
+            $params['controls'] = '0';
+        }
         $params['rel'] = '0'; // Don't show related videos
 
         $queryString = http_build_query($params);
@@ -190,9 +196,15 @@ class VideoBlock extends AbstractBlockType
         }
 
         $params = [];
-        if ($autoplay) $params['autoplay'] = '1';
-        if ($loop) $params['loop'] = '1';
-        if ($muted) $params['muted'] = '1';
+        if ($autoplay) {
+            $params['autoplay'] = '1';
+        }
+        if ($loop) {
+            $params['loop'] = '1';
+        }
+        if ($muted) {
+            $params['muted'] = '1';
+        }
 
         $queryString = http_build_query($params);
         $embedUrl = "https://player.vimeo.com/video/{$videoId}" . ($queryString ? "?{$queryString}" : '');
@@ -213,12 +225,22 @@ class VideoBlock extends AbstractBlockType
         }
 
         $attrs = ['class="video-block__video"'];
-        if ($autoplay) $attrs[] = 'autoplay';
-        if ($loop) $attrs[] = 'loop';
-        if ($muted) $attrs[] = 'muted';
-        if ($controls) $attrs[] = 'controls';
+        if ($autoplay) {
+            $attrs[] = 'autoplay';
+        }
+        if ($loop) {
+            $attrs[] = 'loop';
+        }
+        if ($muted) {
+            $attrs[] = 'muted';
+        }
+        if ($controls) {
+            $attrs[] = 'controls';
+        }
         $attrs[] = 'playsinline';
-        if ($posterSrc) $attrs[] = 'poster="' . $this->escape($posterSrc) . '"';
+        if ($posterSrc) {
+            $attrs[] = 'poster="' . $this->escape($posterSrc) . '"';
+        }
 
         return sprintf(
             '<video %s><source src="%s" type="video/mp4">Your browser does not support the video tag.</video>',
@@ -257,17 +279,17 @@ class VideoBlock extends AbstractBlockType
     public function getCacheTags(Block $block): array
     {
         $tags = parent::getCacheTags($block);
-        
+
         $videoFile = $this->getFieldValue($block, 'video_file');
         if ($videoFile) {
             $tags[] = 'media:' . $videoFile;
         }
-        
+
         $poster = $this->getFieldValue($block, 'poster');
         if ($poster) {
             $tags[] = 'media:' . $poster;
         }
-        
+
         return $tags;
     }
 

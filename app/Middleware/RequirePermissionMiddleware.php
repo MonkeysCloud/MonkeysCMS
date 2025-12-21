@@ -13,7 +13,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * RequirePermissionMiddleware - Checks for specific permission before allowing access
- * 
+ *
  * Usage in routes:
  *   #[Route('GET', '/admin/users', middleware: ['permission:view_users'])]
  */
@@ -22,13 +22,14 @@ final class RequirePermissionMiddleware implements MiddlewareInterface
     public function __construct(
         private readonly PermissionService $permissions,
         private readonly string $requiredPermission,
-    ) {}
+    ) {
+    }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         // Check if user is authenticated
         $user = $this->permissions->getCurrentUser();
-        
+
         if ($user === null) {
             return new JsonResponse([
                 'error' => 'Authentication required',

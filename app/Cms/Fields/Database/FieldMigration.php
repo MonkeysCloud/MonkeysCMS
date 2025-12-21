@@ -6,7 +6,7 @@ namespace App\Cms\Fields\Database;
 
 /**
  * FieldMigration - Database schema for the field widget system
- * 
+ *
  * Creates tables for:
  * - field_definitions: Stores field configurations
  * - field_attachments: Links fields to entity types
@@ -82,7 +82,7 @@ SQL;
 
     /**
      * Create field_attachments table
-     * 
+     *
      * Links fields to entity types (content types, block types, etc.)
      */
     private function createFieldAttachmentsTable(): void
@@ -115,7 +115,7 @@ SQL;
 
     /**
      * Create field_values table (EAV pattern)
-     * 
+     *
      * Stores field values for all entities
      */
     private function createFieldValuesTable(): void
@@ -164,7 +164,7 @@ SQL;
 
     /**
      * Create field_revisions table
-     * 
+     *
      * Stores historical versions of field values
      */
     private function createFieldRevisionsTable(): void
@@ -332,35 +332,35 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($argv[0] ?? '')
     $dsn = $argv[1] ?? 'mysql:host=localhost;dbname=monkeyscms';
     $user = $argv[2] ?? 'root';
     $pass = $argv[3] ?? '';
-    
+
     try {
         $pdo = new PDO($dsn, $user, $pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
-        
+
         $migration = new FieldMigration($pdo);
-        
+
         $action = $argv[4] ?? 'up';
-        
+
         switch ($action) {
             case 'up':
                 echo "Running field migrations...\n";
                 $migration->up();
                 echo "Migrations completed successfully.\n";
                 break;
-                
+
             case 'down':
                 echo "Rolling back field migrations...\n";
                 $migration->down();
                 echo "Rollback completed successfully.\n";
                 break;
-                
+
             case 'seed':
                 echo "Seeding default fields...\n";
                 $migration->seed();
                 echo "Seeding completed successfully.\n";
                 break;
-                
+
             case 'fresh':
                 echo "Fresh migration (down + up + seed)...\n";
                 $migration->down();
@@ -368,7 +368,7 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($argv[0] ?? '')
                 $migration->seed();
                 echo "Fresh migration completed successfully.\n";
                 break;
-                
+
             default:
                 echo "Unknown action: {$action}\n";
                 echo "Usage: php FieldMigration.php [dsn] [user] [pass] [up|down|seed|fresh]\n";

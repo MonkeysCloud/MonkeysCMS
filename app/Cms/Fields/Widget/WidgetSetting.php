@@ -16,7 +16,8 @@ final class WidgetSetting
         private readonly mixed $default,
         private readonly array $options,
         private readonly array $constraints,
-    ) {}
+    ) {
+    }
 
     public static function string(string $name, string $label, ?string $default = null): self
     {

@@ -16,7 +16,7 @@ use App\Cms\User\UserManager;
 
 /**
  * EntityServiceProvider - Dependency injection wiring for entity system
- * 
+ *
  * Provides factory methods for creating entity system components.
  * Can be integrated with any DI container or used standalone.
  */
@@ -146,7 +146,7 @@ class EntityServiceProvider
 
     /**
      * Get a generic repository for any entity class
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @return EntityRepository<T>
@@ -212,29 +212,29 @@ class EntityServiceProvider
 
     /**
      * Get service definitions for DI container
-     * 
+     *
      * Returns an array of service definitions that can be used with
      * any PSR-11 compatible container.
      */
     public static function getDefinitions(): array
     {
         return [
-            \PDO::class => function() {
+            \PDO::class => function () {
                 return self::getConnection();
             },
-            EntityManager::class => function() {
+            EntityManager::class => function () {
                 return self::getEntityManager();
             },
-            NodeManager::class => function() {
+            NodeManager::class => function () {
                 return self::getNodeManager();
             },
-            UserManager::class => function() {
+            UserManager::class => function () {
                 return self::getUserManager();
             },
-            ContentTypeManager::class => function() {
+            ContentTypeManager::class => function () {
                 return self::getContentTypeManager();
             },
-            NodeRepository::class => function() {
+            NodeRepository::class => function () {
                 return self::getNodeRepository();
             },
         ];

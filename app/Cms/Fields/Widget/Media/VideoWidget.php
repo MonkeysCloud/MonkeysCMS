@@ -62,7 +62,7 @@ final class VideoWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
-        
+
         $wrapper = Html::div()
             ->class('field-video')
             ->data('field-id', $fieldId);
@@ -126,7 +126,7 @@ final class VideoWidget extends AbstractWidget
         }
 
         $embedHtml = $this->getEmbedHtml($value);
-        
+
         if ($embedHtml) {
             $html = Html::div()
                 ->class('field-display', 'field-display--video')

@@ -12,7 +12,8 @@ final class StringTransformer implements ValueTransformerInterface
     public function __construct(
         private readonly bool $trim = true,
         private readonly bool $nullifyEmpty = true,
-    ) {}
+    ) {
+    }
 
     public function toForm(FieldValue $value): FieldValue
     {
@@ -22,15 +23,15 @@ final class StringTransformer implements ValueTransformerInterface
     public function toStorage(FieldValue $value): FieldValue
     {
         $string = $value->asString();
-        
+
         if ($this->trim) {
             $string = trim($string);
         }
-        
+
         if ($this->nullifyEmpty && $string === '') {
             return FieldValue::null('string');
         }
-        
+
         return FieldValue::string($string);
     }
 

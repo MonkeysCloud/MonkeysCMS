@@ -49,7 +49,7 @@ final class PhoneWidget extends AbstractWidget
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
-        
+
         $input = Html::input('tel')
             ->attrs($this->buildCommonAttributes($field, $context))
             ->value($value ?? '');

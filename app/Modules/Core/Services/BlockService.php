@@ -12,7 +12,7 @@ use MonkeysLegion\Cache\CacheManager;
 
 /**
  * BlockService - High-level service for managing blocks
- * 
+ *
  * Provides CRUD operations for blocks and integrates with
  * BlockManager (types) and BlockRenderer (rendering).
  */
@@ -26,7 +26,8 @@ class BlockService
         private readonly BlockManager $blockManager,
         private readonly BlockRenderer $blockRenderer,
         private readonly ?CacheManager $cache = null,
-    ) {}
+    ) {
+    }
 
     // =========================================================================
     // Block CRUD
@@ -76,7 +77,7 @@ class BlockService
     public function delete(int $id): bool
     {
         $result = $this->repository->delete(Block::class, $id);
-        
+
         if ($result) {
             $this->invalidateCache($id);
             $this->blockRenderer->clearCache($id);
@@ -156,7 +157,7 @@ class BlockService
     public function getByRegion(string $region, ?string $theme = null): array
     {
         $cacheKey = self::CACHE_PREFIX . "region:{$region}:{$theme}";
-        
+
         if ($this->cache) {
             $cached = $this->cache->store()->get($cacheKey);
             if ($cached !== null) {
@@ -401,25 +402,63 @@ class BlockService
 
     private function hydrateBlock(Block $block, array $data): void
     {
-        if (isset($data['admin_title'])) $block->admin_title = $data['admin_title'];
-        if (isset($data['machine_name'])) $block->machine_name = $data['machine_name'];
-        if (isset($data['title'])) $block->title = $data['title'];
-        if (isset($data['show_title'])) $block->show_title = (bool) $data['show_title'];
-        if (isset($data['block_type'])) $block->block_type = $data['block_type'];
-        if (isset($data['body'])) $block->body = $data['body'];
-        if (isset($data['body_format'])) $block->body_format = $data['body_format'];
-        if (isset($data['view_template'])) $block->view_template = $data['view_template'];
-        if (isset($data['region'])) $block->region = $data['region'];
-        if (isset($data['theme'])) $block->theme = $data['theme'];
-        if (isset($data['weight'])) $block->weight = (int) $data['weight'];
-        if (isset($data['is_published'])) $block->is_published = (bool) $data['is_published'];
-        if (isset($data['visibility_pages'])) $block->visibility_pages = $data['visibility_pages'];
-        if (isset($data['visibility_mode'])) $block->visibility_mode = $data['visibility_mode'];
-        if (isset($data['visibility_roles'])) $block->visibility_roles = $data['visibility_roles'];
-        if (isset($data['settings'])) $block->settings = $data['settings'];
-        if (isset($data['css_class'])) $block->css_class = $data['css_class'];
-        if (isset($data['css_id'])) $block->css_id = $data['css_id'];
-        if (isset($data['author_id'])) $block->author_id = $data['author_id'];
+        if (isset($data['admin_title'])) {
+            $block->admin_title = $data['admin_title'];
+        }
+        if (isset($data['machine_name'])) {
+            $block->machine_name = $data['machine_name'];
+        }
+        if (isset($data['title'])) {
+            $block->title = $data['title'];
+        }
+        if (isset($data['show_title'])) {
+            $block->show_title = (bool) $data['show_title'];
+        }
+        if (isset($data['block_type'])) {
+            $block->block_type = $data['block_type'];
+        }
+        if (isset($data['body'])) {
+            $block->body = $data['body'];
+        }
+        if (isset($data['body_format'])) {
+            $block->body_format = $data['body_format'];
+        }
+        if (isset($data['view_template'])) {
+            $block->view_template = $data['view_template'];
+        }
+        if (isset($data['region'])) {
+            $block->region = $data['region'];
+        }
+        if (isset($data['theme'])) {
+            $block->theme = $data['theme'];
+        }
+        if (isset($data['weight'])) {
+            $block->weight = (int) $data['weight'];
+        }
+        if (isset($data['is_published'])) {
+            $block->is_published = (bool) $data['is_published'];
+        }
+        if (isset($data['visibility_pages'])) {
+            $block->visibility_pages = $data['visibility_pages'];
+        }
+        if (isset($data['visibility_mode'])) {
+            $block->visibility_mode = $data['visibility_mode'];
+        }
+        if (isset($data['visibility_roles'])) {
+            $block->visibility_roles = $data['visibility_roles'];
+        }
+        if (isset($data['settings'])) {
+            $block->settings = $data['settings'];
+        }
+        if (isset($data['css_class'])) {
+            $block->css_class = $data['css_class'];
+        }
+        if (isset($data['css_id'])) {
+            $block->css_id = $data['css_id'];
+        }
+        if (isset($data['author_id'])) {
+            $block->author_id = $data['author_id'];
+        }
     }
 
     private function invalidateCache(?int $blockId = null): void

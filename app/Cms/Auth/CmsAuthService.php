@@ -19,28 +19,28 @@ use MonkeysLegion\Auth\Token\TokenStorageInterface;
 
 /**
  * CmsAuthService - Authentication service for MonkeysCMS
- * 
+ *
  * Wraps MonkeysLegion-Auth with CMS-specific functionality:
  * - Integration with CMS User entity
  * - Session management
  * - Remember me functionality
  * - Audit logging
- * 
+ *
  * Usage:
  * ```php
  * $auth = new CmsAuthService($config);
- * 
+ *
  * // Login
  * $result = $auth->attempt($email, $password);
  * if ($result->success) {
  *     // Store tokens in session/cookie
  * }
- * 
+ *
  * // Check authentication
  * if ($auth->check()) {
  *     $user = $auth->user();
  * }
- * 
+ *
  * // Logout
  * $auth->logout();
  * ```
@@ -107,7 +107,7 @@ class CmsAuthService
 
     /**
      * Attempt to authenticate a user
-     * 
+     *
      * @return AuthResult
      * @throws InvalidCredentialsException
      * @throws AccountLockedException
@@ -128,7 +128,7 @@ class CmsAuthService
 
             // Get user
             $user = $this->userProvider->findByEmail($email);
-            
+
             // Record login
             $user->recordLogin($ip);
             $this->userProvider->save($user);
@@ -141,7 +141,6 @@ class CmsAuthService
                 user: $user,
                 tokens: $result->tokens,
             );
-
         } catch (InvalidCredentialsException $e) {
             return new AuthResult(
                 success: false,
@@ -180,7 +179,6 @@ class CmsAuthService
                 user: $user,
                 tokens: $result->tokens,
             );
-
         } catch (\Exception $e) {
             return new AuthResult(
                 success: false,
@@ -210,7 +208,7 @@ class CmsAuthService
     {
         try {
             $tokens = $this->authService->refresh($refreshToken);
-            
+
             // Update session
             $this->session->set('access_token', $tokens->accessToken);
             $this->session->set('refresh_token', $tokens->refreshToken);
@@ -221,7 +219,6 @@ class CmsAuthService
                 refreshToken: $tokens->refreshToken,
                 accessExpiresAt: $tokens->accessExpiresAt,
             );
-
         } catch (\Exception $e) {
             return null;
         }
@@ -273,7 +270,7 @@ class CmsAuthService
 
     /**
      * Register a new user
-     * 
+     *
      * @param array{email: string, username: string, password: string, display_name?: string} $data
      */
     public function register(array $data, bool $autoLogin = true): AuthResult
@@ -335,7 +332,7 @@ class CmsAuthService
     public function sendPasswordReset(string $email): bool
     {
         $user = $this->userProvider->findByEmail($email);
-        
+
         if (!$user) {
             // Don't reveal if email exists
             return true;
@@ -391,7 +388,7 @@ class CmsAuthService
     public function changePassword(string $currentPassword, string $newPassword): bool
     {
         $user = $this->user();
-        
+
         if (!$user || !$user->verifyPassword($currentPassword)) {
             return false;
         }
@@ -416,7 +413,7 @@ class CmsAuthService
     public function generate2FASetup(): ?array
     {
         $user = $this->user();
-        
+
         if (!$user || !$this->twoFactor) {
             return null;
         }
@@ -430,14 +427,14 @@ class CmsAuthService
     public function enable2FA(string $secret, string $code): bool
     {
         $user = $this->user();
-        
+
         if (!$user || !$this->twoFactor) {
             return false;
         }
 
         try {
             $this->twoFactor->enable($secret, $code, $user->getId());
-            
+
             // Store secret on user
             $this->userProvider->store2FASecret($user->getId(), $secret);
 
@@ -453,7 +450,7 @@ class CmsAuthService
     public function disable2FA(string $password): bool
     {
         $user = $this->user();
-        
+
         if (!$user || !$user->verifyPassword($password)) {
             return false;
         }
@@ -469,13 +466,13 @@ class CmsAuthService
     public function verify2FACode(string $code): bool
     {
         $user = $this->user();
-        
+
         if (!$user || !$this->twoFactor) {
             return false;
         }
 
         $secret = $this->userProvider->get2FASecret($user->getId());
-        
+
         if (!$secret) {
             return false;
         }
@@ -566,7 +563,7 @@ class CmsAuthService
         try {
             $payload = $this->jwtService->decode($accessToken);
             $user = $this->userProvider->findById($payload->sub);
-            
+
             if ($user) {
                 $this->currentUser = $user;
                 $this->accessToken = $accessToken;
@@ -585,13 +582,13 @@ class CmsAuthService
     private function loadFromRememberToken(): bool
     {
         $rememberToken = $this->session->getCookie('remember_token');
-        
+
         if (!$rememberToken) {
             return false;
         }
 
         $user = $this->userProvider->findByRememberToken($rememberToken);
-        
+
         if (!$user || !$user->isActive()) {
             return false;
         }
@@ -649,7 +646,8 @@ class AuthResult
         public readonly ?string $challengeToken = null,
         public readonly ?string $error = null,
         public readonly ?int $lockedUntil = null,
-    ) {}
+    ) {
+    }
 
     public function failed(): bool
     {
@@ -666,5 +664,6 @@ class TokenPair
         public readonly string $accessToken,
         public readonly string $refreshToken,
         public readonly int $accessExpiresAt,
-    ) {}
+    ) {
+    }
 }

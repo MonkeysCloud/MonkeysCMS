@@ -13,21 +13,21 @@ use MonkeysLegion\Template\Renderer;
 
 /**
  * BlockRenderer - Renders blocks to HTML
- * 
+ *
  * Handles:
  * - Block visibility checks (path, user/role)
  * - Caching of rendered output
  * - Asset collection (CSS/JS)
  * - Region-based rendering
- * 
+ *
  * @example
  * ```php
  * // Render a single block
  * $html = $renderer->render($block, ['current_path' => '/about']);
- * 
+ *
  * // Render all blocks in a region
  * $html = $renderer->renderRegion('sidebar', ['user' => $currentUser]);
- * 
+ *
  * // Get required assets
  * $css = $renderer->getRequiredCss();
  * $js = $renderer->getRequiredJs();
@@ -52,7 +52,8 @@ final class BlockRenderer
         private readonly Connection $connection,
         private readonly ?CacheManager $cache = null,
         private readonly ?Renderer $templateRenderer = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Render a single block
@@ -103,7 +104,7 @@ final class BlockRenderer
     public function renderRegion(string $region, array $context = []): string
     {
         $blocks = $this->getBlocksForRegion($region, $context['theme'] ?? null);
-        
+
         if (empty($blocks)) {
             return '';
         }
@@ -439,7 +440,7 @@ final class BlockRenderer
         $html .= '<span class="block-preview__icon">' . ($type['icon'] ?? '🧱') . '</span>';
         $html .= '<span class="block-preview__label">' . htmlspecialchars($type['label']) . '</span>';
         $html .= '</div>';
-        
+
         if (!empty($type['description'])) {
             $html .= '<div class="block-preview__description">' . htmlspecialchars($type['description']) . '</div>';
         }

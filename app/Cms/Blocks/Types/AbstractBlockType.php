@@ -8,7 +8,7 @@ use App\Modules\Core\Entities\Block;
 
 /**
  * AbstractBlockType - Base implementation for block types
- * 
+ *
  * Extend this class to create a new block type with sensible defaults.
  */
 abstract class AbstractBlockType implements BlockTypeInterface

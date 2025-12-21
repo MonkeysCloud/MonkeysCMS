@@ -12,7 +12,7 @@ use MonkeysLegion\Auth\Contract\AuthenticatableInterface;
 
 /**
  * CmsUserProvider - Implements UserProviderInterface for MonkeysLegion-Auth
- * 
+ *
  * Bridges the CMS User entity with the authentication library.
  */
 class CmsUserProvider implements UserProviderInterface
@@ -38,7 +38,7 @@ class CmsUserProvider implements UserProviderInterface
     public function findById(int|string $id): ?AuthenticatableInterface
     {
         $user = $this->repository->find((int) $id);
-        
+
         if ($user) {
             $this->loadRolesAndPermissions($user);
         }
@@ -52,7 +52,7 @@ class CmsUserProvider implements UserProviderInterface
     public function findByEmail(string $email): ?AuthenticatableInterface
     {
         $user = $this->repository->findByEmail($email);
-        
+
         if ($user) {
             $this->loadRolesAndPermissions($user);
         }
@@ -66,7 +66,7 @@ class CmsUserProvider implements UserProviderInterface
     public function findByCredentials(string $identifier): ?AuthenticatableInterface
     {
         $user = $this->repository->findByEmailOrUsername($identifier);
-        
+
         if ($user) {
             $this->loadRolesAndPermissions($user);
         }
@@ -90,7 +90,7 @@ class CmsUserProvider implements UserProviderInterface
         $stmt = $this->db->prepare("SELECT token_version FROM users WHERE id = :id");
         $stmt->execute(['id' => $userId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
+
         return (int) ($row['token_version'] ?? 1);
     }
 
@@ -115,7 +115,7 @@ class CmsUserProvider implements UserProviderInterface
     public function findByUsername(string $username): ?User
     {
         $user = $this->repository->findByUsername($username);
-        
+
         if ($user) {
             $this->loadRolesAndPermissions($user);
         }
@@ -129,7 +129,7 @@ class CmsUserProvider implements UserProviderInterface
     public function findByRememberToken(string $token): ?User
     {
         $user = $this->repository->findOneBy(['remember_token' => $token]);
-        
+
         if ($user) {
             $this->loadRolesAndPermissions($user);
         }
@@ -193,7 +193,7 @@ class CmsUserProvider implements UserProviderInterface
             SELECT :user_id, id FROM roles WHERE machine_name = :role
         ");
         $stmt->execute(['user_id' => $user->getId(), 'role' => $roleName]);
-        
+
         $this->loadRolesAndPermissions($user);
     }
 
@@ -208,13 +208,13 @@ class CmsUserProvider implements UserProviderInterface
             WHERE ur.user_id = :user_id AND r.machine_name = :role
         ");
         $stmt->execute(['user_id' => $user->getId(), 'role' => $roleName]);
-        
+
         $this->loadRolesAndPermissions($user);
     }
 
     /**
      * Sync user roles
-     * 
+     *
      * @param string[] $roles Role machine names
      */
     public function syncRoles(User $user, array $roles): void
@@ -265,7 +265,7 @@ class CmsUserProvider implements UserProviderInterface
         ");
         $stmt->execute(['token_hash' => $tokenHash]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
+
         return $row ? (int) $row['user_id'] : null;
     }
 
@@ -301,7 +301,7 @@ class CmsUserProvider implements UserProviderInterface
         $stmt = $this->db->prepare("SELECT two_factor_secret FROM users WHERE id = :id");
         $stmt->execute(['id' => $userId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
+
         return $row['two_factor_secret'] ?? null;
     }
 
@@ -327,7 +327,7 @@ class CmsUserProvider implements UserProviderInterface
         $stmt = $this->db->prepare("SELECT two_factor_recovery_codes FROM users WHERE id = :id");
         $stmt->execute(['id' => $userId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
+
         return json_decode($row['two_factor_recovery_codes'] ?? '[]', true);
     }
 
@@ -363,7 +363,7 @@ class CmsUserProvider implements UserProviderInterface
         $stmt = $this->db->prepare("SELECT email_verified_at FROM users WHERE id = :id");
         $stmt->execute(['id' => $userId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
+
         return $row['email_verified_at'] !== null;
     }
 
@@ -404,7 +404,7 @@ class CmsUserProvider implements UserProviderInterface
             ORDER BY last_activity DESC
         ");
         $stmt->execute(['user_id' => $userId]);
-        
+
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -444,7 +444,7 @@ class CmsUserProvider implements UserProviderInterface
         ");
         $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
         $stmt->execute();
-        
+
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -464,7 +464,7 @@ class CmsUserProvider implements UserProviderInterface
             'start' => $start->format('Y-m-d H:i:s'),
             'end' => $end->format('Y-m-d H:i:s'),
         ]);
-        
+
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 }

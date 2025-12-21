@@ -62,18 +62,18 @@ final class StarRatingWidget extends AbstractWidget
         $maxStars = $settings->getInt('max_stars', 5);
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
-        
+
         $wrapper = Html::div()->class('field-star-rating');
-        
+
         // Hidden input
         $wrapper->child(
             Html::hidden($fieldName, $value ?? 0)
                 ->id($fieldId)
         );
-        
+
         // Stars container
         $stars = Html::div()->class('field-star-rating__stars');
-        
+
         for ($i = 1; $i <= $maxStars; $i++) {
             $filled = $i <= ($value ?? 0);
             $stars->child(
@@ -83,9 +83,9 @@ final class StarRatingWidget extends AbstractWidget
                     ->text($filled ? '★' : '☆')
             );
         }
-        
+
         $wrapper->child($stars);
-        
+
         return $wrapper;
     }
 

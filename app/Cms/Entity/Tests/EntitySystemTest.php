@@ -19,7 +19,7 @@ use App\Cms\User\UserManager;
 
 /**
  * EntitySystemTest - Comprehensive tests for the entity system
- * 
+ *
  * Run with: php EntitySystemTest.php
  */
 class EntitySystemTest
@@ -200,7 +200,7 @@ class EntitySystemTest
     private function testNodeFields(): void
     {
         $node = new Node(['title' => 'Test']);
-        
+
         $node->setField('body', 'Content here');
         $node->setField('tags', ['news', 'featured']);
 
@@ -389,7 +389,7 @@ class EntitySystemTest
     {
         $em = EntityServiceProvider::getEntityManager();
 
-        $result = $em->transaction(function() use ($em) {
+        $result = $em->transaction(function () use ($em) {
             $entity = new TestEntity(['name' => 'Transaction', 'status' => 'active']);
             $em->save($entity);
             return $entity->getId();
@@ -403,7 +403,7 @@ class EntitySystemTest
         $em = EntityServiceProvider::getEntityManager();
         $called = false;
 
-        $em->on('postSave', function($event) use (&$called) {
+        $em->on('postSave', function ($event) use (&$called) {
             $called = true;
         });
 

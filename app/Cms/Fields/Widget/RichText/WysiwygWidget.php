@@ -60,7 +60,7 @@ final class WysiwygWidget extends AbstractWidget
         $height = $settings->getInt('height', 400);
         $toolbar = $settings->getString('toolbar', 'default');
         $plugins = $settings->getArray('plugins', ['link', 'image', 'lists', 'table', 'code']);
-        
+
         $wrapper = Html::div()
             ->class('field-wysiwyg')
             ->data('field-id', $fieldId)

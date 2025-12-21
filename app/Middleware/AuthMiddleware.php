@@ -24,7 +24,8 @@ final class AuthMiddleware implements MiddlewareInterface
         private readonly PermissionService $permissions,
         private readonly CmsRepository $repository,
         private readonly string $jwtSecret,
-    ) {}
+    ) {
+    }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -33,10 +34,10 @@ final class AuthMiddleware implements MiddlewareInterface
         if ($user !== null) {
             // Set user context in permission service
             $this->permissions->setCurrentUser($user);
-            
+
             // Load user's roles and permissions
             $this->permissions->loadUserRoles($user);
-            
+
             // Add user to request attributes
             $request = $request->withAttribute('user', $user);
             $request = $request->withAttribute('user_id', $user->id);
@@ -112,7 +113,7 @@ final class AuthMiddleware implements MiddlewareInterface
             }
 
             $user = $this->repository->find(User::class, (int) $userId);
-            
+
             if ($user && $user->isActive()) {
                 return $user;
             }

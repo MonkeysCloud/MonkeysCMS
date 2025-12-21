@@ -17,7 +17,7 @@ use App\Cms\Fields\Value\FieldValue;
 
 /**
  * AbstractWidget - Base implementation for field widgets
- * 
+ *
  * Provides common functionality for field rendering, value handling,
  * and asset management. Extend this class to create custom widgets.
  */
@@ -97,21 +97,21 @@ abstract class AbstractWidget implements WidgetInterface
     public function renderField(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult
     {
         $formattedValue = $this->formatValue($field, $value);
-        
+
         // Build the input element
         $input = $this->buildInput($field, $formattedValue, $context);
         $inputHtml = $input instanceof HtmlBuilder ? $input->render() : $input;
-        
+
         // Wrap with field wrapper
         $wrapperHtml = $this->buildWrapper($field, $inputHtml, $context);
-        
+
         // Clone assets and add any initialization scripts
         $assets = clone $this->assets;
         $initScript = $this->getInitScript($field, $this->getFieldId($field, $context));
         if ($initScript) {
             $assets->addInitScript($initScript);
         }
-        
+
         return RenderResult::create($wrapperHtml, $assets);
     }
 
@@ -119,46 +119,46 @@ abstract class AbstractWidget implements WidgetInterface
     {
         // Hydrate a legacy FieldDefinition from the new Field object
         $legacyField = FieldDefinition::fromArray($field->toArray());
-        
+
         // Use the raw value
         $legacyValue = $value->get();
-        
+
         // Call the legacy render logic
         $result = $this->renderField($legacyField, $legacyValue, $context);
-        
+
         // Convert the result back to the new output format
         $output = WidgetOutput::html($result->getHtml());
-        
+
         // Copy assets if any
         if (!$result->getAssets()->isEmpty()) {
             $assets = WidgetAssets::empty();
             $legacyAssets = $result->getAssets();
-            
+
             foreach ($legacyAssets->getCssFiles() as $css) {
                 $assets = $assets->addCss($css);
             }
-            
+
             foreach ($legacyAssets->getJsFiles() as $js) {
                 $assets = $assets->addJs($js);
             }
-            
+
             foreach ($legacyAssets->getInlineStyles() as $id => $style) {
                 $assets = $assets->addInlineStyle($id, $style);
             }
-            
+
             foreach ($legacyAssets->getInlineScripts() as $id => $script) {
                 $assets = $assets->addInlineScript($id, $script);
             }
-            
+
             $output = $output->withAssets($assets);
-            
+
             // Handle init scripts
             $initScripts = $legacyAssets->getInitScripts();
             if (!empty($initScripts)) {
                 $output = $output->withInitScript(implode("\n", $initScripts));
             }
         }
-        
+
         return $output;
     }
 
@@ -189,46 +189,46 @@ abstract class AbstractWidget implements WidgetInterface
         // Hydrate a legacy FieldDefinition from the new Field object
         // This is a temporary bridge until we fully refactor widgets
         $legacyField = FieldDefinition::fromArray($field->toArray());
-        
+
         // Use the raw value as that's what renderDisplay expects
         $legacyValue = $value->get();
-        
+
         // Call the existing render logic (which might be overridden by subclasses)
         $result = $this->renderDisplay($legacyField, $legacyValue, $context);
-        
+
         // Convert the result back to the new output format
         $output = WidgetOutput::html($result->getHtml());
-        
+
         // Copy assets if any
         if (!$result->getAssets()->isEmpty()) {
             $assets = WidgetAssets::empty();
             $legacyAssets = $result->getAssets();
-            
+
             foreach ($legacyAssets->getCssFiles() as $css) {
                 $assets = $assets->addCss($css);
             }
-            
+
             foreach ($legacyAssets->getJsFiles() as $js) {
                 $assets = $assets->addJs($js);
             }
-            
+
             foreach ($legacyAssets->getInlineStyles() as $id => $style) {
                 $assets = $assets->addInlineStyle($id, $style);
             }
-            
+
             foreach ($legacyAssets->getInlineScripts() as $id => $script) {
                 $assets = $assets->addInlineScript($id, $script);
             }
-            
+
             $output = $output->withAssets($assets);
-            
+
             // Handle init scripts
             $initScripts = $legacyAssets->getInitScripts();
             if (!empty($initScripts)) {
                 $output = $output->withInitScript(implode("\n", $initScripts));
             }
         }
-        
+
         return $output;
     }
 
@@ -238,7 +238,7 @@ abstract class AbstractWidget implements WidgetInterface
     protected function buildWrapper(FieldDefinition $field, string $inputHtml, RenderContext $context): string
     {
         $hasError = $context->hasErrorsFor($field->machine_name);
-        
+
         $wrapper = Html::div()
             ->class(
                 'field-widget',
@@ -305,9 +305,9 @@ abstract class AbstractWidget implements WidgetInterface
     protected function buildErrors(FieldDefinition $field, RenderContext $context): HtmlBuilder
     {
         $errors = $context->getErrorsFor($field->machine_name);
-        
+
         $container = Html::div()->class('field-widget__errors');
-        
+
         foreach ($errors as $error) {
             $container->child(
                 Html::div()
@@ -356,11 +356,11 @@ abstract class AbstractWidget implements WidgetInterface
     protected function getFieldId(FieldDefinition $field, RenderContext $context): string
     {
         $id = $context->getFormId() . '_' . $field->machine_name;
-        
+
         if ($context->getIndex() !== null) {
             $id .= '_' . $context->getIndex();
         }
-        
+
         return $id;
     }
 
@@ -370,15 +370,15 @@ abstract class AbstractWidget implements WidgetInterface
     protected function getFieldName(FieldDefinition $field, RenderContext $context): string
     {
         $name = $field->machine_name;
-        
+
         if ($context->getNamePrefix()) {
             $name = $context->getNamePrefix() . '[' . $name . ']';
         }
-        
+
         if ($field->multiple && $this->supportsMultiple()) {
             $name .= '[]';
         }
-        
+
         return $name;
     }
 
@@ -442,12 +442,12 @@ abstract class AbstractWidget implements WidgetInterface
     protected function getOptions(FieldDefinition $field): array
     {
         $options = $field->getSetting('options', []);
-        
+
         if (is_string($options)) {
             $decoded = json_decode($options, true);
             return is_array($decoded) ? $decoded : [];
         }
-        
+
         return $options;
     }
 
@@ -475,7 +475,7 @@ abstract class AbstractWidget implements WidgetInterface
         if ($value instanceof \DateTimeInterface) {
             return $value->format($format);
         }
-        
+
         if (is_string($value) && $value !== '') {
             try {
                 return (new \DateTimeImmutable($value))->format($format);
@@ -483,7 +483,7 @@ abstract class AbstractWidget implements WidgetInterface
                 return $value;
             }
         }
-        
+
         return '';
     }
 
@@ -495,7 +495,7 @@ abstract class AbstractWidget implements WidgetInterface
         if (!is_numeric($value)) {
             return (string) $value;
         }
-        
+
         return number_format((float) $value, $decimals);
     }
 

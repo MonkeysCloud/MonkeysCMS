@@ -13,22 +13,22 @@ use ReflectionProperty;
 
 /**
  * SchemaGenerator - Generates SQL DDL from entity class definitions
- * 
+ *
  * This is the "auto-sync" engine that converts PHP entity classes with
  * attributes into MySQL CREATE TABLE statements.
- * 
+ *
  * Key features:
  * - Reads #[ContentType], #[Field], #[Id], #[Relation] attributes
  * - Generates CREATE TABLE IF NOT EXISTS statements
  * - Creates indexes, unique constraints, and foreign keys
  * - Supports ALTER TABLE for schema evolution
- * 
+ *
  * Unlike Drupal's hook_schema() or entity API, this is pure reflection-based,
  * requiring no configuration files or database queries for schema definition.
- * 
+ *
  * Unlike WordPress, this creates proper normalized tables with typed columns,
  * not a single wp_postmeta EAV table.
- * 
+ *
  * @example
  * ```php
  * $generator = new SchemaGenerator();
@@ -58,7 +58,7 @@ final class SchemaGenerator
 
     /**
      * Generate complete SQL schema for an entity class
-     * 
+     *
      * @param string $entityClass Fully qualified class name
      * @return string Complete SQL statement(s)
      * @throws \InvalidArgumentException If class is not a valid CMS entity
@@ -70,7 +70,7 @@ final class SchemaGenerator
         }
 
         $reflection = new ReflectionClass($entityClass);
-        
+
         // Get ContentType attribute
         $contentTypeAttrs = $reflection->getAttributes(ContentType::class);
         if (empty($contentTypeAttrs)) {
@@ -90,7 +90,7 @@ final class SchemaGenerator
 
         // Build column definitions
         $columns = $this->extractColumns($reflection);
-        
+
         // Generate CREATE TABLE statement
         $createTable = $this->buildCreateTableStatement($tableName, $columns);
         $this->statements[] = $createTable;
@@ -115,7 +115,7 @@ final class SchemaGenerator
 
     /**
      * Generate SQL to alter an existing table to match entity definition
-     * 
+     *
      * @param string $entityClass Fully qualified class name
      * @param array<string, array<string, mixed>> $existingSchema Current table schema from DESCRIBE
      * @return string ALTER TABLE statements
@@ -124,7 +124,7 @@ final class SchemaGenerator
     {
         $reflection = new ReflectionClass($entityClass);
         $contentTypeAttrs = $reflection->getAttributes(ContentType::class);
-        
+
         if (empty($contentTypeAttrs)) {
             throw new \InvalidArgumentException("Class is not a CMS ContentType");
         }
@@ -154,7 +154,7 @@ final class SchemaGenerator
                 // This is a simplified comparison - production code would be more thorough
                 $existingType = strtoupper($existingSchema[$columnName]['Type'] ?? '');
                 $definedType = $this->extractTypeFromDefinition($definition);
-                
+
                 if ($existingType !== $definedType) {
                     $alterStatements[] = sprintf(
                         "ALTER TABLE `%s` MODIFY COLUMN %s;",
@@ -170,7 +170,7 @@ final class SchemaGenerator
 
     /**
      * Generate SQL to compare and sync schema (for module enable)
-     * 
+     *
      * @param string $entityClass Fully qualified class name
      * @param bool $dropUnused Whether to drop columns not in entity definition
      * @return array{create: string, alter: string} SQL statements for create or alter
@@ -185,7 +185,7 @@ final class SchemaGenerator
 
     /**
      * Extract column definitions from entity reflection
-     * 
+     *
      * @param ReflectionClass $reflection
      * @return array<string, string> Column name => full SQL definition
      */
@@ -202,7 +202,7 @@ final class SchemaGenerator
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             $columnName = $this->propertyToColumn($property->getName());
-            
+
             // Check for #[Id] attribute
             $idAttrs = $property->getAttributes(Id::class);
             if (!empty($idAttrs)) {
@@ -231,10 +231,12 @@ final class SchemaGenerator
             if (!empty($relationAttrs)) {
                 /** @var Relation $relation */
                 $relation = $relationAttrs[0]->newInstance();
-                
+
                 // Only create column for owning side of ManyToOne/OneToOne
-                if ($relation->isOwningSide() && 
-                    in_array($relation->type, [Relation::MANY_TO_ONE, Relation::ONE_TO_ONE], true)) {
+                if (
+                    $relation->isOwningSide() &&
+                    in_array($relation->type, [Relation::MANY_TO_ONE, Relation::ONE_TO_ONE], true)
+                ) {
                     $fkColumn = $relation->getForeignKeyColumn($property->getName());
                     $columns[$fkColumn] = sprintf(
                         "`%s` INT UNSIGNED%s",
@@ -281,7 +283,7 @@ final class SchemaGenerator
     private function buildColumnDefinition(string $columnName, Field $field, string $tableName): string
     {
         $parts = [sprintf("`%s`", $columnName)];
-        
+
         // SQL type
         $parts[] = $field->toSqlType();
 
@@ -294,7 +296,7 @@ final class SchemaGenerator
 
         // Default value
         if ($field->default !== null && !$field->required) {
-            $defaultValue = is_string($field->default) 
+            $defaultValue = is_string($field->default)
                 ? sprintf("'%s'", addslashes($field->default))
                 : $field->default;
             $parts[] = sprintf("DEFAULT %s", $defaultValue);
@@ -331,7 +333,7 @@ final class SchemaGenerator
     private function buildCreateTableStatement(string $tableName, array $columns): string
     {
         $columnDefs = implode(",\n    ", $columns);
-        
+
         return sprintf(
             "CREATE TABLE IF NOT EXISTS `%s` (\n    %s\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
             $tableName,
@@ -345,7 +347,7 @@ final class SchemaGenerator
     private function generateRevisionTable(string $baseTable, array $columns): string
     {
         $revisionTable = $baseTable . '_revision';
-        
+
         // Modify columns for revision table
         $revisionColumns = [];
         $revisionColumns['revision_id'] = '`revision_id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY';
@@ -413,7 +415,7 @@ final class SchemaGenerator
 
         $reflection = new ReflectionClass($entityClass);
         $attrs = $reflection->getAttributes(ContentType::class);
-        
+
         if (!empty($attrs)) {
             return $attrs[0]->newInstance()->tableName;
         }

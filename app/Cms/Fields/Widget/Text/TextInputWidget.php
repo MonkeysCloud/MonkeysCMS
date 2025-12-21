@@ -51,7 +51,7 @@ final class TextInputWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $prefix = $settings->getString('prefix');
         $suffix = $settings->getString('suffix');
-        
+
         $input = Html::input('text')
             ->attrs($this->buildCommonAttributes($field, $context))
             ->value($value ?? '');

@@ -6,13 +6,12 @@ namespace App\Controllers\Admin;
 
 use App\Cms\Modules\ModuleManager;
 use App\Cms\Repository\CmsRepository;
-use Laminas\Diactoros\Response\JsonResponse;
-use MonkeysLegion\Router\Attribute\Route;
+use MonkeysLegion\Router\Attributes\Route;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * DashboardController - Admin dashboard API
- * 
+ *
  * Provides overview data for the CMS admin panel.
  */
 #[Route('/admin', name: 'admin')]
@@ -21,7 +20,8 @@ final class DashboardController
     public function __construct(
         private readonly ModuleManager $moduleManager,
         private readonly CmsRepository $repository,
-    ) {}
+    ) {
+    }
 
     /**
      * Dashboard overview data
@@ -48,7 +48,7 @@ final class DashboardController
             }
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'data' => [
                 'modules' => [
@@ -73,7 +73,7 @@ final class DashboardController
     #[Route('GET', '/health', name: 'health')]
     public function health(): ResponseInterface
     {
-        return new JsonResponse([
+        return json([
             'status' => 'healthy',
             'timestamp' => date('c'),
         ]);

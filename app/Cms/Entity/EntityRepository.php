@@ -6,21 +6,21 @@ namespace App\Cms\Entity;
 
 /**
  * EntityRepositoryInterface - Contract for entity repositories
- * 
+ *
  * @template T of EntityInterface
  */
 interface EntityRepositoryInterface
 {
     /**
      * Find entity by ID
-     * 
+     *
      * @return T|null
      */
     public function find(int $id): ?EntityInterface;
 
     /**
      * Find entity by ID or throw
-     * 
+     *
      * @return T
      * @throws EntityNotFoundException
      */
@@ -28,14 +28,14 @@ interface EntityRepositoryInterface
 
     /**
      * Get all entities
-     * 
+     *
      * @return T[]
      */
     public function all(): array;
 
     /**
      * Find by criteria
-     * 
+     *
      * @param array<string, mixed> $criteria
      * @return T[]
      */
@@ -43,7 +43,7 @@ interface EntityRepositoryInterface
 
     /**
      * Find one by criteria
-     * 
+     *
      * @param array<string, mixed> $criteria
      * @return T|null
      */
@@ -51,14 +51,14 @@ interface EntityRepositoryInterface
 
     /**
      * Save entity
-     * 
+     *
      * @param T $entity
      */
     public function save(EntityInterface $entity): void;
 
     /**
      * Delete entity
-     * 
+     *
      * @param T $entity
      */
     public function delete(EntityInterface $entity): void;
@@ -70,7 +70,7 @@ interface EntityRepositoryInterface
 
     /**
      * Count entities
-     * 
+     *
      * @param array<string, mixed> $criteria
      */
     public function count(array $criteria = []): int;
@@ -78,17 +78,17 @@ interface EntityRepositoryInterface
 
 /**
  * EntityRepository - Generic repository implementation
- * 
+ *
  * Provides common repository operations for any entity type.
  * Can be extended for entity-specific repositories.
- * 
+ *
  * @template T of EntityInterface
  * @implements EntityRepositoryInterface<T>
  */
 class EntityRepository implements EntityRepositoryInterface
 {
     protected EntityManager $em;
-    
+
     /** @var class-string<T> */
     protected string $entityClass;
 
@@ -103,7 +103,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Find entity by ID
-     * 
+     *
      * @return T|null
      */
     public function find(int $id): ?EntityInterface
@@ -113,7 +113,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Find entity by ID or throw
-     * 
+     *
      * @return T
      * @throws EntityNotFoundException
      */
@@ -124,7 +124,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Get all entities
-     * 
+     *
      * @return T[]
      */
     public function all(): array
@@ -134,7 +134,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Find by criteria
-     * 
+     *
      * @param array<string, mixed> $criteria
      * @param array<string, string> $orderBy
      * @return T[]
@@ -146,7 +146,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Find one by criteria
-     * 
+     *
      * @param array<string, mixed> $criteria
      * @return T|null
      */
@@ -157,7 +157,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Save entity
-     * 
+     *
      * @param T $entity
      */
     public function save(EntityInterface $entity): void
@@ -167,7 +167,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Delete entity
-     * 
+     *
      * @param T $entity
      */
     public function delete(EntityInterface $entity): void
@@ -185,7 +185,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Count entities
-     * 
+     *
      * @param array<string, mixed> $criteria
      */
     public function count(array $criteria = []): int
@@ -205,7 +205,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Check if entity exists
-     * 
+     *
      * @param array<string, mixed> $criteria
      */
     public function exists(array $criteria): bool
@@ -215,7 +215,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Get paginated results
-     * 
+     *
      * @param array<string, mixed> $criteria
      * @param array<string, string> $orderBy
      * @return array{data: T[], total: int, page: int, per_page: int, last_page: int}
@@ -241,7 +241,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Find by IDs
-     * 
+     *
      * @param int[] $ids
      * @return T[]
      */
@@ -252,7 +252,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Get first entity matching criteria
-     * 
+     *
      * @param array<string, mixed> $criteria
      * @param array<string, string> $orderBy
      * @return T|null
@@ -264,7 +264,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Get latest entity
-     * 
+     *
      * @return T|null
      */
     public function latest(string $column = 'created_at'): ?EntityInterface
@@ -274,7 +274,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Get oldest entity
-     * 
+     *
      * @return T|null
      */
     public function oldest(string $column = 'created_at'): ?EntityInterface
@@ -284,7 +284,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Create new entity instance
-     * 
+     *
      * @param array<string, mixed> $data
      * @return T
      */
@@ -295,7 +295,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Create and save entity
-     * 
+     *
      * @param array<string, mixed> $data
      * @return T
      */
@@ -308,14 +308,14 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Update entity by ID
-     * 
+     *
      * @param array<string, mixed> $data
      * @return T|null
      */
     public function update(int $id, array $data): ?EntityInterface
     {
         $entity = $this->find($id);
-        
+
         if ($entity === null) {
             return null;
         }
@@ -332,7 +332,7 @@ class EntityRepository implements EntityRepositoryInterface
     public function deleteById(int $id): bool
     {
         $entity = $this->find($id);
-        
+
         if ($entity === null) {
             return false;
         }
@@ -343,7 +343,7 @@ class EntityRepository implements EntityRepositoryInterface
 
     /**
      * Get the entity class
-     * 
+     *
      * @return class-string<T>
      */
     public function getEntityClass(): string
@@ -370,7 +370,7 @@ class EntityRepository implements EntityRepositoryInterface
 
 /**
  * ScopedRepository - Repository with predefined scopes
- * 
+ *
  * @template T of EntityInterface
  * @extends EntityRepository<T>
  */
@@ -378,7 +378,7 @@ abstract class ScopedRepository extends EntityRepository
 {
     /**
      * Get defined scopes
-     * 
+     *
      * @return array<string, callable(EntityQuery): EntityQuery>
      */
     abstract protected function scopes(): array;
@@ -389,7 +389,7 @@ abstract class ScopedRepository extends EntityRepository
     public function scope(string $name, EntityQuery $query): EntityQuery
     {
         $scopes = $this->scopes();
-        
+
         if (!isset($scopes[$name])) {
             throw new \InvalidArgumentException("Scope '{$name}' not defined");
         }

@@ -49,7 +49,7 @@ final class UrlWidget extends AbstractWidget
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
-        
+
         $input = Html::input('url')
             ->attrs($this->buildCommonAttributes($field, $context))
             ->value($value ?? '');

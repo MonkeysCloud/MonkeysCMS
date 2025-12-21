@@ -52,7 +52,7 @@ final class JsonWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $fieldId = $this->getFieldId($field, $context);
         $rows = $settings->getInt('rows', 10);
-        
+
         // Convert array/object to JSON string
         $jsonValue = is_array($value) || is_object($value)
             ? json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)

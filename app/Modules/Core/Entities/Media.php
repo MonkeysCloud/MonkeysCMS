@@ -112,7 +112,7 @@ class Media extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->uuid)) {
             $this->uuid = $this->generateUuid();
         }
@@ -128,11 +128,14 @@ class Media extends BaseEntity
     {
         return sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
             mt_rand(0, 0xffff),
             mt_rand(0, 0x0fff) | 0x4000,
             mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
         );
     }
 
@@ -144,11 +147,21 @@ class Media extends BaseEntity
         $documentTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'text/csv'];
         $archiveTypes = ['application/zip', 'application/x-rar-compressed', 'application/x-tar', 'application/gzip'];
 
-        if (in_array($this->mime_type, $imageTypes, true)) return 'image';
-        if (in_array($this->mime_type, $videoTypes, true)) return 'video';
-        if (in_array($this->mime_type, $audioTypes, true)) return 'audio';
-        if (in_array($this->mime_type, $documentTypes, true)) return 'document';
-        if (in_array($this->mime_type, $archiveTypes, true)) return 'archive';
+        if (in_array($this->mime_type, $imageTypes, true)) {
+            return 'image';
+        }
+        if (in_array($this->mime_type, $videoTypes, true)) {
+            return 'video';
+        }
+        if (in_array($this->mime_type, $audioTypes, true)) {
+            return 'audio';
+        }
+        if (in_array($this->mime_type, $documentTypes, true)) {
+            return 'document';
+        }
+        if (in_array($this->mime_type, $archiveTypes, true)) {
+            return 'archive';
+        }
 
         return 'other';
     }

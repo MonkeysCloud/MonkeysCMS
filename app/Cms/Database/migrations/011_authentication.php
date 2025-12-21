@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 /**
  * Migration: Create authentication tables
- * 
+ *
  * Tables:
  * - login_attempts: Track failed login attempts
  * - login_lockouts: Store account lockouts
  * - oauth_accounts: OAuth provider accounts
  * - api_keys: API key authentication
  */
+
 return new class {
     public function up(\PDO $db): void
     {

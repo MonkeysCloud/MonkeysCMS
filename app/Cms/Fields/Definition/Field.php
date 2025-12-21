@@ -9,7 +9,7 @@ use App\Cms\Fields\Value\FieldValue;
 
 /**
  * Field - Domain entity representing a field definition
- * 
+ *
  * Encapsulates field configuration with proper behavior and validation.
  * This is an aggregate root for field-related operations.
  */
@@ -83,7 +83,7 @@ final class Field
             required: (bool) ($data['required'] ?? false),
             multiple: (bool) ($data['multiple'] ?? false),
             cardinality: (int) ($data['cardinality'] ?? 1),
-            defaultValue: isset($data['default_value']) 
+            defaultValue: isset($data['default_value'])
                 ? FieldValue::of($data['default_value'], $data['field_type'] ?? 'string')
                 : null,
             settings: $data['settings'] ?? [],
@@ -319,7 +319,8 @@ final class FieldIdentifier
 {
     private function __construct(
         private readonly string $value,
-    ) {}
+    ) {
+    }
 
     public static function from(string $value): self
     {
@@ -352,11 +353,11 @@ final class FieldIdentifier
     private static function normalize(string $value): string
     {
         $value = strtolower(trim($value));
-        
+
         if (!str_starts_with($value, 'field_')) {
             $value = 'field_' . $value;
         }
-        
+
         return $value;
     }
 
@@ -377,16 +378,17 @@ final class FieldLabel
 {
     private function __construct(
         private readonly string $value,
-    ) {}
+    ) {
+    }
 
     public static function from(string $value): self
     {
         $trimmed = trim($value);
-        
+
         if ($trimmed === '') {
             throw new \InvalidArgumentException('Field label cannot be empty');
         }
-        
+
         return new self($trimmed);
     }
 
@@ -419,16 +421,17 @@ final class FieldType
 
     private function __construct(
         private readonly string $name,
-    ) {}
+    ) {
+    }
 
     public static function from(string $name): self
     {
         $name = strtolower(trim($name));
-        
+
         if (!in_array($name, self::VALID_TYPES, true)) {
             throw new \InvalidArgumentException("Invalid field type: '{$name}'");
         }
-        
+
         return new self($name);
     }
 
@@ -505,7 +508,8 @@ final class ValidationRules
 {
     private function __construct(
         private readonly array $rules,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $rules): self
     {

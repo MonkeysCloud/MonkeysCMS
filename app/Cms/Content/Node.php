@@ -12,10 +12,10 @@ use App\Cms\Entity\SoftDeleteTrait;
 
 /**
  * Node - Base content entity for the CMS
- * 
+ *
  * Represents all content in the CMS including articles, pages, products, etc.
  * Each node has a type that defines its fields and behavior.
- * 
+ *
  * Features:
  * - Soft delete support
  * - Revision tracking
@@ -289,7 +289,7 @@ class Node extends BaseEntity implements RevisionInterface, SoftDeleteInterface
         $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
         $slug = preg_replace('/[\s-]+/', '-', $slug);
         $slug = trim($slug, '-');
-        
+
         return $slug;
     }
 
@@ -334,10 +334,10 @@ class Node extends BaseEntity implements RevisionInterface, SoftDeleteInterface
     public function toArray(): array
     {
         $data = parent::toArray();
-        
+
         // Include fields
         $data['fields'] = $this->fields;
-        
+
         // Include author if loaded
         if ($this->author !== null) {
             $data['author'] = $this->author;
@@ -349,7 +349,7 @@ class Node extends BaseEntity implements RevisionInterface, SoftDeleteInterface
     public function toDatabase(): array
     {
         $data = parent::toDatabase();
-        
+
         // Remove non-database fields
         unset($data['fields']);
         unset($data['author']);
@@ -398,7 +398,7 @@ final class NodeStatus
 
     /**
      * Get all valid statuses
-     * 
+     *
      * @return string[]
      */
     public static function all(): array

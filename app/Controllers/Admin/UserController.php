@@ -7,9 +7,9 @@ namespace App\Controllers\Admin;
 use App\Modules\Core\Entities\User;
 use App\Cms\Repository\CmsRepository;
 use App\Cms\Security\PermissionService;
-use MonkeysLegion\Http\Attribute\Route;
-use MonkeysLegion\Http\Request;
-use MonkeysLegion\Http\JsonResponse;
+use MonkeysLegion\Router\Attributes\Route;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * UserController - Admin API for user management
@@ -19,13 +19,14 @@ final class UserController
     public function __construct(
         private readonly CmsRepository $repository,
         private readonly PermissionService $permissions,
-    ) {}
+    ) {
+    }
 
     /**
      * List users with pagination
      */
     #[Route('GET', '/admin/users')]
-    public function index(Request $request): JsonResponse
+    public function index(ServerRequestInterface $request): ResponseInterface
     {
         $page = (int) ($request->getQueryParams()['page'] ?? 1);
         $perPage = (int) ($request->getQueryParams()['per_page'] ?? 20);
@@ -42,7 +43,7 @@ final class UserController
             $total = count($users);
             $users = array_slice($users, ($page - 1) * $perPage, $perPage);
 
-            return new JsonResponse([
+            return json([
                 'data' => array_map(fn($u) => $u->toArray(), $users),
                 'total' => $total,
                 'page' => $page,
@@ -63,7 +64,7 @@ final class UserController
             $this->permissions->loadUserRoles($user);
         }
 
-        return new JsonResponse([
+        return json([
             'data' => array_map(fn($u) => array_merge($u->toArray(), [
                 'roles' => array_map(fn($r) => ['id' => $r->id, 'name' => $r->name, 'slug' => $r->slug, 'color' => $r->color], $u->roles),
             ]), $result['data']),
@@ -78,17 +79,17 @@ final class UserController
      * Get single user
      */
     #[Route('GET', '/admin/users/{id}')]
-    public function show(int $id): JsonResponse
+    public function show(int $id): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
 
         if (!$user) {
-            return new JsonResponse(['error' => 'User not found'], 404);
+            return json(['error' => 'User not found'], 404);
         }
 
         $this->permissions->loadUserRoles($user);
 
-        return new JsonResponse(array_merge($user->toArray(), [
+        return json(array_merge($user->toArray(), [
             'roles' => array_map(fn($r) => [
                 'id' => $r->id,
                 'name' => $r->name,
@@ -103,26 +104,26 @@ final class UserController
      * Create user
      */
     #[Route('POST', '/admin/users')]
-    public function create(Request $request): JsonResponse
+    public function create(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         // Validate required fields
         $errors = $this->validateUserData($data, true);
         if (!empty($errors)) {
-            return new JsonResponse(['errors' => $errors], 422);
+            return json(['errors' => $errors], 422);
         }
 
         // Check email uniqueness
         $existing = $this->repository->findOneBy(User::class, ['email' => $data['email']]);
         if ($existing) {
-            return new JsonResponse(['errors' => ['email' => 'Email already exists']], 422);
+            return json(['errors' => ['email' => 'Email already exists']], 422);
         }
 
         // Check username uniqueness
         $existing = $this->repository->findOneBy(User::class, ['username' => $data['username']]);
         if ($existing) {
-            return new JsonResponse(['errors' => ['username' => 'Username already exists']], 422);
+            return json(['errors' => ['username' => 'Username already exists']], 422);
         }
 
         $user = new User();
@@ -143,7 +144,7 @@ final class UserController
             $this->permissions->setUserRoles($user, $data['role_ids']);
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'User created successfully',
             'user' => $user->toArray(),
@@ -154,27 +155,27 @@ final class UserController
      * Update user
      */
     #[Route('PUT', '/admin/users/{id}')]
-    public function update(int $id, Request $request): JsonResponse
+    public function update(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
 
         if (!$user) {
-            return new JsonResponse(['error' => 'User not found'], 404);
+            return json(['error' => 'User not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         // Validate
         $errors = $this->validateUserData($data, false);
         if (!empty($errors)) {
-            return new JsonResponse(['errors' => $errors], 422);
+            return json(['errors' => $errors], 422);
         }
 
         // Check email uniqueness
         if (isset($data['email']) && $data['email'] !== $user->email) {
             $existing = $this->repository->findOneBy(User::class, ['email' => $data['email']]);
             if ($existing) {
-                return new JsonResponse(['errors' => ['email' => 'Email already exists']], 422);
+                return json(['errors' => ['email' => 'Email already exists']], 422);
             }
             $user->email = $data['email'];
         }
@@ -183,7 +184,7 @@ final class UserController
         if (isset($data['username']) && $data['username'] !== $user->username) {
             $existing = $this->repository->findOneBy(User::class, ['username' => $data['username']]);
             if ($existing) {
-                return new JsonResponse(['errors' => ['username' => 'Username already exists']], 422);
+                return json(['errors' => ['username' => 'Username already exists']], 422);
             }
             $user->username = $data['username'];
         }
@@ -221,7 +222,7 @@ final class UserController
             $this->permissions->setUserRoles($user, $data['role_ids']);
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'User updated successfully',
             'user' => $user->toArray(),
@@ -232,18 +233,18 @@ final class UserController
      * Delete user
      */
     #[Route('DELETE', '/admin/users/{id}')]
-    public function delete(int $id): JsonResponse
+    public function delete(int $id): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
 
         if (!$user) {
-            return new JsonResponse(['error' => 'User not found'], 404);
+            return json(['error' => 'User not found'], 404);
         }
 
         // Prevent self-deletion
         $currentUser = $this->permissions->getCurrentUser();
         if ($currentUser && $currentUser->id === $user->id) {
-            return new JsonResponse(['error' => 'Cannot delete your own account'], 400);
+            return json(['error' => 'Cannot delete your own account'], 400);
         }
 
         // Remove role assignments
@@ -252,7 +253,7 @@ final class UserController
         // Delete user
         $this->repository->delete($user);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'User deleted successfully',
         ]);
@@ -262,17 +263,17 @@ final class UserController
      * Get user's roles
      */
     #[Route('GET', '/admin/users/{id}/roles')]
-    public function getRoles(int $id): JsonResponse
+    public function getRoles(int $id): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
 
         if (!$user) {
-            return new JsonResponse(['error' => 'User not found'], 404);
+            return json(['error' => 'User not found'], 404);
         }
 
         $this->permissions->loadUserRoles($user);
 
-        return new JsonResponse([
+        return json([
             'user_id' => $user->id,
             'roles' => array_map(fn($r) => $r->toArray(), $user->roles),
         ]);
@@ -282,20 +283,20 @@ final class UserController
      * Set user's roles
      */
     #[Route('PUT', '/admin/users/{id}/roles')]
-    public function setRoles(int $id, Request $request): JsonResponse
+    public function setRoles(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
 
         if (!$user) {
-            return new JsonResponse(['error' => 'User not found'], 404);
+            return json(['error' => 'User not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
         $roleIds = $data['role_ids'] ?? [];
 
         $this->permissions->setUserRoles($user, $roleIds);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'User roles updated',
         ]);
@@ -305,18 +306,18 @@ final class UserController
      * Get user's permissions
      */
     #[Route('GET', '/admin/users/{id}/permissions')]
-    public function getPermissions(int $id): JsonResponse
+    public function getPermissions(int $id): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
 
         if (!$user) {
-            return new JsonResponse(['error' => 'User not found'], 404);
+            return json(['error' => 'User not found'], 404);
         }
 
         $this->permissions->loadUserRoles($user);
         $allPermissions = $user->getAllPermissions();
 
-        return new JsonResponse([
+        return json([
             'user_id' => $user->id,
             'permissions' => array_map(fn($p) => $p->toArray(), $allPermissions),
         ]);

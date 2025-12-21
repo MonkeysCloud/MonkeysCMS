@@ -13,7 +13,8 @@ final class DateTransformer implements ValueTransformerInterface
         private readonly string $storageFormat = 'Y-m-d',
         private readonly string $formFormat = 'Y-m-d',
         private readonly string $displayFormat = 'F j, Y',
-    ) {}
+    ) {
+    }
 
     public function toForm(FieldValue $value): FieldValue
     {
@@ -26,7 +27,7 @@ final class DateTransformer implements ValueTransformerInterface
         if ($value->isEmpty()) {
             return FieldValue::null('date');
         }
-        
+
         $date = $value->asDate($this->storageFormat);
         return FieldValue::string($date ?? '');
     }

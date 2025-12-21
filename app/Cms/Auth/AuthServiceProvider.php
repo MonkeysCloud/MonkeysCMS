@@ -13,14 +13,14 @@ use App\Cms\Entity\EntityManager;
 
 /**
  * AuthServiceProvider - Dependency injection for authentication
- * 
+ *
  * Provides factory methods for authentication services.
- * 
+ *
  * Usage:
  * ```php
  * // Initialize
  * AuthServiceProvider::init($db, $config);
- * 
+ *
  * // Get services
  * $auth = AuthServiceProvider::getAuthService();
  * $session = AuthServiceProvider::getSessionManager();
@@ -233,7 +233,7 @@ class AuthServiceProvider
 
     /**
      * Get container definitions for DI containers
-     * 
+     *
      * @return array<string, callable>
      */
     public static function getDefinitions(): array
@@ -299,7 +299,7 @@ class AuthServiceProvider
 
     /**
      * Create authentication routes
-     * 
+     *
      * @return array<array{method: string, path: string, handler: array}>
      */
     public static function getRoutes(): array
@@ -345,7 +345,7 @@ class AuthServiceProvider
 
     /**
      * Get API authentication routes
-     * 
+     *
      * @return array<array{method: string, path: string, handler: array}>
      */
     public static function getApiRoutes(): array
@@ -375,7 +375,7 @@ class AuthServiceProvider
 
     /**
      * Get all routes (web + API)
-     * 
+     *
      * @return array<array{method: string, path: string, handler: array}>
      */
     public static function getAllRoutes(): array

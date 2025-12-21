@@ -17,7 +17,8 @@ final class WidgetMetadata
         public readonly int $priority,
         public readonly array $supportedTypes,
         public readonly bool $supportsMultiple,
-    ) {}
+    ) {
+    }
 
     public static function create(
         string $id,

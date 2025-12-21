@@ -19,7 +19,7 @@ use MonkeysLegion\Database\Connection;
 
 /**
  * CMS Install Command
- * 
+ *
  * Sets up the CMS with initial data:
  * - System roles
  * - System permissions
@@ -34,7 +34,7 @@ class CmsInstallCommand
     private Connection $connection;
     private ModuleManager $moduleManager;
     private SchemaGenerator $schemaGenerator;
-    
+
     public function __construct(
         Connection $connection,
         ModuleManager $moduleManager,
@@ -56,7 +56,7 @@ class CmsInstallCommand
             // Step 1: Create core tables
             $this->output("\n📦 Step 1: Creating database tables...\n");
             $this->createCoreTables();
-            
+
             // Step 1b: Create dynamic type tables
             $this->output("\n🔧 Step 1b: Creating dynamic type tables...\n");
             $this->createDynamicTypeTables();
@@ -92,7 +92,7 @@ class CmsInstallCommand
             $this->enableCoreModule();
 
             $this->output("\n✅ MonkeysCMS installed successfully!\n\n");
-            
+
             return 0;
         } catch (\Exception $e) {
             $this->output("\n❌ Installation failed: " . $e->getMessage() . "\n");
@@ -146,7 +146,7 @@ class CmsInstallCommand
             }
 
             $shortName = (new \ReflectionClass($entityClass))->getShortName();
-            
+
             try {
                 $sql = $this->schemaGenerator->generateCreateTable($entityClass);
                 $this->connection->exec($sql);
@@ -195,7 +195,7 @@ class CmsInstallCommand
                 $now,
                 $now,
             ]);
-            
+
             $this->output("  ✓ Created role: {$roleData['name']}\n");
         }
     }
@@ -236,7 +236,7 @@ class CmsInstallCommand
                 $now,
                 $now,
             ]);
-            
+
             $this->output("  ✓ Created permission: {$permData['name']}\n");
         }
     }
@@ -349,7 +349,7 @@ class CmsInstallCommand
                 $now,
                 $now,
             ]);
-            
+
             $this->output("  ✓ Created vocabulary: {$vocabData['name']}\n");
         }
     }
@@ -387,7 +387,7 @@ class CmsInstallCommand
                 $now,
                 $now,
             ]);
-            
+
             $menuId = (int) $this->connection->lastInsertId();
             $this->output("  ✓ Created menu: {$menuData['name']}\n");
 
@@ -419,7 +419,7 @@ class CmsInstallCommand
         ];
 
         $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
-        
+
         foreach ($items as $item) {
             $stmt = $this->connection->prepare("
                 INSERT INTO menu_items (menu_id, parent_id, title, url, route_name, route_params, link_type, target, icon, css_class, weight, depth, is_active, is_expanded, permissions, attributes, created_at, updated_at)
@@ -446,7 +446,7 @@ class CmsInstallCommand
                 $now,
             ]);
         }
-        
+
         $this->output("    ✓ Created " . count($items) . " admin menu items\n");
     }
 
@@ -519,7 +519,7 @@ class CmsInstallCommand
         if (!is_dir($storagePath)) {
             mkdir($storagePath, 0755, true);
         }
-        
+
         file_put_contents(
             $storagePath . '/admin_credentials.txt',
             "MonkeysCMS Admin Credentials\n" .
@@ -731,7 +731,7 @@ class CmsInstallCommand
             // Check if exists
             $exists = $this->connection->prepare("SELECT id FROM block_types WHERE type_id = ?");
             $exists->execute([$typeData['type_id']]);
-            
+
             if ($exists->fetch()) {
                 $this->output("  ℹ️  Block type '{$typeData['type_id']}' already exists\n");
                 continue;
@@ -745,7 +745,7 @@ class CmsInstallCommand
                     weight, created_at, updated_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            
+
             $stmt->execute([
                 $typeData['type_id'],
                 $typeData['label'],
@@ -769,7 +769,7 @@ class CmsInstallCommand
             // Insert fields
             foreach ($typeData['fields'] ?? [] as $index => $fieldData) {
                 $machineName = 'field_' . strtolower(preg_replace('/[^a-z0-9]+/i', '_', $fieldData['name']));
-                
+
                 $stmt = $this->connection->prepare("
                     INSERT INTO block_type_fields (
                         block_type_id, name, machine_name, field_type, description, help_text,
@@ -778,7 +778,7 @@ class CmsInstallCommand
                         created_at, updated_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
-                
+
                 $stmt->execute([
                     $typeId,
                     $fieldData['name'],

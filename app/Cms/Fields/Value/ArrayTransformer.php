@@ -11,7 +11,8 @@ final class ArrayTransformer implements ValueTransformerInterface
 {
     public function __construct(
         private readonly string $separator = ', ',
-    ) {}
+    ) {
+    }
 
     public function toForm(FieldValue $value): FieldValue
     {

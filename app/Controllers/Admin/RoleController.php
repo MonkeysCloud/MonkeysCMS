@@ -8,9 +8,9 @@ use App\Modules\Core\Entities\Role;
 use App\Modules\Core\Entities\Permission;
 use App\Cms\Repository\CmsRepository;
 use App\Cms\Security\PermissionService;
-use MonkeysLegion\Http\Attribute\Route;
-use MonkeysLegion\Http\Request;
-use MonkeysLegion\Http\JsonResponse;
+use MonkeysLegion\Router\Attributes\Route;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * RoleController - Admin API for role and permission management
@@ -20,7 +20,8 @@ final class RoleController
     public function __construct(
         private readonly CmsRepository $repository,
         private readonly PermissionService $permissions,
-    ) {}
+    ) {
+    }
 
     // ─────────────────────────────────────────────────────────────
     // Role Endpoints
@@ -30,7 +31,7 @@ final class RoleController
      * List all roles
      */
     #[Route('GET', '/admin/roles')]
-    public function index(): JsonResponse
+    public function index(): ResponseInterface
     {
         $roles = $this->repository->findAll(Role::class, ['weight' => 'DESC', 'name' => 'ASC']);
 
@@ -39,7 +40,7 @@ final class RoleController
             $role->permissions = $this->permissions->getRolePermissions($role);
         }
 
-        return new JsonResponse([
+        return json([
             'roles' => array_map(fn($r) => array_merge($r->toArray(), [
                 'permission_count' => count($r->permissions),
                 'permission_slugs' => array_map(fn($p) => $p->slug, $r->permissions),
@@ -51,17 +52,17 @@ final class RoleController
      * Get single role with permissions
      */
     #[Route('GET', '/admin/roles/{id}')]
-    public function show(int $id): JsonResponse
+    public function show(int $id): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
 
         if (!$role) {
-            return new JsonResponse(['error' => 'Role not found'], 404);
+            return json(['error' => 'Role not found'], 404);
         }
 
         $role->permissions = $this->permissions->getRolePermissions($role);
 
-        return new JsonResponse(array_merge($role->toArray(), [
+        return json(array_merge($role->toArray(), [
             'permissions' => array_map(fn($p) => $p->toArray(), $role->permissions),
         ]));
     }
@@ -70,12 +71,12 @@ final class RoleController
      * Create role
      */
     #[Route('POST', '/admin/roles')]
-    public function create(Request $request): JsonResponse
+    public function create(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['name'])) {
-            return new JsonResponse(['errors' => ['name' => 'Name is required']], 422);
+            return json(['errors' => ['name' => 'Name is required']], 422);
         }
 
         // Generate slug if not provided
@@ -84,7 +85,7 @@ final class RoleController
         // Check uniqueness
         $existing = $this->repository->findOneBy(Role::class, ['slug' => $slug]);
         if ($existing) {
-            return new JsonResponse(['errors' => ['slug' => 'Slug already exists']], 422);
+            return json(['errors' => ['slug' => 'Slug already exists']], 422);
         }
 
         $role = new Role();
@@ -103,7 +104,7 @@ final class RoleController
             $this->permissions->setRolePermissions($role, $data['permission_ids']);
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Role created successfully',
             'role' => $role->toArray(),
@@ -114,16 +115,16 @@ final class RoleController
      * Update role
      */
     #[Route('PUT', '/admin/roles/{id}')]
-    public function update(int $id, Request $request): JsonResponse
+    public function update(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
 
         if (!$role) {
-            return new JsonResponse(['error' => 'Role not found'], 404);
+            return json(['error' => 'Role not found'], 404);
         }
 
         // Prevent editing system roles (except permissions)
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (!$role->is_system) {
             if (isset($data['name'])) {
@@ -133,7 +134,7 @@ final class RoleController
                 // Check uniqueness
                 $existing = $this->repository->findOneBy(Role::class, ['slug' => $data['slug']]);
                 if ($existing && $existing->id !== $role->id) {
-                    return new JsonResponse(['errors' => ['slug' => 'Slug already exists']], 422);
+                    return json(['errors' => ['slug' => 'Slug already exists']], 422);
                 }
                 $role->slug = $data['slug'];
             }
@@ -158,7 +159,7 @@ final class RoleController
             $this->permissions->setRolePermissions($role, $data['permission_ids']);
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Role updated successfully',
             'role' => $role->toArray(),
@@ -169,16 +170,16 @@ final class RoleController
      * Delete role
      */
     #[Route('DELETE', '/admin/roles/{id}')]
-    public function delete(int $id): JsonResponse
+    public function delete(int $id): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
 
         if (!$role) {
-            return new JsonResponse(['error' => 'Role not found'], 404);
+            return json(['error' => 'Role not found'], 404);
         }
 
         if ($role->is_system) {
-            return new JsonResponse(['error' => 'Cannot delete system roles'], 400);
+            return json(['error' => 'Cannot delete system roles'], 400);
         }
 
         // Remove all permission assignments
@@ -187,7 +188,7 @@ final class RoleController
         // Delete role (will cascade to user_roles via foreign key)
         $this->repository->delete($role);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Role deleted successfully',
         ]);
@@ -197,17 +198,17 @@ final class RoleController
      * Get role's permissions
      */
     #[Route('GET', '/admin/roles/{id}/permissions')]
-    public function getRolePermissions(int $id): JsonResponse
+    public function getRolePermissions(int $id): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
 
         if (!$role) {
-            return new JsonResponse(['error' => 'Role not found'], 404);
+            return json(['error' => 'Role not found'], 404);
         }
 
         $permissions = $this->permissions->getRolePermissions($role);
 
-        return new JsonResponse([
+        return json([
             'role_id' => $role->id,
             'role_name' => $role->name,
             'permissions' => array_map(fn($p) => $p->toArray(), $permissions),
@@ -218,20 +219,20 @@ final class RoleController
      * Set role's permissions
      */
     #[Route('PUT', '/admin/roles/{id}/permissions')]
-    public function setRolePermissions(int $id, Request $request): JsonResponse
+    public function setRolePermissions(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
 
         if (!$role) {
-            return new JsonResponse(['error' => 'Role not found'], 404);
+            return json(['error' => 'Role not found'], 404);
         }
 
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
         $permissionIds = $data['permission_ids'] ?? [];
 
         $this->permissions->setRolePermissions($role, $permissionIds);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Role permissions updated',
         ]);
@@ -245,7 +246,7 @@ final class RoleController
      * List all permissions
      */
     #[Route('GET', '/admin/permissions')]
-    public function listPermissions(Request $request): JsonResponse
+    public function listPermissions(ServerRequestInterface $request): ResponseInterface
     {
         $group = $request->getQueryParams()['group'] ?? null;
         $entityType = $request->getQueryParams()['entity_type'] ?? null;
@@ -264,7 +265,7 @@ final class RoleController
             ['group' => 'ASC', 'weight' => 'ASC', 'name' => 'ASC']
         );
 
-        return new JsonResponse([
+        return json([
             'permissions' => array_map(fn($p) => $p->toArray(), $permissions),
         ]);
     }
@@ -273,7 +274,7 @@ final class RoleController
      * Get permissions grouped
      */
     #[Route('GET', '/admin/permissions/grouped')]
-    public function listPermissionsGrouped(): JsonResponse
+    public function listPermissionsGrouped(): ResponseInterface
     {
         $grouped = $this->permissions->getAllPermissionsGrouped();
 
@@ -282,7 +283,7 @@ final class RoleController
             $result[$group] = array_map(fn($p) => $p->toArray(), $permissions);
         }
 
-        return new JsonResponse([
+        return json([
             'groups' => $result,
         ]);
     }
@@ -291,11 +292,11 @@ final class RoleController
      * Get permissions for an entity type
      */
     #[Route('GET', '/admin/permissions/entity/{entityType}')]
-    public function getEntityPermissions(string $entityType): JsonResponse
+    public function getEntityPermissions(string $entityType): ResponseInterface
     {
         $permissions = $this->permissions->getEntityPermissions($entityType);
 
-        return new JsonResponse([
+        return json([
             'entity_type' => $entityType,
             'permissions' => array_map(fn($p) => $p->toArray(), $permissions),
         ]);
@@ -305,21 +306,21 @@ final class RoleController
      * Create permission
      */
     #[Route('POST', '/admin/permissions')]
-    public function createPermission(Request $request): JsonResponse
+    public function createPermission(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['name'])) {
-            return new JsonResponse(['errors' => ['name' => 'Name is required']], 422);
+            return json(['errors' => ['name' => 'Name is required']], 422);
         }
         if (empty($data['slug'])) {
-            return new JsonResponse(['errors' => ['slug' => 'Slug is required']], 422);
+            return json(['errors' => ['slug' => 'Slug is required']], 422);
         }
 
         // Check uniqueness
         $existing = $this->repository->findOneBy(Permission::class, ['slug' => $data['slug']]);
         if ($existing) {
-            return new JsonResponse(['errors' => ['slug' => 'Permission slug already exists']], 422);
+            return json(['errors' => ['slug' => 'Permission slug already exists']], 422);
         }
 
         $permission = new Permission();
@@ -335,7 +336,7 @@ final class RoleController
 
         $this->repository->save($permission);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Permission created successfully',
             'permission' => $permission->toArray(),
@@ -346,21 +347,21 @@ final class RoleController
      * Delete permission
      */
     #[Route('DELETE', '/admin/permissions/{id}')]
-    public function deletePermission(int $id): JsonResponse
+    public function deletePermission(int $id): ResponseInterface
     {
         $permission = $this->repository->find(Permission::class, $id);
 
         if (!$permission) {
-            return new JsonResponse(['error' => 'Permission not found'], 404);
+            return json(['error' => 'Permission not found'], 404);
         }
 
         if ($permission->is_system) {
-            return new JsonResponse(['error' => 'Cannot delete system permissions'], 400);
+            return json(['error' => 'Cannot delete system permissions'], 400);
         }
 
         $this->repository->delete($permission);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Permission deleted successfully',
         ]);
@@ -370,15 +371,15 @@ final class RoleController
      * Register permissions for an entity type
      */
     #[Route('POST', '/admin/permissions/register-entity')]
-    public function registerEntityPermissions(Request $request): JsonResponse
+    public function registerEntityPermissions(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['entity_type'])) {
-            return new JsonResponse(['errors' => ['entity_type' => 'Entity type is required']], 422);
+            return json(['errors' => ['entity_type' => 'Entity type is required']], 422);
         }
         if (empty($data['entity_label'])) {
-            return new JsonResponse(['errors' => ['entity_label' => 'Entity label is required']], 422);
+            return json(['errors' => ['entity_label' => 'Entity label is required']], 422);
         }
 
         $module = $data['module'] ?? 'custom';
@@ -391,7 +392,7 @@ final class RoleController
             $actions
         );
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => "Permissions registered for {$data['entity_type']}",
         ]);
@@ -402,7 +403,7 @@ final class RoleController
      * Returns all roles and permissions in a matrix format
      */
     #[Route('GET', '/admin/permissions/matrix')]
-    public function getPermissionMatrix(): JsonResponse
+    public function getPermissionMatrix(): ResponseInterface
     {
         $roles = $this->repository->findAll(Role::class, ['weight' => 'DESC', 'name' => 'ASC']);
         $grouped = $this->permissions->getAllPermissionsGrouped();
@@ -440,7 +441,7 @@ final class RoleController
             }
         }
 
-        return new JsonResponse([
+        return json([
             'roles' => array_values($matrix),
             'permissions' => $allPermissions,
             'groups' => array_keys($grouped),
@@ -451,12 +452,12 @@ final class RoleController
      * Update permission matrix (batch update)
      */
     #[Route('PUT', '/admin/permissions/matrix')]
-    public function updatePermissionMatrix(Request $request): JsonResponse
+    public function updatePermissionMatrix(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (!isset($data['assignments']) || !is_array($data['assignments'])) {
-            return new JsonResponse(['error' => 'Invalid assignments data'], 400);
+            return json(['error' => 'Invalid assignments data'], 400);
         }
 
         // Process each role's permissions
@@ -467,7 +468,7 @@ final class RoleController
             }
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Permission matrix updated',
         ]);

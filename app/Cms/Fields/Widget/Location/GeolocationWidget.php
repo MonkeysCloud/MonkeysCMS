@@ -63,10 +63,10 @@ final class GeolocationWidget extends AbstractWidget
         $defaultLat = $settings->getFloat('default_lat', 0.0);
         $defaultLng = $settings->getFloat('default_lng', 0.0);
         $defaultZoom = $settings->getInt('default_zoom', 10);
-        
+
         // Parse value
         $coords = is_array($value) ? $value : ['lat' => $defaultLat, 'lng' => $defaultLng];
-        
+
         $wrapper = Html::div()
             ->class('field-geolocation')
             ->data('field-id', $fieldId)
@@ -142,11 +142,11 @@ final class GeolocationWidget extends AbstractWidget
     {
         $settings = $this->getSettings($field);
         $showMap = $settings->getBool('show_map', true);
-        
+
         if ($showMap) {
             return "CmsGeolocation.initWithMap('{$elementId}');";
         }
-        
+
         return "CmsGeolocation.init('{$elementId}');";
     }
 
@@ -161,14 +161,14 @@ final class GeolocationWidget extends AbstractWidget
                 ];
             }
         }
-        
+
         if (is_array($value)) {
             return [
                 'lat' => (float) ($value['lat'] ?? 0),
                 'lng' => (float) ($value['lng'] ?? 0),
             ];
         }
-        
+
         return null;
     }
 
@@ -179,7 +179,7 @@ final class GeolocationWidget extends AbstractWidget
         }
 
         $coords = is_array($value) ? $value : json_decode($value, true);
-        
+
         if (!is_array($coords)) {
             return ValidationResult::failure('Invalid coordinate format');
         }

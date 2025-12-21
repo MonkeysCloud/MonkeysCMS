@@ -59,7 +59,12 @@
         }
     },
     "scripts": {
-        "serve": "php -S localhost:8000 -t public",
+        "serve": "php vendor/bin/dev-server",
+        "server:start": "php vendor/bin/dev-server",
+        "server:start:public": "php vendor/bin/dev-server 0.0.0.0 8000",
+        "server:stop": "php vendor/bin/dev-server stop",
+        "server:restart": "php vendor/bin/dev-server restart",
+        "server:status": "php vendor/bin/dev-server status",
         "test": "phpunit",
         "test:unit": "phpunit --testsuite=Unit",
         "test:integration": "phpunit --testsuite=Integration",

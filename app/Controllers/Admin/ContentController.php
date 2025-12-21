@@ -10,18 +10,17 @@ use App\Cms\Modules\ModuleManager;
 use App\Cms\Repository\CmsRepository;
 use App\Cms\Security\PermissionService;
 use App\Modules\Core\Services\TaxonomyService;
-use Laminas\Diactoros\Response\JsonResponse;
-use MonkeysLegion\Router\Attribute\Route;
+use MonkeysLegion\Router\Attributes\Route;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 
 /**
  * ContentController - Generic CRUD API for all CMS content types
- * 
+ *
  * This controller provides a unified REST API for any content type entity.
  * It dynamically resolves the entity class based on the content type parameter.
- * 
+ *
  * Routes:
  * - GET    /admin/content/{type}           - List/paginate content
  * - GET    /admin/content/{type}/{id}      - Get single item
@@ -29,7 +28,7 @@ use ReflectionClass;
  * - PUT    /admin/content/{type}/{id}      - Update item
  * - DELETE /admin/content/{type}/{id}      - Delete item
  * - GET    /admin/content/{type}/search    - Search content
- * 
+ *
  * Features:
  * - Permission-based access control per entity type
  * - Supports "own content" permissions (view_own, edit_own, delete_own)
@@ -63,21 +62,27 @@ final class ContentController
     {
         $entityClass = $this->resolveEntityClass($type);
         if ($entityClass === null) {
-            return $this->notFound("Content type '{$type}' not found");
+            return json([
+                'success' => false,
+                'error' => "Content type '{$type}' not found",
+            ], 404);
         }
 
         // Check view permission
         if (!$this->permissions->canOnEntityType('view', $type)) {
-            return $this->forbidden("You don't have permission to view {$type}");
+            return json([
+                'success' => false,
+                'error' => "You don't have permission to view {$type}",
+            ], 403);
         }
 
         $params = $request->getQueryParams();
         $page = max(1, (int) ($params['page'] ?? 1));
         $perPage = min(100, max(1, (int) ($params['per_page'] ?? 20)));
-        
+
         // Build criteria from query params
         $criteria = $this->buildCriteria($params, $entityClass);
-        
+
         // If user only has "view_own" permission, filter by author
         if (!$this->permissions->can("view_{$type}") && $this->permissions->can("view_own_{$type}")) {
             $currentUser = $this->permissions->getCurrentUser();
@@ -85,7 +90,7 @@ final class ContentController
                 $criteria['author_id'] = $currentUser->id;
             }
         }
-        
+
         // Build ordering
         $orderBy = [];
         if (isset($params['sort'])) {
@@ -97,7 +102,7 @@ final class ContentController
 
         $result = $this->repository->paginate($entityClass, $page, $perPage, $criteria, $orderBy);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'data' => array_map(fn($e) => $e->toArray(true), $result['data']),
             'meta' => [
@@ -118,17 +123,26 @@ final class ContentController
     {
         $entityClass = $this->resolveEntityClass($type);
         if ($entityClass === null) {
-            return $this->notFound("Content type '{$type}' not found");
+            return json([
+                'success' => false,
+                'error' => "Content type '{$type}' not found",
+            ], 404);
         }
 
         $entity = $this->repository->find($entityClass, $id);
         if ($entity === null) {
-            return $this->notFound("Item not found");
+            return json([
+                'success' => false,
+                'error' => "Item not found",
+            ], 404);
         }
 
         // Check view permission on this specific entity
         if (!$this->permissions->canOnEntity('view', $entity)) {
-            return $this->forbidden("You don't have permission to view this item");
+            return json([
+                'success' => false,
+                'error' => "You don't have permission to view this item",
+            ], 403);
         }
 
         // Load taxonomy terms if available
@@ -137,7 +151,7 @@ final class ContentController
             $terms = $this->taxonomy->getEntityTerms($type, $id);
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'data' => $entity->toArray(true),
             'terms' => array_map(fn($t) => $t->toArray(), $terms),
@@ -156,17 +170,23 @@ final class ContentController
     {
         $entityClass = $this->resolveEntityClass($type);
         if ($entityClass === null) {
-            return $this->notFound("Content type '{$type}' not found");
+            return json([
+                'success' => false,
+                'error' => "Content type '{$type}' not found",
+            ], 404);
         }
 
         // Check create permission
         if (!$this->permissions->canOnEntityType('create', $type)) {
-            return $this->forbidden("You don't have permission to create {$type}");
+            return json([
+                'success' => false,
+                'error' => "You don't have permission to create {$type}",
+            ], 403);
         }
 
         $data = json_decode((string) $request->getBody(), true);
         if ($data === null) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Invalid JSON body',
             ], 400);
@@ -176,13 +196,14 @@ final class ContentController
             /** @var BaseEntity $entity */
             $entity = new $entityClass();
             $entity->hydrate($data);
-            
+
             // Set author if entity supports it
             $currentUser = $this->permissions->getCurrentUser();
             if ($currentUser && property_exists($entity, 'author_id')) {
+                /** @phpstan-ignore-next-line */
                 $entity->author_id = $currentUser->id;
             }
-            
+
             $saved = $this->repository->save($entity);
 
             // Handle taxonomy terms
@@ -192,13 +213,13 @@ final class ContentController
                 }
             }
 
-            return new JsonResponse([
+            return json([
                 'success' => true,
                 'data' => $saved->toArray(true),
                 'message' => 'Created successfully',
             ], 201);
         } catch (\Exception $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Failed to create: ' . $e->getMessage(),
             ], 400);
@@ -213,22 +234,31 @@ final class ContentController
     {
         $entityClass = $this->resolveEntityClass($type);
         if ($entityClass === null) {
-            return $this->notFound("Content type '{$type}' not found");
+            return json([
+                'success' => false,
+                'error' => "Content type '{$type}' not found",
+            ], 404);
         }
 
         $entity = $this->repository->find($entityClass, $id);
         if ($entity === null) {
-            return $this->notFound("Item not found");
+            return json([
+                'success' => false,
+                'error' => "Item not found",
+            ], 404);
         }
 
         // Check edit permission on this specific entity
         if (!$this->permissions->canOnEntity('edit', $entity)) {
-            return $this->forbidden("You don't have permission to edit this item");
+            return json([
+                'success' => false,
+                'error' => "You don't have permission to edit this item",
+            ], 403);
         }
 
         $data = json_decode((string) $request->getBody(), true);
         if ($data === null) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Invalid JSON body',
             ], 400);
@@ -237,7 +267,7 @@ final class ContentController
         try {
             // Don't overwrite ID, created_at, or author
             unset($data['id'], $data['created_at'], $data['author_id']);
-            
+
             $entity->hydrate($data);
             $saved = $this->repository->save($entity);
 
@@ -248,13 +278,13 @@ final class ContentController
                 }
             }
 
-            return new JsonResponse([
+            return json([
                 'success' => true,
                 'data' => $saved->toArray(true),
                 'message' => 'Updated successfully',
             ]);
         } catch (\Exception $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Failed to update: ' . $e->getMessage(),
             ], 400);
@@ -269,17 +299,26 @@ final class ContentController
     {
         $entityClass = $this->resolveEntityClass($type);
         if ($entityClass === null) {
-            return $this->notFound("Content type '{$type}' not found");
+            return json([
+                'success' => false,
+                'error' => "Content type '{$type}' not found",
+            ], 404);
         }
 
         $entity = $this->repository->find($entityClass, $id);
         if ($entity === null) {
-            return $this->notFound("Item not found");
+            return json([
+                'success' => false,
+                'error' => "Item not found",
+            ], 404);
         }
 
         // Check delete permission on this specific entity
         if (!$this->permissions->canOnEntity('delete', $entity)) {
-            return $this->forbidden("You don't have permission to delete this item");
+            return json([
+                'success' => false,
+                'error' => "You don't have permission to delete this item",
+            ], 403);
         }
 
         try {
@@ -290,12 +329,12 @@ final class ContentController
 
             $this->repository->delete($entity);
 
-            return new JsonResponse([
+            return json([
                 'success' => true,
                 'message' => 'Deleted successfully',
             ]);
         } catch (\Exception $e) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Failed to delete: ' . $e->getMessage(),
             ], 400);
@@ -310,24 +349,27 @@ final class ContentController
     {
         $entityClass = $this->resolveEntityClass($type);
         if ($entityClass === null) {
-            return $this->notFound("Content type '{$type}' not found");
+            return json([
+                'success' => false,
+                'error' => "Content type '{$type}' not found",
+            ], 404);
         }
 
         $params = $request->getQueryParams();
         $query = $params['q'] ?? '';
-        
+
         if (empty($query)) {
-            return new JsonResponse([
+            return json([
                 'success' => false,
                 'error' => 'Search query "q" is required',
             ], 400);
         }
 
         $limit = min(100, max(1, (int) ($params['limit'] ?? 20)));
-        
+
         $results = $this->repository->search($entityClass, $query, [], $limit);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'data' => array_map(fn($e) => $e->toArray(true), $results),
             'meta' => [
@@ -348,7 +390,7 @@ final class ContentController
         foreach ($this->entityMap as $typeName => $entityClass) {
             $reflection = new ReflectionClass($entityClass);
             $attrs = $reflection->getAttributes(ContentType::class);
-            
+
             if (!empty($attrs)) {
                 $contentType = $attrs[0]->newInstance();
                 $types[$typeName] = [
@@ -364,7 +406,7 @@ final class ContentController
             }
         }
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'data' => $types,
         ]);
@@ -378,7 +420,7 @@ final class ContentController
         foreach ($this->moduleManager->getEnabledModules() as $moduleName) {
             try {
                 $entities = $this->moduleManager->discoverEntities($moduleName);
-                
+
                 foreach ($entities as $entityClass) {
                     if (!class_exists($entityClass)) {
                         continue;
@@ -386,7 +428,7 @@ final class ContentController
 
                     $reflection = new ReflectionClass($entityClass);
                     $attrs = $reflection->getAttributes(ContentType::class);
-                    
+
                     if (!empty($attrs)) {
                         $contentType = $attrs[0]->newInstance();
                         // Map both table name and class short name
@@ -415,15 +457,15 @@ final class ContentController
     private function buildCriteria(array $params, string $entityClass): array
     {
         $criteria = [];
-        
+
         // Remove pagination/sorting params
         $reserved = ['page', 'per_page', 'sort', 'direction', 'q'];
-        
+
         foreach ($params as $key => $value) {
             if (in_array($key, $reserved, true)) {
                 continue;
             }
-            
+
             // Handle special filter syntax
             if (str_ends_with($key, '__in')) {
                 $field = substr($key, 0, -4);
@@ -439,27 +481,7 @@ final class ContentController
         return $criteria;
     }
 
-    /**
-     * Return a 404 response
-     */
-    private function notFound(string $message): ResponseInterface
-    {
-        return new JsonResponse([
-            'success' => false,
-            'error' => $message,
-        ], 404);
-    }
 
-    /**
-     * Return a 403 forbidden response
-     */
-    private function forbidden(string $message): ResponseInterface
-    {
-        return new JsonResponse([
-            'success' => false,
-            'error' => $message,
-        ], 403);
-    }
 
     /**
      * Get current user's permissions for a content type

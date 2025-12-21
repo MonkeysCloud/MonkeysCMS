@@ -60,7 +60,7 @@ final class CheckboxesWidget extends AbstractWidget
         $fieldName = $this->getFieldName($field, $context);
         $layout = $settings->getString('layout', 'vertical');
         $columns = $settings->getInt('columns');
-        
+
         $container = Html::div()
             ->class('field-checkbox-group', "field-checkbox-group--{$layout}");
 
@@ -72,7 +72,7 @@ final class CheckboxesWidget extends AbstractWidget
         foreach ($options as $optValue => $optLabel) {
             $checkboxId = $fieldId . '_' . $index;
             $checked = in_array($optValue, $values, true);
-            
+
             $container->child(
                 Html::element('label')
                     ->class('field-checkbox')
@@ -91,7 +91,7 @@ final class CheckboxesWidget extends AbstractWidget
                             ->text((string) $optLabel)
                     )
             );
-            
+
             $index++;
         }
 
@@ -114,7 +114,7 @@ final class CheckboxesWidget extends AbstractWidget
 
         $options = $this->getOptions($field);
         $values = is_array($value) ? $value : [$value];
-        
+
         $labels = [];
         foreach ($values as $v) {
             $labels[] = $options[$v] ?? $v;

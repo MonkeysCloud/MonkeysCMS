@@ -13,7 +13,7 @@ use MonkeysLegion\Cli\IO\Output;
 
 /**
  * CacheForgetCommand - Delete keys from cache
- * 
+ *
  * Usage:
  *   php monkeys cache:forget user:123
  *   php monkeys cache:forget user:123,user:456
@@ -27,7 +27,8 @@ class CacheForgetCommand
 {
     public function __construct(
         private readonly CacheManager $cacheManager,
-    ) {}
+    ) {
+    }
 
     #[Argument(name: 'keys', description: 'Cache key(s) to delete (comma-separated for multiple)')]
     public string $keys;
@@ -38,7 +39,7 @@ class CacheForgetCommand
     public function __invoke(Input $input, Output $output): int
     {
         try {
-            $store = $this->store 
+            $store = $this->store
                 ? $this->cacheManager->store($this->store)
                 : $this->cacheManager->store();
 

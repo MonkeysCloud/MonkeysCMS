@@ -53,7 +53,7 @@ final class SwitchWidget extends AbstractWidget
         $fieldName = $this->getFieldName($field, $context);
         $onLabel = $settings->getString('on_label', 'On');
         $offLabel = $settings->getString('off_label', 'Off');
-        
+
         return Html::element('label')
             ->class('field-switch')
             ->child(Html::hidden($fieldName, '0'))
@@ -88,7 +88,7 @@ final class SwitchWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $on = (bool) $value;
         $class = $on ? 'field-display--on' : 'field-display--off';
-        $text = $on 
+        $text = $on
             ? $settings->getString('on_label', 'On')
             : $settings->getString('off_label', 'Off');
 

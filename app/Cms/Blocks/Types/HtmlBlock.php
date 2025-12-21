@@ -37,21 +37,21 @@ class HtmlBlock extends AbstractBlockType
     public function render(Block $block, array $context = []): string
     {
         $content = $this->getFieldValue($block, 'content', '');
-        
+
         // If block has body, use that instead (for backward compatibility)
         if (!empty($block->body)) {
             $content = $block->body;
         }
-        
+
         return $content;
     }
 
     public function validate(array $data): array
     {
         $errors = parent::validate($data);
-        
+
         // Could add HTML validation/sanitization here
-        
+
         return $errors;
     }
 }

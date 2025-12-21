@@ -12,7 +12,7 @@ use MonkeysLegion\Cli\IO\Output;
 
 /**
  * CacheClearCommand - Clear cache stores
- * 
+ *
  * Usage:
  *   php monkeys cache:clear              # Clear default store
  *   php monkeys cache:clear --store=redis  # Clear specific store
@@ -27,7 +27,8 @@ class CacheClearCommand
 {
     public function __construct(
         private readonly CacheManager $cacheManager,
-    ) {}
+    ) {
+    }
 
     #[Option(name: 'store', shortcut: 's', description: 'Cache store to clear')]
     public ?string $store = null;
@@ -62,10 +63,10 @@ class CacheClearCommand
             } else {
                 // Clear specific or default store
                 $storeName = $this->store ?? 'default';
-                $store = $this->store 
+                $store = $this->store
                     ? $this->cacheManager->store($this->store)
                     : $this->cacheManager->store();
-                
+
                 $store->clear();
                 $output->writeln("<success>✓ Cache store '{$storeName}' cleared successfully</success>");
             }

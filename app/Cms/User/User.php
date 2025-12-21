@@ -11,7 +11,7 @@ use MonkeysLegion\Auth\Contract\AuthenticatableInterface;
 
 /**
  * User - User entity for the CMS
- * 
+ *
  * Represents a user account with authentication and profile information.
  */
 class User extends BaseEntity implements SoftDeleteInterface, AuthenticatableInterface

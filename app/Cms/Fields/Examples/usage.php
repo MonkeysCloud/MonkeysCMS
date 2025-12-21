@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * MonkeysCMS Field Widget System - Usage Examples
- * 
+ *
  * This file demonstrates the object-oriented approach to working
  * with fields, widgets, validation, and form building.
  */
@@ -290,7 +290,7 @@ $validator->registerRule(new class implements \App\Cms\Fields\Validation\Validat
         \App\Cms\Fields\Validation\ValidationContext $context
     ): \App\Cms\Fields\Validation\ValidationResult {
         $badWords = ['spam', 'test'];
-        
+
         foreach ($badWords as $word) {
             if (stripos($value, $word) !== false) {
                 return \App\Cms\Fields\Validation\ValidationResult::failure(
@@ -298,7 +298,7 @@ $validator->registerRule(new class implements \App\Cms\Fields\Validation\Validat
                 );
             }
         }
-        
+
         return \App\Cms\Fields\Validation\ValidationResult::success();
     }
 });

@@ -11,9 +11,9 @@ use MonkeysLegion\Cli\Console\Command;
 
 /**
  * ModuleEnableCommand - Enable a CMS module via CLI
- * 
+ *
  * Usage: ./monkeys cms:module:enable ModuleName
- * 
+ *
  * This command:
  * 1. Discovers the module in app/Modules
  * 2. Finds all entity classes with #[ContentType]
@@ -38,12 +38,12 @@ final class ModuleEnableCommand extends Command
             $this->line('Usage: cms:module:enable <ModuleName>');
             $this->line('');
             $this->line('Available modules:');
-            
+
             foreach ($this->moduleManager->getAvailableModules() as $name => $info) {
                 $status = $info['enabled'] ? '✓' : ' ';
                 $this->line("  [{$status}] {$name}");
             }
-            
+
             return self::FAILURE;
         }
 

@@ -6,7 +6,7 @@ namespace App\Cms\Fields\Rendering;
 
 /**
  * RenderContext - Immutable value object containing rendering context
- * 
+ *
  * Encapsulates all context needed for field rendering including
  * form identification, errors, display states, and customization options.
  */
@@ -22,7 +22,8 @@ final class RenderContext
         private readonly bool $hideHelp,
         private readonly array $errors,
         private readonly array $customData,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a new RenderContext with default values
@@ -189,7 +190,7 @@ final class RenderContext
     {
         $customData = $this->customData;
         $customData[$key] = $value;
-        
+
         return new self(
             $this->formId,
             $this->namePrefix,

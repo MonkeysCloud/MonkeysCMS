@@ -6,7 +6,7 @@ namespace App\Cms\Auth;
 
 /**
  * LoginAttempt - Tracks and manages login attempts for brute force protection
- * 
+ *
  * Features:
  * - Track failed login attempts
  * - Exponential backoff for lockouts
@@ -81,7 +81,7 @@ class LoginAttempt
 
     /**
      * Check if identifier/IP is locked out
-     * 
+     *
      * @return array{locked: bool, until: ?int, remaining: int}
      */
     public function checkLockout(string $identifier, ?string $ip = null): array
@@ -112,11 +112,11 @@ class LoginAttempt
 
         // Check if should be locked based on attempts
         $attempts = $this->getRecentAttempts($identifier, $ip);
-        
+
         if ($attempts >= $this->config['max_attempts']) {
             $this->createLockout($identifier, $ip, $attempts);
             $lockoutMinutes = $this->calculateLockoutDuration($attempts);
-            
+
             return [
                 'locked' => true,
                 'until' => time() + ($lockoutMinutes * 60),

@@ -13,7 +13,8 @@ final class WidgetOutput
         private readonly string $html,
         private readonly WidgetAssets $assets,
         private readonly ?string $initScript,
-    ) {}
+    ) {
+    }
 
     public static function create(
         string $html,

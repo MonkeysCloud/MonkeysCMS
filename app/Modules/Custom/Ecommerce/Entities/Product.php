@@ -12,15 +12,15 @@ use App\Cms\Core\BaseEntity;
 
 /**
  * Product Entity - Demonstrates the CMS entity system
- * 
+ *
  * This entity showcases how to define a content type using attributes.
  * When the Ecommerce module is enabled, the ModuleManager will:
  * 1. Discover this class via reflection
  * 2. Read the #[ContentType] and #[Field] attributes
  * 3. Generate and execute the CREATE TABLE SQL
- * 
+ *
  * No migrations, no hook_install(), no activate_plugin() - just enable and go.
- * 
+ *
  * @example
  * ```php
  * // Create a product
@@ -30,7 +30,7 @@ use App\Cms\Core\BaseEntity;
  * $product->price = 29.99;
  * $product->description = 'The best widget money can buy';
  * $product->stock_quantity = 100;
- * 
+ *
  * $repo->save($product);
  * ```
  */
@@ -283,9 +283,9 @@ class Product extends BaseEntity
 
     /**
      * Category relationship (example of ManyToOne - commented until Category entity exists)
-     * 
+     *
      * Uncomment when Category entity is created:
-     * 
+     *
      * #[Relation(
      *     type: Relation::MANY_TO_ONE,
      *     target: Category::class,
@@ -315,10 +315,10 @@ class Product extends BaseEntity
     {
         // Convert to lowercase
         $slug = strtolower($text);
-        
+
         // Replace non-alphanumeric with hyphens
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '';
-        
+
         // Remove leading/trailing hyphens
         return trim($slug, '-');
     }

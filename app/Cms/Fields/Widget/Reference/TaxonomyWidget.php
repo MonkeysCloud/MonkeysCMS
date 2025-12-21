@@ -66,7 +66,7 @@ final class TaxonomyWidget extends AbstractWidget
         $displayStyle = $settings->getString('display_style', 'checkboxes');
         $values = is_array($value) ? $value : ($value ? [$value] : []);
         $terms = $settings->getArray('terms', []); // In production, fetch from database
-        
+
         $wrapper = Html::div()
             ->class('field-taxonomy', "field-taxonomy--{$displayStyle}")
             ->data('field-id', $fieldId)
@@ -98,7 +98,7 @@ final class TaxonomyWidget extends AbstractWidget
             $termId = $term['id'] ?? $term['value'] ?? '';
             $termLabel = $term['label'] ?? $term['name'] ?? $termId;
             $checked = in_array($termId, $values);
-            
+
             $container->child(
                 Html::element('label')
                     ->class('field-taxonomy__checkbox')
@@ -126,7 +126,7 @@ final class TaxonomyWidget extends AbstractWidget
             $termLabel = $term['label'] ?? $term['name'] ?? $termId;
             $children = $term['children'] ?? [];
             $checked = in_array($termId, $values);
-            
+
             $item = Html::element('li')->class('field-taxonomy__tree-item');
 
             $item->child(
@@ -155,12 +155,12 @@ final class TaxonomyWidget extends AbstractWidget
         $fieldId = $this->getFieldId($field, $context);
         $settings = $this->getSettings($field);
         $allowNew = $settings->getBool('allow_new', false);
-        
+
         $html = '';
 
         // Selected tags
         $tags = Html::div()->class('field-taxonomy__tags');
-        
+
         foreach ($values as $value) {
             $tags->child(
                 Html::span()
@@ -198,13 +198,13 @@ final class TaxonomyWidget extends AbstractWidget
     {
         $settings = $this->getSettings($field);
         $displayStyle = $settings->getString('display_style', 'checkboxes');
-        
+
         if ($displayStyle === 'tags') {
             $vocabulary = $settings->getString('vocabulary');
             $apiUrl = "/api/taxonomy/{$vocabulary}/terms";
             return "CmsTaxonomy.initTags('{$elementId}', '{$apiUrl}');";
         }
-        
+
         return "CmsTaxonomy.init('{$elementId}');";
     }
 
@@ -216,18 +216,18 @@ final class TaxonomyWidget extends AbstractWidget
                 return $decoded;
             }
         }
-        
+
         if (!is_array($value)) {
             return $value ? [$value] : [];
         }
-        
+
         return array_values(array_filter($value));
     }
 
     public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult
     {
         $values = is_array($value) ? $value : [];
-        
+
         if (empty($values)) {
             return parent::renderDisplay($field, null, $context);
         }

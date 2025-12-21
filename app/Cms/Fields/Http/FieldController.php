@@ -12,7 +12,7 @@ use App\Cms\Fields\Widget\WidgetRegistry;
 
 /**
  * FieldController - HTTP API for field operations
- * 
+ *
  * Provides RESTful endpoints for field management,
  * widget rendering, and value handling.
  */
@@ -22,7 +22,8 @@ final class FieldController
         private readonly WidgetRegistry $widgets,
         private readonly FieldRepository $repository,
         private readonly FormBuilder $formBuilder,
-    ) {}
+    ) {
+    }
 
     // =========================================================================
     // Field CRUD
@@ -36,7 +37,7 @@ final class FieldController
     {
         $entityType = $request->get('entity_type');
         $bundleId = $request->get('bundle_id');
-        
+
         $fields = $entityType
             ? $this->repository->findByEntityType($entityType, $bundleId)
             : $this->repository->findAll();
@@ -56,7 +57,7 @@ final class FieldController
     public function show(int $id): Response
     {
         $field = $this->repository->find($id);
-        
+
         if (!$field) {
             return Response::json(['error' => 'Field not found'], 404);
         }
@@ -74,7 +75,7 @@ final class FieldController
     public function store(Request $request): Response
     {
         $data = $request->json();
-        
+
         // Validate required fields
         $errors = $this->validateFieldData($data);
         if (!empty($errors)) {
@@ -104,7 +105,7 @@ final class FieldController
     public function update(int $id, Request $request): Response
     {
         $field = $this->repository->find($id);
-        
+
         if (!$field) {
             return Response::json(['error' => 'Field not found'], 404);
         }
@@ -126,7 +127,7 @@ final class FieldController
     public function destroy(int $id): Response
     {
         $field = $this->repository->find($id);
-        
+
         if (!$field) {
             return Response::json(['error' => 'Field not found'], 404);
         }
@@ -149,7 +150,7 @@ final class FieldController
     public function listWidgets(): Response
     {
         $grouped = $this->widgets->getGroupedByCategory();
-        
+
         $data = [];
         foreach ($grouped as $category => $widgets) {
             $data[$category] = array_map(fn($w) => $w->toArray(), $widgets);
@@ -165,7 +166,7 @@ final class FieldController
     public function showWidget(string $widgetId): Response
     {
         $widget = $this->widgets->get($widgetId);
-        
+
         if (!$widget) {
             return Response::json(['error' => 'Widget not found'], 404);
         }
@@ -201,14 +202,14 @@ final class FieldController
     public function render(int $id, Request $request): Response
     {
         $field = $this->repository->find($id);
-        
+
         if (!$field) {
             return Response::json(['error' => 'Field not found'], 404);
         }
 
         $value = $request->json('value');
         $contextData = $request->json('context', []);
-        
+
         $context = RenderContext::create($contextData);
         $result = $this->widgets->renderField($field, $value, $context);
 
@@ -228,7 +229,7 @@ final class FieldController
     public function renderDisplay(int $id, Request $request): Response
     {
         $field = $this->repository->find($id);
-        
+
         if (!$field) {
             return Response::json(['error' => 'Field not found'], 404);
         }
@@ -251,9 +252,9 @@ final class FieldController
         $fieldIds = $request->json('field_ids', []);
         $values = $request->json('values', []);
         $formConfig = $request->json('form', []);
-        
+
         $fields = $this->repository->findByIds($fieldIds);
-        
+
         // Configure form builder
         $builder = $this->formBuilder
             ->id($formConfig['id'] ?? 'form')
@@ -286,7 +287,7 @@ final class FieldController
     public function validate(int $id, Request $request): Response
     {
         $field = $this->repository->find($id);
-        
+
         if (!$field) {
             return Response::json(['error' => 'Field not found'], 404);
         }
@@ -308,7 +309,7 @@ final class FieldController
     {
         $fieldIds = $request->json('field_ids', []);
         $values = $request->json('values', []);
-        
+
         $fields = $this->repository->findByIds($fieldIds);
         $errors = $this->widgets->validateFields($fields, $values);
 
@@ -325,7 +326,7 @@ final class FieldController
     public function prepare(int $id, Request $request): Response
     {
         $field = $this->repository->find($id);
-        
+
         if (!$field) {
             return Response::json(['error' => 'Field not found'], 404);
         }
@@ -345,7 +346,7 @@ final class FieldController
     public function format(int $id, Request $request): Response
     {
         $field = $this->repository->find($id);
-        
+
         if (!$field) {
             return Response::json(['error' => 'Field not found'], 404);
         }
@@ -444,7 +445,7 @@ class Request
         if ($input) {
             $body = json_decode($input, true) ?? [];
         }
-        
+
         return new self($_GET, $body);
     }
 
@@ -471,7 +472,8 @@ class Response
         private readonly mixed $body,
         private readonly int $status,
         private readonly array $headers,
-    ) {}
+    ) {
+    }
 
     public static function json(mixed $data, int $status = 200): self
     {
@@ -481,11 +483,11 @@ class Response
     public function send(): void
     {
         http_response_code($this->status);
-        
+
         foreach ($this->headers as $name => $value) {
             header("{$name}: {$value}");
         }
-        
+
         echo json_encode($this->body, JSON_THROW_ON_ERROR);
     }
 

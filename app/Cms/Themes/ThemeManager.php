@@ -9,11 +9,11 @@ use RuntimeException;
 
 /**
  * ThemeManager - Manages custom and contrib themes for MonkeysCMS
- * 
+ *
  * Themes are organized in two directories:
  * - themes/contrib: Community/third-party themes
  * - themes/custom: Site-specific custom themes
- * 
+ *
  * Each theme contains:
  * - theme.mlc: Theme metadata (preferred) or theme.json (legacy)
  * - views/: Template files (.ml.php)
@@ -26,7 +26,7 @@ final class ThemeManager
     private array $discoveredThemes = [];
     private ?ThemeInfo $activeThemeInfo = null;
     private ?ThemeInfo $adminThemeInfo = null;
-    
+
     public function __construct(
         private readonly string $contribPath,
         private readonly string $customPath,
@@ -37,7 +37,7 @@ final class ThemeManager
     ) {
         $this->ensureDirectories();
     }
-    
+
     /**
      * Get active frontend theme info
      */
@@ -48,7 +48,7 @@ final class ThemeManager
         }
         return $this->activeThemeInfo;
     }
-    
+
     /**
      * Get admin theme info
      */
@@ -59,7 +59,7 @@ final class ThemeManager
         }
         return $this->adminThemeInfo;
     }
-    
+
     /**
      * Set active theme
      */
@@ -68,10 +68,10 @@ final class ThemeManager
         $theme = $this->loadTheme($themeName);
         $this->activeThemeInfo = $theme;
     }
-    
+
     /**
      * Discover all available themes
-     * 
+     *
      * @return array<string, ThemeInfo>
      */
     public function discoverThemes(): array
@@ -79,25 +79,25 @@ final class ThemeManager
         if (!empty($this->discoveredThemes)) {
             return $this->discoveredThemes;
         }
-        
+
         // Discover contrib themes
         foreach ($this->scanThemeDirectory($this->contribPath) as $name => $info) {
             $info->source = 'contrib';
             $this->discoveredThemes[$name] = $info;
         }
-        
+
         // Discover custom themes (override contrib if same name)
         foreach ($this->scanThemeDirectory($this->customPath) as $name => $info) {
             $info->source = 'custom';
             $this->discoveredThemes[$name] = $info;
         }
-        
+
         return $this->discoveredThemes;
     }
-    
+
     /**
      * Get all contrib themes
-     * 
+     *
      * @return array<string, ThemeInfo>
      */
     public function getContribThemes(): array
@@ -107,10 +107,10 @@ final class ThemeManager
             fn(ThemeInfo $t) => $t->source === 'contrib'
         );
     }
-    
+
     /**
      * Get all custom themes
-     * 
+     *
      * @return array<string, ThemeInfo>
      */
     public function getCustomThemes(): array
@@ -120,7 +120,7 @@ final class ThemeManager
             fn(ThemeInfo $t) => $t->source === 'custom'
         );
     }
-    
+
     /**
      * Check if theme exists
      */
@@ -128,30 +128,30 @@ final class ThemeManager
     {
         return $this->findThemePath($themeName) !== null;
     }
-    
+
     /**
      * Get view paths for the active theme (for Renderer)
-     * 
+     *
      * Returns paths in priority order:
      * 1. Custom theme views
      * 2. Contrib theme views
      * 3. Fallback app views
-     * 
+     *
      * @return string[]
      */
     public function getViewPaths(): array
     {
         $paths = [];
         $theme = $this->getActiveTheme();
-        
+
         // Theme views
         $paths[] = $theme->path . '/views';
-        
+
         // Theme layouts
         if (is_dir($theme->path . '/layouts')) {
             $paths[] = $theme->path . '/layouts';
         }
-        
+
         // Parent theme if exists
         if ($theme->parent !== null) {
             $parentTheme = $this->loadTheme($theme->parent);
@@ -160,25 +160,25 @@ final class ThemeManager
                 $paths[] = $parentTheme->path . '/layouts';
             }
         }
-        
+
         return $paths;
     }
-    
+
     /**
      * Get component paths for the active theme
-     * 
+     *
      * @return string[]
      */
     public function getComponentPaths(): array
     {
         $paths = [];
         $theme = $this->getActiveTheme();
-        
+
         // Theme components
         if (is_dir($theme->path . '/components')) {
             $paths[] = $theme->path . '/components';
         }
-        
+
         // Parent theme components
         if ($theme->parent !== null) {
             $parentTheme = $this->loadTheme($theme->parent);
@@ -186,10 +186,10 @@ final class ThemeManager
                 $paths[] = $parentTheme->path . '/components';
             }
         }
-        
+
         return $paths;
     }
-    
+
     /**
      * Get asset URL for theme
      */
@@ -198,7 +198,7 @@ final class ThemeManager
         $theme = $themeName ? $this->loadTheme($themeName) : $this->getActiveTheme();
         return '/themes/' . $theme->source . '/' . $theme->name . '/assets/' . ltrim($asset, '/');
     }
-    
+
     /**
      * Get theme configuration value
      */
@@ -207,7 +207,7 @@ final class ThemeManager
         $theme = $this->getActiveTheme();
         return $theme->config[$key] ?? $default;
     }
-    
+
     /**
      * Clear theme cache
      */
@@ -216,38 +216,38 @@ final class ThemeManager
         if (!is_dir($this->cachePath)) {
             return;
         }
-        
+
         $files = glob($this->cachePath . '/*');
         foreach ($files as $file) {
             if (is_file($file)) {
                 unlink($file);
             }
         }
-        
+
         // Reset discovered themes
         $this->discoveredThemes = [];
         $this->activeThemeInfo = null;
         $this->adminThemeInfo = null;
     }
-    
+
     /**
      * Validate theme structure
-     * 
+     *
      * @return array<string> List of validation errors
      */
     public function validateTheme(string $themeName): array
     {
         $errors = [];
         $path = $this->findThemePath($themeName);
-        
+
         if ($path === null) {
             return ["Theme '{$themeName}' not found"];
         }
-        
+
         // Check for theme config file (.mlc or .json)
         $mlcFile = $path . '/theme.mlc';
         $jsonFile = $path . '/theme.json';
-        
+
         if (!file_exists($mlcFile) && !file_exists($jsonFile)) {
             $errors[] = "Missing theme.mlc or theme.json";
         } elseif (file_exists($mlcFile)) {
@@ -265,7 +265,7 @@ final class ThemeManager
         } else {
             $json = file_get_contents($jsonFile);
             $data = json_decode($json, true);
-            
+
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $errors[] = "Invalid theme.json: " . json_last_error_msg();
             } else {
@@ -277,15 +277,15 @@ final class ThemeManager
                 }
             }
         }
-        
+
         // Check views directory
         if (!is_dir($path . '/views')) {
             $errors[] = "Missing views/ directory";
         }
-        
+
         return $errors;
     }
-    
+
     /**
      * Create a new theme scaffold
      */
@@ -297,11 +297,11 @@ final class ThemeManager
     ): ThemeInfo {
         $basePath = $source === 'custom' ? $this->customPath : $this->contribPath;
         $themePath = $basePath . '/' . $name;
-        
+
         if (is_dir($themePath)) {
             throw new RuntimeException("Theme '{$name}' already exists at {$themePath}");
         }
-        
+
         // Create directory structure
         $directories = [
             '',
@@ -314,26 +314,26 @@ final class ThemeManager
             '/assets/js',
             '/assets/images',
         ];
-        
+
         foreach ($directories as $dir) {
             mkdir($themePath . $dir, 0755, true);
         }
-        
+
         // Create theme.mlc
         $this->createThemeMlc($themePath, $name, $parentTheme, $metadata);
-        
+
         // Create base layout
         $this->createDefaultLayout($themePath, $name, $parentTheme);
-        
+
         // Create basic CSS
         $this->createDefaultStyles($themePath, $name);
-        
+
         // Clear cache
         $this->discoveredThemes = [];
-        
+
         return $this->loadTheme($name);
     }
-    
+
     /**
      * Create theme.mlc configuration file
      */
@@ -342,7 +342,7 @@ final class ThemeManager
         $description = $metadata['description'] ?? "Custom theme: {$name}";
         $author = $metadata['author'] ?? '';
         $type = $metadata['type'] ?? 'frontend';
-        
+
         $mlc = <<<MLC
 # {$name} Theme
 # Generated by MonkeysCMS
@@ -376,10 +376,10 @@ js = ["assets/js/theme.js"]
 # Screenshots for theme preview
 screenshots = []
 MLC;
-        
+
         file_put_contents($themePath . '/theme.mlc', $mlc);
     }
-    
+
     /**
      * Format value for MLC file
      */
@@ -402,11 +402,11 @@ MLC;
         }
         return 'null';
     }
-    
+
     // ─────────────────────────────────────────────────────────────
     // Private Methods
     // ─────────────────────────────────────────────────────────────
-    
+
     private function ensureDirectories(): void
     {
         foreach ([$this->contribPath, $this->customPath, $this->cachePath] as $dir) {
@@ -415,7 +415,7 @@ MLC;
             }
         }
     }
-    
+
     private function loadTheme(string $themeName): ThemeInfo
     {
         // Check cache first
@@ -425,22 +425,22 @@ MLC;
                 return $cached;
             }
         }
-        
+
         $path = $this->findThemePath($themeName);
-        
+
         if ($path === null) {
             throw new RuntimeException("Theme '{$themeName}' not found in contrib or custom directories");
         }
-        
+
         // Try .mlc first, then fall back to .json
         $mlcFile = $path . '/theme.mlc';
         $jsonFile = $path . '/theme.json';
-        
+
         if (file_exists($mlcFile)) {
             $data = $this->parseMlcFile($mlcFile);
         } elseif (file_exists($jsonFile)) {
             $data = json_decode(file_get_contents($jsonFile), true);
-            
+
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new RuntimeException(
                     "Invalid theme.json for '{$themeName}': " . json_last_error_msg()
@@ -449,7 +449,7 @@ MLC;
         } else {
             throw new RuntimeException("Theme '{$themeName}' missing theme.mlc or theme.json at {$path}");
         }
-        
+
         $info = new ThemeInfo(
             name: $data['name'] ?? $themeName,
             version: $data['version'] ?? '0.0.0',
@@ -466,15 +466,15 @@ MLC;
             assets: $data['assets'] ?? [],
             menus: $data['menus'] ?? [],
         );
-        
+
         // Cache the theme info
         if ($this->cacheEnabled) {
             $this->saveToCache($themeName, $info);
         }
-        
+
         return $info;
     }
-    
+
     /**
      * Parse MLC configuration file
      */
@@ -484,7 +484,7 @@ MLC;
         $parser = new Parser();
         return $parser->parse($content);
     }
-    
+
     private function findThemePath(string $themeName): ?string
     {
         // Check custom first (higher priority)
@@ -492,39 +492,39 @@ MLC;
         if (is_dir($customPath)) {
             return $customPath;
         }
-        
+
         // Check contrib
         $contribPath = $this->contribPath . '/' . $themeName;
         if (is_dir($contribPath)) {
             return $contribPath;
         }
-        
+
         return null;
     }
-    
+
     /**
      * @return array<string, ThemeInfo>
      */
     private function scanThemeDirectory(string $directory): array
     {
         $themes = [];
-        
+
         if (!is_dir($directory)) {
             return $themes;
         }
-        
+
         $dirs = glob($directory . '/*', GLOB_ONLYDIR);
-        
+
         foreach ($dirs as $dir) {
             $themeName = basename($dir);
             $mlcFile = $dir . '/theme.mlc';
             $jsonFile = $dir . '/theme.json';
-            
+
             // Skip if neither config file exists
             if (!file_exists($mlcFile) && !file_exists($jsonFile)) {
                 continue;
             }
-            
+
             try {
                 $themes[$themeName] = $this->loadTheme($themeName);
             } catch (RuntimeException) {
@@ -532,43 +532,43 @@ MLC;
                 continue;
             }
         }
-        
+
         return $themes;
     }
-    
+
     private function loadFromCache(string $themeName): ?ThemeInfo
     {
         $cacheFile = $this->cachePath . '/' . md5($themeName) . '.cache';
-        
+
         if (!file_exists($cacheFile)) {
             return null;
         }
-        
+
         $data = unserialize(file_get_contents($cacheFile));
-        
+
         if (!$data instanceof ThemeInfo) {
             return null;
         }
-        
+
         // Validate cache - check if theme config was modified
         $mlcFile = $data->path . '/theme.mlc';
         $jsonFile = $data->path . '/theme.json';
-        
+
         $configFile = file_exists($mlcFile) ? $mlcFile : $jsonFile;
-        
+
         if (file_exists($configFile) && filemtime($configFile) > filemtime($cacheFile)) {
             return null; // Cache invalidated
         }
-        
+
         return $data;
     }
-    
+
     private function saveToCache(string $themeName, ThemeInfo $info): void
     {
         $cacheFile = $this->cachePath . '/' . md5($themeName) . '.cache';
         file_put_contents($cacheFile, serialize($info));
     }
-    
+
     private function createDefaultLayout(string $themePath, string $themeName, ?string $parent): void
     {
         if ($parent !== null) {
@@ -615,10 +615,10 @@ ML;
 </html>
 ML;
         }
-        
+
         file_put_contents($themePath . '/views/layouts/base.ml.php', $content);
     }
-    
+
     private function createDefaultStyles(string $themePath, string $themeName): void
     {
         $css = <<<CSS
@@ -666,9 +666,9 @@ body {
     margin-top: 2rem;
 }
 CSS;
-        
+
         file_put_contents($themePath . '/assets/css/theme.css', $css);
-        
+
         // Empty JS file
         file_put_contents($themePath . '/assets/js/theme.js', "// Theme JavaScript\n");
     }

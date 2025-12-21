@@ -52,7 +52,7 @@ final class PasswordWidget extends AbstractWidget
         $fieldId = $this->getFieldId($field, $context);
         $showToggle = $settings->getBool('show_toggle', true);
         $showStrength = $settings->getBool('show_strength', false);
-        
+
         $wrapper = Html::div()->class('field-password');
 
         // Password input

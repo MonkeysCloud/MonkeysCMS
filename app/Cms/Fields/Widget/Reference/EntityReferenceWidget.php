@@ -66,7 +66,7 @@ final class EntityReferenceWidget extends AbstractWidget
         $displayStyle = $settings->getString('display_style', 'autocomplete');
         $multiple = $field->multiple;
         $values = $this->normalizeValues($value);
-        
+
         $wrapper = Html::div()
             ->class('field-entity-reference', "field-entity-reference--{$displayStyle}")
             ->data('field-id', $fieldId)
@@ -94,12 +94,12 @@ final class EntityReferenceWidget extends AbstractWidget
         $fieldId = $this->getFieldId($field, $context);
         $settings = $this->getSettings($field);
         $placeholder = $settings->getString('placeholder', 'Search...');
-        
+
         $html = '';
 
         // Selected items container
         $selected = Html::div()->class('field-entity-reference__selected');
-        
+
         foreach ($values as $value) {
             // In production, fetch entity label from database
             $label = $value; // Placeholder
@@ -134,7 +134,7 @@ final class EntityReferenceWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $options = $settings->getArray('options', []);
         $multiple = $field->multiple;
-        
+
         $select = Html::select()
             ->attrs($this->buildCommonAttributes($field, $context));
 
@@ -180,11 +180,11 @@ final class EntityReferenceWidget extends AbstractWidget
         if (is_array($value)) {
             return array_values(array_filter($value));
         }
-        
+
         if ($value !== null && $value !== '') {
             return [$value];
         }
-        
+
         return [];
     }
 
@@ -193,25 +193,25 @@ final class EntityReferenceWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $entityType = $settings->getString('entity_type', 'content');
         $apiUrl = $settings->getString('api_url', '/api/entities/' . $entityType . '/search');
-        
+
         return "CmsEntityReference.init('{$elementId}', '{$apiUrl}');";
     }
 
     public function prepareValue(FieldDefinition $field, mixed $value): mixed
     {
         $values = $this->normalizeValues($value);
-        
+
         if (!$field->multiple) {
             return $values[0] ?? null;
         }
-        
+
         return $values;
     }
 
     public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult
     {
         $values = $this->normalizeValues($value);
-        
+
         if (empty($values)) {
             return parent::renderDisplay($field, null, $context);
         }

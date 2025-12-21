@@ -12,7 +12,8 @@ final class ValidationResult
     private function __construct(
         private readonly bool $valid,
         private readonly array $errors,
-    ) {}
+    ) {
+    }
 
     public static function success(): self
     {
@@ -39,7 +40,7 @@ final class ValidationResult
         if ($this->valid && $other->valid) {
             return self::success();
         }
-        
+
         return self::failure(array_merge($this->errors, $other->errors));
     }
 }

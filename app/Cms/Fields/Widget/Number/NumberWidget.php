@@ -52,7 +52,7 @@ final class NumberWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $prefix = $settings->getString('prefix');
         $suffix = $settings->getString('suffix');
-        
+
         $input = Html::input('number')
             ->attrs($this->buildCommonAttributes($field, $context))
             ->value($value ?? '');

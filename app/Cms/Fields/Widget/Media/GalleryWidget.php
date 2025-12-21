@@ -64,7 +64,7 @@ final class GalleryWidget extends AbstractWidget
         $fieldName = $this->getFieldName($field, $context);
         $maxItems = $settings->getInt('max_items', 0);
         $images = is_array($value) ? $value : ($value ? [$value] : []);
-        
+
         $wrapper = Html::div()
             ->class('field-gallery')
             ->data('field-id', $fieldId)
@@ -145,7 +145,7 @@ final class GalleryWidget extends AbstractWidget
     public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult
     {
         $images = is_array($value) ? $value : [];
-        
+
         if (empty($images)) {
             return parent::renderDisplay($field, null, $context);
         }

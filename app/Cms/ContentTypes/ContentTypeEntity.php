@@ -11,7 +11,7 @@ use App\Cms\Core\BaseEntity;
 
 /**
  * ContentTypeEntity - Database-defined content types
- * 
+ *
  * Content types can be defined both in code (as Entity classes) and
  * in the database (via this entity). Database-defined types can have
  * custom fields added dynamically via the admin UI.
@@ -101,11 +101,11 @@ class ContentTypeEntity extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->type_id)) {
             $this->type_id = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $this->label));
         }
-        
+
         if (empty($this->label_plural)) {
             $this->label_plural = $this->label . 's';
         }
@@ -140,14 +140,14 @@ class ContentTypeEntity extends BaseEntity
         if (!$this->url_pattern) {
             return '/' . $this->type_id . '/' . ($content[$this->slug_field] ?? $content['id']);
         }
-        
+
         $url = $this->url_pattern;
         foreach ($content as $key => $value) {
             if (is_scalar($value)) {
                 $url = str_replace('{' . $key . '}', (string) $value, $url);
             }
         }
-        
+
         return $url;
     }
 
@@ -195,65 +195,65 @@ class ContentTypeEntity extends BaseEntity
     public function generateTableSql(): string
     {
         $tableName = $this->getTableName();
-        
+
         $sql = "CREATE TABLE IF NOT EXISTS {$tableName} (\n";
         $sql .= "    id INT AUTO_INCREMENT PRIMARY KEY,\n";
         $sql .= "    uuid VARCHAR(36) NOT NULL UNIQUE,\n";
-        
+
         // Title field
         if ($this->title_field) {
             $sql .= "    {$this->title_field} VARCHAR(255) NOT NULL,\n";
         }
-        
+
         // Slug field
         if ($this->slug_field) {
             $sql .= "    {$this->slug_field} VARCHAR(255) NOT NULL UNIQUE,\n";
         }
-        
+
         // Custom fields
         foreach ($this->fields as $field) {
             $sql .= "    " . $field->getSqlColumnDefinition() . ",\n";
         }
-        
+
         // Standard fields
         if ($this->publishable) {
             $sql .= "    status VARCHAR(20) DEFAULT 'draft',\n";
             $sql .= "    published_at DATETIME,\n";
         }
-        
+
         if ($this->has_author) {
             $sql .= "    author_id INT,\n";
         }
-        
+
         if ($this->revisionable) {
             $sql .= "    revision_id INT,\n";
         }
-        
+
         if ($this->translatable) {
             $sql .= "    language VARCHAR(10) DEFAULT 'en',\n";
             $sql .= "    translation_of INT,\n";
         }
-        
+
         $sql .= "    created_at DATETIME NOT NULL,\n";
         $sql .= "    updated_at DATETIME NOT NULL,\n";
-        
+
         // Indexes
         $sql .= "    INDEX idx_status (status),\n";
         $sql .= "    INDEX idx_created (created_at),\n";
-        
+
         if ($this->has_author) {
             $sql .= "    INDEX idx_author (author_id),\n";
         }
-        
+
         if ($this->translatable) {
             $sql .= "    INDEX idx_language (language),\n";
         }
-        
+
         // Remove trailing comma
         $sql = rtrim($sql, ",\n") . "\n";
-        
+
         $sql .= ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
-        
+
         return $sql;
     }
 }

@@ -63,7 +63,7 @@ final class DecimalWidget extends AbstractWidget
         $prefix = $symbol ?? $settings->getString('prefix');
         $suffix = $settings->getString('suffix');
         $decimals = $settings->getInt('decimals', 2);
-        
+
         $input = Html::input('number')
             ->attrs($this->buildCommonAttributes($field, $context))
             ->attr('step', '0.' . str_repeat('0', $decimals - 1) . '1')
@@ -112,7 +112,7 @@ final class DecimalWidget extends AbstractWidget
 
         $settings = $this->getSettings($field);
         $decimals = $settings->getInt('decimals', 2);
-        
+
         return round((float) $value, $decimals);
     }
 
@@ -130,7 +130,7 @@ final class DecimalWidget extends AbstractWidget
         $decimals = $settings->getInt('decimals', 2);
 
         $formatted = $this->formatNumber($value, $decimals);
-        
+
         if ($prefix) {
             $formatted = $prefix . $formatted;
         }

@@ -31,9 +31,9 @@ class TwoFactorController
     public function show(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         // Check if 2FA is already enabled
@@ -55,21 +55,21 @@ class TwoFactorController
     public function setup(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->jsonResponse(['error' => 'Unauthorized'], 401);
+            return json(['error' => 'Unauthorized'], 401);
         }
 
         $setupData = $this->auth->generate2FASetup();
 
         if (!$setupData) {
-            return $this->jsonResponse(['error' => 'Failed to generate 2FA setup'], 500);
+            return json(['error' => 'Failed to generate 2FA setup'], 500);
         }
 
         // Store secret temporarily in session for verification
         $this->session->set('2fa_temp_secret', $setupData['secret']);
 
-        return $this->jsonResponse([
+        return json([
             'secret' => $setupData['secret'],
             'qr_code' => $setupData['qr_code'],
             'recovery_codes' => $setupData['recovery'] ?? [],
@@ -83,9 +83,9 @@ class TwoFactorController
     public function enable(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $data = $request->getParsedBody();
@@ -94,22 +94,22 @@ class TwoFactorController
 
         if (!$secret) {
             $this->session->flash('error', 'Please start the setup process again');
-            return $this->redirect('/settings/2fa');
+            return redirect('/settings/2fa');
         }
 
         if (empty($code)) {
             $this->session->flash('error', 'Verification code is required');
-            return $this->redirect('/settings/2fa');
+            return redirect('/settings/2fa');
         }
 
         if ($this->auth->enable2FA($secret, $code)) {
             $this->session->forget('2fa_temp_secret');
             $this->session->flash('success', 'Two-factor authentication has been enabled');
-            return $this->redirect('/settings/2fa');
+            return redirect('/settings/2fa');
         }
 
         $this->session->flash('error', 'Invalid verification code. Please try again.');
-        return $this->redirect('/settings/2fa');
+        return redirect('/settings/2fa');
     }
 
     /**
@@ -119,9 +119,9 @@ class TwoFactorController
     public function disable(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $data = $request->getParsedBody();
@@ -129,16 +129,16 @@ class TwoFactorController
 
         if (empty($password)) {
             $this->session->flash('error', 'Password is required to disable 2FA');
-            return $this->redirect('/settings/2fa');
+            return redirect('/settings/2fa');
         }
 
         if ($this->auth->disable2FA($password)) {
             $this->session->flash('success', 'Two-factor authentication has been disabled');
-            return $this->redirect('/settings/2fa');
+            return redirect('/settings/2fa');
         }
 
         $this->session->flash('error', 'Invalid password');
-        return $this->redirect('/settings/2fa');
+        return redirect('/settings/2fa');
     }
 
     /**
@@ -148,16 +148,18 @@ class TwoFactorController
     public function showRecoveryCodes(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         // Require recent password verification
-        if (!$this->session->has('password_confirmed_at') || 
-            $this->session->get('password_confirmed_at') < time() - 300) {
+        if (
+            !$this->session->has('password_confirmed_at') ||
+            $this->session->get('password_confirmed_at') < time() - 300
+        ) {
             $this->session->setIntendedUrl('/settings/2fa/recovery');
-            return $this->redirect('/settings/confirm-password');
+            return redirect('/settings/confirm-password');
         }
 
         // TODO: Get recovery codes from user provider
@@ -176,9 +178,9 @@ class TwoFactorController
     public function regenerateRecoveryCodes(ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->auth->user();
-        
+
         if (!$user) {
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         $data = $request->getParsedBody();
@@ -186,36 +188,24 @@ class TwoFactorController
 
         if (!$user->verifyPassword($password)) {
             $this->session->flash('error', 'Invalid password');
-            return $this->redirect('/settings/2fa/recovery');
+            return redirect('/settings/2fa/recovery');
         }
 
         // TODO: Regenerate recovery codes
         $this->session->flash('success', 'Recovery codes have been regenerated');
-        return $this->redirect('/settings/2fa/recovery');
+        return redirect('/settings/2fa/recovery');
     }
 
     // =========================================================================
     // Helpers
     // =========================================================================
 
-    private function redirect(string $url, int $status = 302): ResponseInterface
-    {
-        return new \Nyholm\Psr7\Response($status, ['Location' => $url]);
-    }
 
-    private function jsonResponse(array $data, int $status = 200): ResponseInterface
-    {
-        return new \Nyholm\Psr7\Response(
-            $status,
-            ['Content-Type' => 'application/json'],
-            json_encode($data)
-        );
-    }
 
     private function view(string $template, array $data = []): ResponseInterface
     {
         $html = $this->renderTemplate($data);
-        return new \Nyholm\Psr7\Response(200, ['Content-Type' => 'text/html'], $html);
+        return response($html, 200, ['Content-Type' => 'text/html']);
     }
 
     private function renderTemplate(array $data): string

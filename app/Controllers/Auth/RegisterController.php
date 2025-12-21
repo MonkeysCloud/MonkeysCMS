@@ -8,7 +8,6 @@ use App\Cms\Auth\CmsAuthService;
 use App\Cms\Auth\SessionManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-
 use MonkeysLegion\Template\Renderer;
 use MonkeysLegion\Router\Attributes\Route;
 
@@ -47,7 +46,7 @@ class RegisterController
     public function show(ServerRequestInterface $request): ResponseInterface
     {
         if ($this->auth->check()) {
-            return $this->redirect('/admin');
+            return redirect('/admin');
         }
 
         return $this->view('auth/register', [
@@ -76,7 +75,7 @@ class RegisterController
                 'username' => $data['username'] ?? '',
                 'display_name' => $data['display_name'] ?? '',
             ]);
-            return $this->redirect('/register');
+            return redirect('/register');
         }
 
         // Attempt registration
@@ -94,27 +93,27 @@ class RegisterController
                 'username' => $data['username'] ?? '',
                 'display_name' => $data['display_name'] ?? '',
             ]);
-            return $this->redirect('/register');
+            return redirect('/register');
         }
 
         // Send verification email if required
         if ($this->config['require_email_verification']) {
             // TODO: Send verification email
             $this->session->flash('success', 'Registration successful! Please check your email to verify your account.');
-            
+
             if (!$this->config['auto_login']) {
-                return $this->redirect('/login');
+                return redirect('/login');
             }
         }
 
         // Auto-login successful
         if ($this->config['auto_login'] && $result->success) {
             $this->session->regenerate();
-            return $this->redirect('/admin');
+            return redirect('/admin');
         }
 
         $this->session->flash('success', 'Registration successful! You can now log in.');
-        return $this->redirect('/login');
+        return redirect('/login');
     }
 
     /**
@@ -189,19 +188,19 @@ class RegisterController
 
     /**
      * Verify email with token
-     * 
+     *
      * GET /verify-email/{token}
      */
     public function verifyEmail(ServerRequestInterface $request, string $token): ResponseInterface
     {
         // TODO: Implement email verification
         $this->session->flash('success', 'Email verified successfully! You can now log in.');
-        return $this->redirect('/login');
+        return redirect('/login');
     }
 
     /**
      * Resend verification email
-     * 
+     *
      * POST /verify-email/resend
      */
     public function resendVerification(ServerRequestInterface $request): ResponseInterface
@@ -211,26 +210,23 @@ class RegisterController
 
         if (empty($email)) {
             $this->session->flash('error', 'Email is required');
-            return $this->redirect('/login');
+            return redirect('/login');
         }
 
         // TODO: Resend verification email
         $this->session->flash('success', 'Verification email sent! Please check your inbox.');
-        return $this->redirect('/login');
+        return redirect('/login');
     }
 
     // =========================================================================
     // Helpers
     // =========================================================================
 
-    private function redirect(string $url, int $status = 302): ResponseInterface
-    {
-        return new \Nyholm\Psr7\Response($status, ['Location' => $url]);
-    }
+
 
     private function view(string $template, array $data = []): ResponseInterface
     {
         $html = $this->renderer->render($template, $data);
-        return new \Nyholm\Psr7\Response(200, ['Content-Type' => 'text/html'], $html);
+        return response($html, 200, ['Content-Type' => 'text/html']);
     }
 }

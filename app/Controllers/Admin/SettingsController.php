@@ -6,9 +6,9 @@ namespace App\Controllers\Admin;
 
 use App\Modules\Core\Services\SettingsService;
 use App\Modules\Core\Entities\Setting;
-use MonkeysLegion\Http\Attribute\Route;
-use MonkeysLegion\Http\Request;
-use MonkeysLegion\Http\JsonResponse;
+use MonkeysLegion\Router\Attributes\Route;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * SettingsController - Admin API for site settings
@@ -17,13 +17,14 @@ final class SettingsController
 {
     public function __construct(
         private readonly SettingsService $settings,
-    ) {}
+    ) {
+    }
 
     /**
      * Get all settings grouped
      */
     #[Route('GET', '/admin/settings')]
-    public function index(): JsonResponse
+    public function index(): ResponseInterface
     {
         $grouped = $this->settings->getAllGrouped();
 
@@ -34,7 +35,7 @@ final class SettingsController
             ]), $settings);
         }
 
-        return new JsonResponse([
+        return json([
             'settings' => $result,
             'groups' => array_keys($result),
         ]);
@@ -44,11 +45,11 @@ final class SettingsController
      * Get settings for a specific group
      */
     #[Route('GET', '/admin/settings/group/{group}')]
-    public function getGroup(string $group): JsonResponse
+    public function getGroup(string $group): ResponseInterface
     {
         $settings = $this->settings->getGroup($group);
 
-        return new JsonResponse([
+        return json([
             'group' => $group,
             'settings' => $settings,
         ]);
@@ -58,7 +59,7 @@ final class SettingsController
      * Get a single setting
      */
     #[Route('GET', '/admin/settings/{key}')]
-    public function show(string $key): JsonResponse
+    public function show(string $key): ResponseInterface
     {
         // Handle dots in key (URL encoded)
         $key = str_replace('_', '.', $key);
@@ -66,10 +67,10 @@ final class SettingsController
         $setting = $this->settings->getSetting($key);
 
         if (!$setting) {
-            return new JsonResponse(['error' => 'Setting not found'], 404);
+            return json(['error' => 'Setting not found'], 404);
         }
 
-        return new JsonResponse(array_merge($setting->toArray(), [
+        return json(array_merge($setting->toArray(), [
             'typed_value' => $setting->getTypedValue(),
         ]));
     }
@@ -78,24 +79,24 @@ final class SettingsController
      * Update a single setting
      */
     #[Route('PUT', '/admin/settings/{key}')]
-    public function update(string $key, Request $request): JsonResponse
+    public function update(string $key, ServerRequestInterface $request): ResponseInterface
     {
         $key = str_replace('_', '.', $key);
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (!isset($data['value'])) {
-            return new JsonResponse(['error' => 'Value is required'], 422);
+            return json(['error' => 'Value is required'], 422);
         }
 
         $setting = $this->settings->getSetting($key);
 
         if ($setting && $setting->is_system && isset($data['key'])) {
-            return new JsonResponse(['error' => 'Cannot change key of system setting'], 400);
+            return json(['error' => 'Cannot change key of system setting'], 400);
         }
 
         $this->settings->set($key, $data['value'], $data['type'] ?? null);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Setting updated',
             'key' => $key,
@@ -107,16 +108,16 @@ final class SettingsController
      * Create a new setting
      */
     #[Route('POST', '/admin/settings')]
-    public function create(Request $request): JsonResponse
+    public function create(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
 
         if (empty($data['key'])) {
-            return new JsonResponse(['errors' => ['key' => 'Key is required']], 422);
+            return json(['errors' => ['key' => 'Key is required']], 422);
         }
 
         if ($this->settings->has($data['key'])) {
-            return new JsonResponse(['errors' => ['key' => 'Setting already exists']], 422);
+            return json(['errors' => ['key' => 'Setting already exists']], 422);
         }
 
         $setting = new Setting();
@@ -130,7 +131,7 @@ final class SettingsController
 
         $this->settings->saveSetting($setting);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Setting created',
             'setting' => $setting->toArray(),
@@ -141,23 +142,23 @@ final class SettingsController
      * Delete a setting
      */
     #[Route('DELETE', '/admin/settings/{key}')]
-    public function delete(string $key): JsonResponse
+    public function delete(string $key): ResponseInterface
     {
         $key = str_replace('_', '.', $key);
 
         $setting = $this->settings->getSetting($key);
 
         if (!$setting) {
-            return new JsonResponse(['error' => 'Setting not found'], 404);
+            return json(['error' => 'Setting not found'], 404);
         }
 
         if ($setting->is_system) {
-            return new JsonResponse(['error' => 'Cannot delete system setting'], 400);
+            return json(['error' => 'Cannot delete system setting'], 400);
         }
 
         $this->settings->delete($key);
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Setting deleted',
         ]);
@@ -167,9 +168,9 @@ final class SettingsController
      * Bulk update settings
      */
     #[Route('PUT', '/admin/settings/bulk')]
-    public function bulkUpdate(Request $request): JsonResponse
+    public function bulkUpdate(ServerRequestInterface $request): ResponseInterface
     {
-        $data = $request->getParsedBody();
+        $data = json_decode((string) $request->getBody(), true) ?? [];
         $settings = $data['settings'] ?? [];
 
         $updated = [];
@@ -184,7 +185,7 @@ final class SettingsController
             }
         }
 
-        return new JsonResponse([
+        return json([
             'success' => empty($errors),
             'updated' => $updated,
             'errors' => $errors,
@@ -195,11 +196,11 @@ final class SettingsController
      * Clear settings cache
      */
     #[Route('POST', '/admin/settings/cache/clear')]
-    public function clearCache(): JsonResponse
+    public function clearCache(): ResponseInterface
     {
         $this->settings->clearCache();
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Settings cache cleared',
         ]);
@@ -209,11 +210,11 @@ final class SettingsController
      * Reset settings to defaults
      */
     #[Route('POST', '/admin/settings/reset')]
-    public function resetDefaults(): JsonResponse
+    public function resetDefaults(): ResponseInterface
     {
         $this->settings->seedDefaults();
 
-        return new JsonResponse([
+        return json([
             'success' => true,
             'message' => 'Default settings restored',
         ]);

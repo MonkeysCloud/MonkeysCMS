@@ -50,7 +50,7 @@ final class TimeWidget extends AbstractWidget
     {
         $settings = $this->getSettings($field);
         $formattedValue = $this->formatValue($field, $value);
-        
+
         $input = Html::input('time')
             ->attrs($this->buildCommonAttributes($field, $context))
             ->value($formattedValue);

@@ -6,7 +6,7 @@ namespace App\Cms\Auth;
 
 /**
  * SessionManager - Handles session management for authentication
- * 
+ *
  * Features:
  * - Secure session configuration
  * - Session data management
@@ -344,7 +344,7 @@ class SessionManager
     public function verifyCsrfToken(string $token): bool
     {
         $sessionToken = $this->get('_csrf_token');
-        
+
         if (!$sessionToken) {
             return false;
         }
@@ -411,11 +411,11 @@ class SessionManager
             $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
             return trim($ips[0]);
         }
-        
+
         if (!empty($_SERVER['HTTP_X_REAL_IP'])) {
             return $_SERVER['HTTP_X_REAL_IP'];
         }
-        
+
         return $_SERVER['REMOTE_ADDR'] ?? null;
     }
 

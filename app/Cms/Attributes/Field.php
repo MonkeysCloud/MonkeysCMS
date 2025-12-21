@@ -8,20 +8,20 @@ use Attribute;
 
 /**
  * Field Attribute - Defines a content field on a CMS entity
- * 
+ *
  * This attribute marks a property as a CMS field, specifying its database mapping,
  * validation rules, and admin UI configuration.
- * 
+ *
  * Key improvements over Drupal:
  * - No separate field configuration tables - field definitions live in code
  * - Type-safe field definitions with PHP enums
  * - Automatic SQL type mapping
- * 
+ *
  * Key improvements over WordPress:
  * - Fields are proper columns, not EAV meta values
  * - Native SQL queries, indexes, and foreign keys
  * - No serialization of complex data
- * 
+ *
  * @example
  * ```php
  * #[Field(
@@ -76,7 +76,8 @@ final readonly class Field
         public bool $listable = true,
         public bool $filterable = false,
         public ?string $reference = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Get the SQL column definition for this field

@@ -13,7 +13,7 @@ use App\Cms\Fields\Widget\WidgetRegistry;
 
 /**
  * FormBuilder - Builds forms from field definitions
- * 
+ *
  * Uses the builder pattern to construct forms with customizable
  * options, layouts, and styling.
  */
@@ -34,7 +34,8 @@ final class FormBuilder
 
     public function __construct(
         private readonly WidgetRegistry $widgets,
-    ) {}
+    ) {
+    }
 
     // =========================================================================
     // Builder Methods
@@ -123,14 +124,14 @@ final class FormBuilder
 
     /**
      * Build a complete form
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array $values Current values indexed by machine_name
      */
     public function build(array $fields, array $values = []): FormResult
     {
         $this->widgets->clearAssets();
-        
+
         $context = RenderContext::create([
             'form_id' => $this->id,
             'errors' => $this->errors,
@@ -156,7 +157,7 @@ final class FormBuilder
 
         // Fields container
         $fieldsContainer = Html::div()->class('cms-form__fields');
-        
+
         if ($this->groupFields) {
             $fieldsContainer->html($this->buildGroupedFields($fields, $values, $context));
         } else {
@@ -180,14 +181,14 @@ final class FormBuilder
 
     /**
      * Build just the fields (without form wrapper)
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array $values
      */
     public function buildFields(array $fields, array $values = []): RenderResult
     {
         $this->widgets->clearAssets();
-        
+
         $context = RenderContext::create([
             'form_id' => $this->id,
             'errors' => $this->errors,
@@ -220,7 +221,7 @@ final class FormBuilder
 
     /**
      * Validate submitted values
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array $values Submitted values
      * @return array<string, array<string>> Errors indexed by field machine_name
@@ -232,7 +233,7 @@ final class FormBuilder
 
     /**
      * Prepare submitted values for storage
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array $values Submitted values
      * @return array Prepared values indexed by machine_name
@@ -256,7 +257,7 @@ final class FormBuilder
     private function buildFormErrors(array $errors): string
     {
         $container = Html::div()->class('cms-form__errors');
-        
+
         foreach ($errors as $error) {
             $container->child(
                 Html::div()
@@ -285,7 +286,7 @@ final class FormBuilder
 
         foreach ($groups as $groupName => $groupFields) {
             $collapsed = $index > 0;
-            
+
             $fieldset = Html::element('fieldset')
                 ->class('cms-form__group', $collapsed ? 'cms-form__group--collapsed' : '');
 
@@ -300,7 +301,7 @@ final class FormBuilder
 
             // Group content
             $content = Html::div()->class('cms-form__group-content');
-            
+
             foreach ($groupFields as $field) {
                 $value = $values[$field->machine_name] ?? $field->default_value;
                 $result = $this->widgets->renderField($field, $value, $context);
@@ -348,7 +349,8 @@ final class FormResult
     public function __construct(
         public readonly string $html,
         public readonly \App\Cms\Fields\Rendering\AssetCollection $assets,
-    ) {}
+    ) {
+    }
 
     /**
      * Get HTML with assets included

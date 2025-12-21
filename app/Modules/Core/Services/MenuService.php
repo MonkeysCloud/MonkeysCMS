@@ -12,7 +12,7 @@ use MonkeysLegion\Cache\CacheManager;
 
 /**
  * MenuService - Manages navigation menus with caching
- * 
+ *
  * Uses MonkeysLegion-Cache for persistent menu caching with
  * tag-based invalidation support.
  */
@@ -20,17 +20,18 @@ final class MenuService
 {
     private const CACHE_TTL = 86400; // 24 hours
     private const CACHE_TAG = 'menus';
-    
+
     private array $localCache = [];
 
     public function __construct(
         private readonly Connection $connection,
         private readonly ?CacheManager $cache = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Get all menus
-     * 
+     *
      * @return Menu[]
      */
     public function getAllMenus(): array
@@ -79,7 +80,7 @@ final class MenuService
         if (isset($this->localCache[$machineName])) {
             return $this->localCache[$machineName];
         }
-        
+
         // Check persistent cache
         $cacheKey = "menu:{$machineName}";
         if ($this->cache !== null) {
@@ -104,7 +105,7 @@ final class MenuService
         $menu->hydrate($row);
 
         $this->localCache[$machineName] = $menu;
-        
+
         // Store in persistent cache
         if ($this->cache !== null) {
             $this->cacheSet($cacheKey, $menu);
@@ -145,7 +146,7 @@ final class MenuService
 
     /**
      * Get menu items
-     * 
+     *
      * @return MenuItem[]
      */
     public function getMenuItems(int $menuId, ?User $user = null, bool $publishedOnly = true): array
@@ -175,7 +176,7 @@ final class MenuService
 
     /**
      * Get menu tree (hierarchical)
-     * 
+     *
      * @return MenuItem[]
      */
     public function getMenuTree(int $menuId, ?User $user = null): array
@@ -493,11 +494,11 @@ final class MenuService
             }
         }
     }
-    
+
     // =========================================================================
     // Cache Helpers
     // =========================================================================
-    
+
     /**
      * Set value in cache with tags
      */
@@ -506,7 +507,7 @@ final class MenuService
         if ($this->cache === null) {
             return;
         }
-        
+
         try {
             $this->cache->tags([self::CACHE_TAG])->set($key, $value, self::CACHE_TTL);
         } catch (\Exception) {
@@ -514,7 +515,7 @@ final class MenuService
             $this->cache->store()->set($key, $value, self::CACHE_TTL);
         }
     }
-    
+
     /**
      * Invalidate menu cache
      */
@@ -523,7 +524,7 @@ final class MenuService
         if ($this->cache === null) {
             return;
         }
-        
+
         // Delete specific menu cache
         $this->cache->store()->delete("menu:{$machineName}");
         $this->cache->store()->delete("menu_tree:{$machineName}");
@@ -535,7 +536,7 @@ final class MenuService
     public function clearCache(): void
     {
         $this->localCache = [];
-        
+
         if ($this->cache !== null) {
             try {
                 $this->cache->tags([self::CACHE_TAG])->clear();

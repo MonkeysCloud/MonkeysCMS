@@ -61,7 +61,7 @@ final class ImageWidget extends AbstractWidget
         $previewSize = $settings->getString('preview_size', 'medium');
         $allowedTypes = $settings->getArray('allowed_types', ['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
         $maxSize = $settings->getInt('max_size', 5 * 1024 * 1024); // 5MB default
-        
+
         $wrapper = Html::div()
             ->class('field-image')
             ->data('field-id', $fieldId);

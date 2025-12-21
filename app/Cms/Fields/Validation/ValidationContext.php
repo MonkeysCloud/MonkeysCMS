@@ -14,5 +14,6 @@ final class ValidationContext
         public readonly string $fieldLabel,
         public readonly string $fieldType,
         public readonly array $allValues = [],
-    ) {}
+    ) {
+    }
 }

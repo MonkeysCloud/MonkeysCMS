@@ -6,7 +6,7 @@ namespace App\Cms\Fields\Rendering;
 
 /**
  * AssetCollection - Collects and manages CSS/JS assets for field rendering
- * 
+ *
  * Tracks required assets from widgets, ensures uniqueness,
  * and generates proper HTML includes.
  */
@@ -14,16 +14,16 @@ final class AssetCollection
 {
     /** @var array<string, bool> */
     private array $cssFiles = [];
-    
+
     /** @var array<string, bool> */
     private array $jsFiles = [];
-    
+
     /** @var array<string> */
     private array $initScripts = [];
-    
+
     /** @var array<string, string> */
     private array $inlineStyles = [];
-    
+
     /** @var array<string, string> */
     private array $inlineScripts = [];
 
@@ -102,29 +102,29 @@ final class AssetCollection
         foreach (array_keys($other->cssFiles) as $path) {
             $this->addCss($path);
         }
-        
+
         foreach (array_keys($other->jsFiles) as $path) {
             $this->addJs($path);
         }
-        
+
         foreach ($other->initScripts as $script) {
             $this->initScripts[] = $script;
         }
-        
+
         foreach ($other->inlineStyles as $id => $css) {
             $this->inlineStyles[$id] = $css;
         }
-        
+
         foreach ($other->inlineScripts as $id => $js) {
             $this->inlineScripts[$id] = $js;
         }
-        
+
         return $this;
     }
 
     /**
      * Get all CSS file paths
-     * 
+     *
      * @return array<string>
      */
     public function getCssFiles(): array
@@ -134,7 +134,7 @@ final class AssetCollection
 
     /**
      * Get all JavaScript file paths
-     * 
+     *
      * @return array<string>
      */
     public function getJsFiles(): array
@@ -144,7 +144,7 @@ final class AssetCollection
 
     /**
      * Get all initialization scripts
-     * 
+     *
      * @return array<string>
      */
     public function getInitScripts(): array
@@ -154,7 +154,7 @@ final class AssetCollection
 
     /**
      * Get inline styles
-     * 
+     *
      * @return array<string, string>
      */
     public function getInlineStyles(): array
@@ -164,7 +164,7 @@ final class AssetCollection
 
     /**
      * Get inline scripts
-     * 
+     *
      * @return array<string, string>
      */
     public function getInlineScripts(): array
@@ -178,11 +178,11 @@ final class AssetCollection
     public function renderCssTags(): string
     {
         $html = '';
-        
+
         foreach ($this->getCssFiles() as $path) {
             $html .= '<link rel="stylesheet" href="' . htmlspecialchars($path, ENT_QUOTES | ENT_HTML5) . '">' . "\n";
         }
-        
+
         return $html;
     }
 
@@ -194,13 +194,13 @@ final class AssetCollection
         if (empty($this->inlineStyles)) {
             return '';
         }
-        
+
         $html = '<style>' . "\n";
         foreach ($this->inlineStyles as $css) {
             $html .= $css . "\n";
         }
         $html .= '</style>' . "\n";
-        
+
         return $html;
     }
 
@@ -210,11 +210,11 @@ final class AssetCollection
     public function renderJsTags(): string
     {
         $html = '';
-        
+
         foreach ($this->getJsFiles() as $path) {
             $html .= '<script src="' . htmlspecialchars($path, ENT_QUOTES | ENT_HTML5) . '"></script>' . "\n";
         }
-        
+
         return $html;
     }
 
@@ -226,22 +226,22 @@ final class AssetCollection
         if (empty($this->initScripts) && empty($this->inlineScripts)) {
             return '';
         }
-        
+
         $html = '<script>' . "\n";
         $html .= 'document.addEventListener("DOMContentLoaded", function() {' . "\n";
-        
+
         foreach ($this->initScripts as $script) {
             $html .= $script . "\n";
         }
-        
+
         $html .= '});' . "\n";
-        
+
         foreach ($this->inlineScripts as $script) {
             $html .= $script . "\n";
         }
-        
+
         $html .= '</script>' . "\n";
-        
+
         return $html;
     }
 

@@ -16,7 +16,8 @@ final class CmsServiceProvider
 {
     public function __construct(
         private readonly ContainerInterface $container,
-    ) {}
+    ) {
+    }
 
     /**
      * Boot the CMS services
@@ -38,7 +39,7 @@ final class CmsServiceProvider
         }
 
         $pdo = $this->container->get(PDO::class);
-        
+
         // Initialize AuthServiceProvider with database connection
         // Config will be pulled from env vars by default
         AuthServiceProvider::init($pdo);
@@ -46,10 +47,10 @@ final class CmsServiceProvider
 
     /**
      * Get DI definitions
-     * 
+     *
      * @return array<string, callable>
      */
-    public function getDefinitions(): array
+    public static function getDefinitions(): array
     {
         return AuthServiceProvider::getDefinitions();
     }

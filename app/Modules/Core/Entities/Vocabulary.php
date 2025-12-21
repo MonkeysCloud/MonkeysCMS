@@ -11,7 +11,7 @@ use App\Cms\Core\BaseEntity;
 
 /**
  * Vocabulary Entity - Defines taxonomy vocabularies (like Drupal)
- * 
+ *
  * A vocabulary is a container for terms. Examples:
  * - Categories (hierarchical)
  * - Tags (flat)
@@ -120,7 +120,7 @@ class Vocabulary extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->machine_name)) {
             $this->machine_name = $this->generateMachineName($this->name);
         }
@@ -187,7 +187,7 @@ class Vocabulary extends BaseEntity
 
     /**
      * Get root terms (terms without parent)
-     * 
+     *
      * @return Term[]
      */
     public function getRootTerms(): array

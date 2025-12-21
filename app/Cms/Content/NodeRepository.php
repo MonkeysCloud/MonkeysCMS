@@ -10,9 +10,9 @@ use App\Cms\Entity\ScopedRepository;
 
 /**
  * NodeRepository - Specialized repository for content nodes
- * 
+ *
  * Provides common queries and scopes for nodes.
- * 
+ *
  * @extends ScopedRepository<Node>
  */
 class NodeRepository extends ScopedRepository
@@ -24,7 +24,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Define query scopes
-     * 
+     *
      * @return array<string, callable(EntityQuery): EntityQuery>
      */
     protected function scopes(): array
@@ -60,7 +60,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Find published nodes
-     * 
+     *
      * @return Node[]
      */
     public function findPublished(int $limit = 10): array
@@ -73,7 +73,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Find by type
-     * 
+     *
      * @return Node[]
      */
     public function findByType(string $type, ?string $status = null): array
@@ -89,7 +89,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Find by author
-     * 
+     *
      * @return Node[]
      */
     public function findByAuthor(int $authorId, ?string $status = null): array
@@ -113,7 +113,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Find scheduled nodes ready to publish
-     * 
+     *
      * @return Node[]
      */
     public function findDueForPublishing(): array
@@ -128,7 +128,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Search nodes
-     * 
+     *
      * @return Node[]
      */
     public function search(string $term, array $options = []): array
@@ -154,7 +154,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Get recent nodes
-     * 
+     *
      * @return Node[]
      */
     public function getRecent(int $limit = 10, ?string $type = null): array
@@ -172,7 +172,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Get nodes by multiple types
-     * 
+     *
      * @param string[] $types
      * @return Node[]
      */
@@ -188,7 +188,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Get nodes in date range
-     * 
+     *
      * @return Node[]
      */
     public function findInDateRange(
@@ -197,7 +197,8 @@ class NodeRepository extends ScopedRepository
         ?string $type = null
     ): array {
         $query = $this->createQuery()
-            ->whereBetween('created_at', 
+            ->whereBetween(
+                'created_at',
                 $start->format('Y-m-d H:i:s'),
                 $end->format('Y-m-d H:i:s')
             )
@@ -212,7 +213,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Get content type counts
-     * 
+     *
      * @return array<string, int>
      */
     public function getTypeCounts(): array
@@ -237,7 +238,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Get status counts
-     * 
+     *
      * @return array<string, int>
      */
     public function getStatusCounts(?string $type = null): array
@@ -248,11 +249,11 @@ class NodeRepository extends ScopedRepository
         $sql = "SELECT status, COUNT(*) as count 
                 FROM {$table} 
                 WHERE deleted_at IS NULL";
-        
+
         if ($type) {
             $sql .= " AND type = :type";
         }
-        
+
         $sql .= " GROUP BY status";
 
         $stmt = $connection->prepare($sql);
@@ -268,7 +269,7 @@ class NodeRepository extends ScopedRepository
 
     /**
      * Get nodes by tag (via taxonomy)
-     * 
+     *
      * @return Node[]
      */
     public function findByTag(string $tag, int $limit = 20): array

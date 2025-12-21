@@ -174,11 +174,11 @@ class Term extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->slug)) {
             $this->slug = $this->generateSlug($this->name);
         }
-        
+
         // Calculate path for hierarchical terms
         $this->updatePath();
     }
@@ -253,7 +253,7 @@ class Term extends BaseEntity
 
     /**
      * Get all ancestor term IDs
-     * 
+     *
      * @return int[]
      */
     public function getAncestorIds(): array
@@ -261,10 +261,10 @@ class Term extends BaseEntity
         if (empty($this->path)) {
             return [];
         }
-        
+
         $parts = explode('/', trim($this->path, '/'));
         array_pop(); // Remove self
-        
+
         return array_map('intval', array_filter($parts));
     }
 
@@ -276,7 +276,7 @@ class Term extends BaseEntity
         if ($this->parent === null) {
             return $this->name;
         }
-        
+
         return $this->parent->getHierarchicalName($separator) . $separator . $this->name;
     }
 

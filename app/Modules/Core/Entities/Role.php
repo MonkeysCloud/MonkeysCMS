@@ -102,7 +102,7 @@ class Role extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->slug)) {
             $this->slug = $this->generateSlug($this->name);
         }
@@ -142,7 +142,7 @@ class Role extends BaseEntity
 
     /**
      * Get all permission slugs
-     * 
+     *
      * @return string[]
      */
     public function getPermissionSlugs(): array

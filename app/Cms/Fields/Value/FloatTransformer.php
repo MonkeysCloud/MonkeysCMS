@@ -13,7 +13,8 @@ final class FloatTransformer implements ValueTransformerInterface
         private readonly int $decimals = 2,
         private readonly string $decimalSeparator = '.',
         private readonly string $thousandsSeparator = ',',
-    ) {}
+    ) {
+    }
 
     public function toForm(FieldValue $value): FieldValue
     {

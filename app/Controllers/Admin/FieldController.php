@@ -6,27 +6,27 @@ namespace App\Controllers\Admin;
 
 use App\Cms\Fields\FieldDefinition;
 use App\Cms\Fields\FieldType;
-use App\Cms\Fields\Widgets\FieldWidgetManager;
-use MonkeysLegion\Http\Attribute\Route;
-use MonkeysLegion\Http\Response;
+use App\Cms\Fields\Widget\WidgetRegistry;
+use MonkeysLegion\Router\Attributes\Route;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * FieldController - Admin API for field types and widgets
- * 
+ *
  * Field Type Endpoints:
  * - GET /admin/fields/types - List all field types
  * - GET /admin/fields/types/{type} - Get field type info
- * 
+ *
  * Widget Endpoints:
  * - GET /admin/fields/widgets - List all widgets
  * - GET /admin/fields/widgets/grouped - Widgets grouped by category
  * - GET /admin/fields/widgets/{type} - Widgets for a field type
  * - GET /admin/fields/widgets/{id}/schema - Widget settings schema
- * 
+ *
  * Validation Endpoints:
  * - POST /admin/fields/validate - Validate field value
- * 
+ *
  * Render Endpoints:
  * - POST /admin/fields/render - Render field widget HTML
  * - POST /admin/fields/preview - Preview field display
@@ -34,8 +34,9 @@ use Psr\Http\Message\ServerRequestInterface;
 class FieldController
 {
     public function __construct(
-        private readonly FieldWidgetManager $widgetManager,
-    ) {}
+        private readonly WidgetRegistry $widgetManager,
+    ) {
+    }
 
     // =========================================================================
     // Field Types
@@ -45,10 +46,10 @@ class FieldController
      * List all field types
      */
     #[Route('GET', '/admin/fields/types')]
-    public function listTypes(ServerRequestInterface $request): Response
+    public function listTypes(ServerRequestInterface $request): ResponseInterface
     {
         $types = [];
-        
+
         foreach (FieldType::cases() as $case) {
             $types[] = [
                 'value' => $case->value,
@@ -61,7 +62,7 @@ class FieldController
             ];
         }
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $types,
             'total' => count($types),
@@ -72,18 +73,18 @@ class FieldController
      * Get field type info
      */
     #[Route('GET', '/admin/fields/types/{type}')]
-    public function getType(ServerRequestInterface $request, string $type): Response
+    public function getType(ServerRequestInterface $request, string $type): ResponseInterface
     {
         $fieldType = FieldType::tryFrom($type);
-        
+
         if (!$fieldType) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Field type not found',
             ], 404);
         }
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => [
                 'value' => $fieldType->value,
@@ -93,7 +94,7 @@ class FieldController
                 'php_type' => $fieldType->getPhpType(),
                 'sql_type' => $fieldType->getSqlType(),
                 'default_widget' => $fieldType->getDefaultWidget(),
-                'available_widgets' => $this->widgetManager->getWidgetOptions($type),
+                'available_widgets' => $this->widgetManager->getOptionsForType($type),
             ],
         ]);
     }
@@ -102,10 +103,10 @@ class FieldController
      * Get field types grouped by category
      */
     #[Route('GET', '/admin/fields/types/grouped')]
-    public function getTypesGrouped(ServerRequestInterface $request): Response
+    public function getTypesGrouped(ServerRequestInterface $request): ResponseInterface
     {
         $grouped = [];
-        
+
         foreach (FieldType::cases() as $case) {
             $category = $case->getCategory();
             if (!isset($grouped[$category])) {
@@ -120,7 +121,7 @@ class FieldController
 
         ksort($grouped);
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $grouped,
         ]);
@@ -134,19 +135,19 @@ class FieldController
      * List all widgets
      */
     #[Route('GET', '/admin/fields/widgets')]
-    public function listWidgets(ServerRequestInterface $request): Response
+    public function listWidgets(ServerRequestInterface $request): ResponseInterface
     {
         $widgets = [];
-        
-        foreach ($this->widgetManager->getWidgets() as $id => $widget) {
+
+        foreach ($this->widgetManager->all() as $id => $widget) {
             $widgets[] = [
                 'id' => $id,
-                'label' => $widget::getLabel(),
-                'category' => $widget::getCategory(),
-                'icon' => $widget::getIcon(),
-                'supported_types' => $widget::getSupportedTypes(),
-                'supports_multiple' => $widget::supportsMultiple(),
-                'priority' => $widget::getPriority(),
+                'label' => $widget->getLabel(),
+                'category' => $widget->getCategory(),
+                'icon' => $widget->getIcon(),
+                'supported_types' => $widget->getSupportedTypes(),
+                'supports_multiple' => $widget->supportsMultiple(),
+                'priority' => $widget->getPriority(),
             ];
         }
 
@@ -156,7 +157,7 @@ class FieldController
             return $catCmp !== 0 ? $catCmp : strcmp($a['label'], $b['label']);
         });
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $widgets,
             'total' => count($widgets),
@@ -167,11 +168,11 @@ class FieldController
      * Get widgets grouped by category
      */
     #[Route('GET', '/admin/fields/widgets/grouped')]
-    public function getWidgetsGrouped(ServerRequestInterface $request): Response
+    public function getWidgetsGrouped(ServerRequestInterface $request): ResponseInterface
     {
-        return Response::json([
+        return json([
             'success' => true,
-            'data' => $this->widgetManager->getWidgetsGrouped(),
+            'data' => $this->widgetManager->getGroupedByCategory(),
         ]);
     }
 
@@ -179,11 +180,11 @@ class FieldController
      * Get widgets for a field type
      */
     #[Route('GET', '/admin/fields/widgets/for-type/{type}')]
-    public function getWidgetsForType(ServerRequestInterface $request, string $type): Response
+    public function getWidgetsForType(ServerRequestInterface $request, string $type): ResponseInterface
     {
-        $widgets = $this->widgetManager->getWidgetOptions($type);
+        $widgets = $this->widgetManager->getOptionsForType($type);
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $widgets,
             'field_type' => $type,
@@ -194,25 +195,41 @@ class FieldController
      * Get widget settings schema
      */
     #[Route('GET', '/admin/fields/widgets/{id}/schema')]
-    public function getWidgetSchema(ServerRequestInterface $request, string $id): Response
+    public function getWidgetSchema(ServerRequestInterface $request, string $id): ResponseInterface
     {
-        $widget = $this->widgetManager->getWidget($id);
-        
+        $widget = $this->widgetManager->get($id);
+
         if (!$widget) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Widget not found',
             ], 404);
         }
 
-        return Response::json([
+        $schema = [];
+        if ($widget instanceof \App\Cms\Fields\Widget\ConfigurableWidgetInterface) {
+            $schema = $widget->getSettingsSchema();
+        } elseif (method_exists($widget, 'getSettingsSchema')) {
+            /** @phpstan-ignore-next-line */
+            $schema = $widget->getSettingsSchema();
+        }
+
+        $assets = ['css' => [], 'js' => []];
+        if (method_exists($widget, 'getAssets')) {
+            /** @phpstan-ignore-next-line */
+            $widgetAssets = $widget->getAssets();
+            $assets['css'] = $widgetAssets->getCssFiles();
+            $assets['js'] = $widgetAssets->getJsFiles();
+        }
+
+        return json([
             'success' => true,
             'data' => [
                 'id' => $id,
-                'label' => $widget::getLabel(),
-                'settings_schema' => $widget::getSettingsSchema(),
-                'css_assets' => $widget::getCssAssets(),
-                'js_assets' => $widget::getJsAssets(),
+                'label' => $widget->getLabel(),
+                'settings_schema' => $schema,
+                'css_assets' => $assets['css'],
+                'js_assets' => $assets['js'],
             ],
         ]);
     }
@@ -225,7 +242,7 @@ class FieldController
      * Validate a field value
      */
     #[Route('POST', '/admin/fields/validate')]
-    public function validateField(ServerRequestInterface $request): Response
+    public function validateField(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
@@ -233,7 +250,7 @@ class FieldController
         $value = $data['value'] ?? null;
 
         if (!$fieldDef) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Field definition required',
             ], 400);
@@ -244,19 +261,12 @@ class FieldController
         $field->hydrate($fieldDef);
 
         // Get widget and validate
-        $widget = $this->widgetManager->getWidgetForField($field);
-        
-        $errors = [];
-        
-        // Field-level validation
-        $fieldErrors = $field->validateValue($value);
-        
-        // Widget-level validation
-        $widgetErrors = $widget->validate($field, $value);
-        
-        $errors = array_merge($fieldErrors, $widgetErrors);
+        $widget = $this->widgetManager->resolve($field);
 
-        return Response::json([
+        // Validate
+        $errors = $this->widgetManager->validateField($field, $value);
+
+        return json([
             'success' => empty($errors),
             'valid' => empty($errors),
             'errors' => $errors,
@@ -267,7 +277,7 @@ class FieldController
      * Validate multiple field values
      */
     #[Route('POST', '/admin/fields/validate-many')]
-    public function validateFields(ServerRequestInterface $request): Response
+    public function validateFields(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
@@ -275,7 +285,7 @@ class FieldController
         $values = $data['values'] ?? [];
 
         if (empty($fieldDefs)) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Field definitions required',
             ], 400);
@@ -288,9 +298,9 @@ class FieldController
             $fields[] = $field;
         }
 
-        $errors = $this->widgetManager->validateValues($fields, $values);
+        $errors = $this->widgetManager->validateFields($fields, $values);
 
-        return Response::json([
+        return json([
             'success' => empty($errors),
             'valid' => empty($errors),
             'errors' => $errors,
@@ -305,7 +315,7 @@ class FieldController
      * Render a field widget
      */
     #[Route('POST', '/admin/fields/render')]
-    public function renderField(ServerRequestInterface $request): Response
+    public function renderField(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
@@ -314,7 +324,7 @@ class FieldController
         $context = $data['context'] ?? [];
 
         if (!$fieldDef) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Field definition required',
             ], 400);
@@ -328,13 +338,13 @@ class FieldController
         $this->widgetManager->clearAssets();
         $html = $this->widgetManager->renderField($field, $value, $context);
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => [
-                'html' => $html,
-                'css' => $this->widgetManager->getCssAssets(),
-                'js' => $this->widgetManager->getJsAssets(),
-                'init_script' => $this->widgetManager->getInitScripts(),
+                'html' => $html->getHtml(),
+                'css' => $this->widgetManager->getCollectedAssets()->getCssFiles(),
+                'js' => $this->widgetManager->getCollectedAssets()->getJsFiles(),
+                'init_script' => $this->widgetManager->getCollectedAssets()->getInitScripts(),
             ],
         ]);
     }
@@ -343,7 +353,7 @@ class FieldController
      * Render field for display (view mode)
      */
     #[Route('POST', '/admin/fields/render-display')]
-    public function renderDisplay(ServerRequestInterface $request): Response
+    public function renderDisplay(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
@@ -352,7 +362,7 @@ class FieldController
         $context = $data['context'] ?? [];
 
         if (!$fieldDef) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Field definition required',
             ], 400);
@@ -363,12 +373,12 @@ class FieldController
         $field->hydrate($fieldDef);
 
         // Render display
-        $html = $this->widgetManager->renderFieldDisplay($field, $value, $context);
+        $result = $this->widgetManager->renderFieldDisplay($field, $value, $context);
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => [
-                'html' => $html,
+                'html' => $result->getHtml(),
             ],
         ]);
     }
@@ -377,7 +387,7 @@ class FieldController
      * Prepare values for storage
      */
     #[Route('POST', '/admin/fields/prepare')]
-    public function prepareValues(ServerRequestInterface $request): Response
+    public function prepareValues(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
 
@@ -385,7 +395,7 @@ class FieldController
         $values = $data['values'] ?? [];
 
         if (empty($fieldDefs)) {
-            return Response::json([
+            return json([
                 'success' => false,
                 'error' => 'Field definitions required',
             ], 400);
@@ -400,7 +410,7 @@ class FieldController
 
         $prepared = $this->widgetManager->prepareValues($fields, $values);
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => $prepared,
         ]);
@@ -414,14 +424,14 @@ class FieldController
      * Get field definition template
      */
     #[Route('GET', '/admin/fields/template')]
-    public function getTemplate(ServerRequestInterface $request): Response
+    public function getTemplate(ServerRequestInterface $request): ResponseInterface
     {
         $params = $request->getQueryParams();
         $type = $params['type'] ?? 'string';
 
         $fieldType = FieldType::tryFrom($type) ?? FieldType::STRING;
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => [
                 'name' => '',
@@ -445,7 +455,7 @@ class FieldController
      * Generate machine name from label
      */
     #[Route('POST', '/admin/fields/machine-name')]
-    public function generateMachineName(ServerRequestInterface $request): Response
+    public function generateMachineName(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
         $label = $data['label'] ?? '';
@@ -454,7 +464,7 @@ class FieldController
         $machineName = $prefix . strtolower(preg_replace('/[^a-z0-9]+/i', '_', $label));
         $machineName = trim($machineName, '_');
 
-        return Response::json([
+        return json([
             'success' => true,
             'data' => [
                 'machine_name' => $machineName,

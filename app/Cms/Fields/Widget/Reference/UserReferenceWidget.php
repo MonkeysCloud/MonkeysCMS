@@ -65,7 +65,7 @@ final class UserReferenceWidget extends AbstractWidget
         $roleFilter = $settings->getArray('role_filter', []);
         $multiple = $field->multiple;
         $values = is_array($value) ? $value : ($value ? [$value] : []);
-        
+
         $wrapper = Html::div()
             ->class('field-user-reference')
             ->data('field-id', $fieldId)
@@ -81,7 +81,7 @@ final class UserReferenceWidget extends AbstractWidget
 
         // Selected users
         $selected = Html::div()->class('field-user-reference__selected');
-        
+
         foreach ($values as $userId) {
             // In production, fetch user info from database
             $selected->child($this->buildUserBadge($userId, 'User #' . $userId));
@@ -155,18 +155,18 @@ final class UserReferenceWidget extends AbstractWidget
                 return $field->multiple ? $decoded : ($decoded[0] ?? null);
             }
         }
-        
+
         if (!$field->multiple) {
             return is_array($value) ? ($value[0] ?? null) : $value;
         }
-        
+
         return is_array($value) ? array_values(array_filter($value)) : ($value ? [$value] : []);
     }
 
     public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult
     {
         $values = is_array($value) ? $value : ($value ? [$value] : []);
-        
+
         if (empty($values)) {
             return parent::renderDisplay($field, null, $context);
         }

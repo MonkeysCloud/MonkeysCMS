@@ -8,7 +8,7 @@ use App\Cms\Entity\BaseEntity;
 
 /**
  * ContentType - Defines a content type for nodes
- * 
+ *
  * Content types define the structure and behavior of nodes:
  * - Fields attached to the type
  * - Publishing options
@@ -359,7 +359,7 @@ class ContentTypeManager
 
     /**
      * Get all content types
-     * 
+     *
      * @return ContentType[]
      */
     public function all(): array

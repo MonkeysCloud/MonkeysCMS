@@ -6,7 +6,7 @@ namespace App\Cms\Database;
 
 /**
  * DatabaseCommands - CLI commands for database operations
- * 
+ *
  * Usage:
  *   php DatabaseCommands.php migrate              Run pending migrations
  *   php DatabaseCommands.php migrate:rollback     Rollback last batch
@@ -26,9 +26,9 @@ class DatabaseCommands
         $this->db = $db;
         $this->migrationsPath = $migrationsPath;
         $this->runner = new MigrationRunner($db, $migrationsPath);
-        
+
         // Set output callback
-        $this->runner->setOutput(function(string $message) {
+        $this->runner->setOutput(function (string $message) {
             $this->output($message);
         });
     }
@@ -60,16 +60,16 @@ class DatabaseCommands
     public function migrate(array $options = []): int
     {
         $this->info("Running migrations...");
-        
+
         try {
             $migrated = $this->runner->migrate();
-            
+
             if (empty($migrated)) {
                 $this->info("Nothing to migrate.");
             } else {
                 $this->success(sprintf("Migrated %d migration(s).", count($migrated)));
             }
-            
+
             return 0;
         } catch (\Throwable $e) {
             $this->error("Migration failed: " . $e->getMessage());
@@ -83,16 +83,16 @@ class DatabaseCommands
     public function rollback(array $options = []): int
     {
         $this->info("Rolling back last batch...");
-        
+
         try {
             $rolledBack = $this->runner->rollback();
-            
+
             if (empty($rolledBack)) {
                 $this->info("Nothing to rollback.");
             } else {
                 $this->success(sprintf("Rolled back %d migration(s).", count($rolledBack)));
             }
-            
+
             return 0;
         } catch (\Throwable $e) {
             $this->error("Rollback failed: " . $e->getMessage());
@@ -111,7 +111,7 @@ class DatabaseCommands
         }
 
         $this->info("Resetting all migrations...");
-        
+
         try {
             $rolledBack = $this->runner->reset();
             $this->success(sprintf("Reset %d migration(s).", count($rolledBack)));
@@ -133,16 +133,16 @@ class DatabaseCommands
         }
 
         $this->info("Dropping all tables and re-running migrations...");
-        
+
         try {
             $migrated = $this->runner->fresh();
             $this->success(sprintf("Fresh migration completed. Ran %d migration(s).", count($migrated)));
-            
+
             // Optionally run seeders
             if (in_array('--seed', $options)) {
                 $this->seed([]);
             }
-            
+
             return 0;
         } catch (\Throwable $e) {
             $this->error("Fresh migration failed: " . $e->getMessage());
@@ -157,10 +157,10 @@ class DatabaseCommands
     {
         $this->info("Migration Status:");
         $this->output("");
-        
+
         try {
             $status = $this->runner->status();
-            
+
             if (empty($status)) {
                 $this->info("No migrations found.");
                 return 0;
@@ -189,9 +189,9 @@ class DatabaseCommands
     public function seed(array $options = []): int
     {
         $this->info("Running seeders...");
-        
+
         $seederPath = dirname($this->migrationsPath) . '/seeders';
-        
+
         if (!is_dir($seederPath)) {
             $this->info("No seeders directory found.");
             return 0;
@@ -202,7 +202,7 @@ class DatabaseCommands
 
         foreach ($files as $file) {
             $seeder = require $file;
-            
+
             if (is_callable($seeder)) {
                 $this->output("Seeding: " . basename($file));
                 $seeder($this->db);
@@ -224,7 +224,7 @@ class DatabaseCommands
     public function createDatabase(array $options = []): int
     {
         $dbName = $options[0] ?? null;
-        
+
         if (!$dbName) {
             $this->error("Database name required: php DatabaseCommands.php db:create <name>");
             return 1;
@@ -359,7 +359,7 @@ Examples:
 if (php_sapi_name() === 'cli' && realpath($argv[0]) === __FILE__) {
     // Load config
     $configPath = dirname(__DIR__, 3) . '/config/database.php';
-    
+
     if (!file_exists($configPath)) {
         // Create default config
         $config = [

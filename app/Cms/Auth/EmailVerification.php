@@ -8,7 +8,7 @@ use App\Cms\User\User;
 
 /**
  * EmailVerification - Handles email verification for user accounts
- * 
+ *
  * Features:
  * - Generate verification tokens
  * - Verify email addresses
@@ -30,7 +30,7 @@ class EmailVerification
 
     /**
      * Generate verification token for user
-     * 
+     *
      * @return array{token: string, expires_at: \DateTimeImmutable}
      */
     public function generateToken(int $userId): array
@@ -132,7 +132,7 @@ class EmailVerification
         // $this->sendVerificationEmail($user, $tokenData['token']);
 
         return new ResendResult(
-            true, 
+            true,
             'Verification email sent',
             $tokenData['token'] // In production, don't return this
         );
@@ -157,7 +157,7 @@ class EmailVerification
             AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
         ");
         $stmt->execute(['user_id' => $userId]);
-        
+
         return (int) $stmt->fetchColumn() < 3;
     }
 
@@ -198,7 +198,8 @@ class VerificationResult
         public readonly bool $success,
         public readonly string $message,
         public readonly ?User $user = null,
-    ) {}
+    ) {
+    }
 }
 
 /**
@@ -210,5 +211,6 @@ class ResendResult
         public readonly bool $success,
         public readonly string $message,
         public readonly ?string $token = null,
-    ) {}
+    ) {
+    }
 }

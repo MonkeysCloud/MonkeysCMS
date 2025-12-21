@@ -12,7 +12,7 @@ use MonkeysLegion\Database\Connection;
 
 /**
  * Core Module Loader
- * 
+ *
  * Handles initialization of core CMS functionality including:
  * - System roles creation
  * - System permissions creation
@@ -421,7 +421,7 @@ class Loader
 
         // Log the generated password (in a real app, this would be emailed or shown once)
         error_log("MonkeysCMS: Default admin created - Email: admin@example.com, Password: {$password}");
-        
+
         // Store in a file for first-time setup
         $credsFile = dirname(__DIR__, 3) . '/storage/admin_credentials.txt';
         file_put_contents($credsFile, "Default Admin Credentials\n=========================\nEmail: admin@example.com\nPassword: {$password}\n\nDelete this file after logging in and changing your password.\n");

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 /**
  * Migration: Create authentication tables
- * 
+ *
  * Tables:
  * - login_attempts: Track failed login attempts
  * - login_lockouts: Track account lockouts
  * - oauth_accounts: OAuth provider links
  * - token_blacklist: Revoked JWT tokens
  */
+
 return new class {
     public function up(\PDO $db): void
     {
@@ -135,7 +136,7 @@ return new class {
         $db->exec("DROP TABLE IF EXISTS oauth_accounts");
         $db->exec("DROP TABLE IF EXISTS login_lockouts");
         $db->exec("DROP TABLE IF EXISTS login_attempts");
-        
+
         // Remove 2FA columns from users
         $db->exec("
             ALTER TABLE users 

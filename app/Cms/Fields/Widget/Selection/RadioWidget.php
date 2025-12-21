@@ -53,7 +53,7 @@ final class RadioWidget extends AbstractWidget
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
         $layout = $settings->getString('layout', 'vertical');
-        
+
         $container = Html::div()
             ->class('field-radio-group', "field-radio-group--{$layout}");
 
@@ -61,7 +61,7 @@ final class RadioWidget extends AbstractWidget
         foreach ($options as $optValue => $optLabel) {
             $radioId = $fieldId . '_' . $index;
             $checked = $value == $optValue;
-            
+
             $container->child(
                 Html::element('label')
                     ->class('field-radio')
@@ -80,7 +80,7 @@ final class RadioWidget extends AbstractWidget
                             ->text((string) $optLabel)
                     )
             );
-            
+
             $index++;
         }
 

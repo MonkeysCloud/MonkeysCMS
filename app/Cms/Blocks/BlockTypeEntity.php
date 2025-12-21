@@ -11,7 +11,7 @@ use App\Cms\Core\BaseEntity;
 
 /**
  * BlockTypeEntity - Database-defined block types
- * 
+ *
  * Stores block type definitions that are created via the admin UI.
  * These can have custom fields added dynamically.
  */
@@ -82,7 +82,7 @@ class BlockTypeEntity extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->type_id)) {
             $this->type_id = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $this->label));
         }
@@ -96,7 +96,7 @@ class BlockTypeEntity extends BaseEntity
         if (empty($this->allowed_regions)) {
             return true; // All regions
         }
-        
+
         return in_array($region, $this->allowed_regions, true);
     }
 

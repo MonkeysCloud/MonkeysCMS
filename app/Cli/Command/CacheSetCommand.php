@@ -13,7 +13,7 @@ use MonkeysLegion\Cli\IO\Output;
 
 /**
  * CacheSetCommand - Set a value in cache
- * 
+ *
  * Usage:
  *   php monkeys cache:set user:123 "John Doe"
  *   php monkeys cache:set config:debug true --ttl=3600
@@ -27,7 +27,8 @@ class CacheSetCommand
 {
     public function __construct(
         private readonly CacheManager $cacheManager,
-    ) {}
+    ) {
+    }
 
     #[Argument(name: 'key', description: 'Cache key')]
     public string $key;
@@ -47,13 +48,13 @@ class CacheSetCommand
     public function __invoke(Input $input, Output $output): int
     {
         try {
-            $store = $this->store 
+            $store = $this->store
                 ? $this->cacheManager->store($this->store)
                 : $this->cacheManager->store();
 
             // Parse value
             $value = $this->value;
-            
+
             // Auto-detect JSON
             if ($this->json || $this->looksLikeJson($value)) {
                 $decoded = json_decode($value, true);
@@ -61,7 +62,7 @@ class CacheSetCommand
                     $value = $decoded;
                 }
             }
-            
+
             // Handle boolean strings
             if ($value === 'true') {
                 $value = true;

@@ -55,7 +55,7 @@ final class LinkWidget extends AbstractWidget
         $value = is_array($value) ? $value : ['url' => '', 'title' => '', 'target' => '_self'];
         $showTitle = $settings->getBool('show_title', true);
         $showTarget = $settings->getBool('show_target', true);
-        
+
         $wrapper = Html::div()->class('field-link');
 
         // URL input

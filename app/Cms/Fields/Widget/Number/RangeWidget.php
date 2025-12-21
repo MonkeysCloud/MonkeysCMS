@@ -55,7 +55,7 @@ final class RangeWidget extends AbstractWidget
         $step = $settings->get('step', 1);
         $showValue = $settings->getBool('show_value', true);
         $currentValue = $value ?? $min;
-        
+
         $wrapper = Html::div()->class('field-range');
 
         $wrapper->child(
@@ -82,7 +82,7 @@ final class RangeWidget extends AbstractWidget
     protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
         $settings = $this->getSettings($field);
-        
+
         if (!$settings->getBool('show_value', true)) {
             return null;
         }

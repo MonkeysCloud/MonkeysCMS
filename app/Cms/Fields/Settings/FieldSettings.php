@@ -6,7 +6,7 @@ namespace App\Cms\Fields\Settings;
 
 /**
  * FieldSettings - Immutable value object for field settings
- * 
+ *
  * Provides type-safe access to field configuration with
  * default values and validation.
  */
@@ -137,43 +137,43 @@ final class FieldSettings
     public function validate(): array
     {
         $errors = [];
-        
+
         foreach ($this->schema as $key => $definition) {
             $value = $this->settings[$key] ?? null;
             $required = $definition['required'] ?? false;
             $type = $definition['type'] ?? 'string';
-            
+
             // Check required
             if ($required && $value === null) {
                 $errors[$key] = "Setting '{$key}' is required";
                 continue;
             }
-            
+
             if ($value === null) {
                 continue;
             }
-            
+
             // Type validation
             $typeError = $this->validateType($key, $value, $type);
             if ($typeError) {
                 $errors[$key] = $typeError;
                 continue;
             }
-            
+
             // Constraints
             if (isset($definition['min']) && is_numeric($value) && $value < $definition['min']) {
                 $errors[$key] = "Setting '{$key}' must be at least {$definition['min']}";
             }
-            
+
             if (isset($definition['max']) && is_numeric($value) && $value > $definition['max']) {
                 $errors[$key] = "Setting '{$key}' must be at most {$definition['max']}";
             }
-            
+
             if (isset($definition['options']) && !isset($definition['options'][$value])) {
                 $errors[$key] = "Setting '{$key}' must be one of: " . implode(', ', array_keys($definition['options']));
             }
         }
-        
+
         return $errors;
     }
 

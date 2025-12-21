@@ -13,18 +13,19 @@ use MonkeysLegion\Cache\CacheManager;
 
 /**
  * TaxonomyService - Manages vocabularies, terms, and entity-term relationships
- * 
+ *
  * Uses MonkeysLegion-Cache for vocabulary and term caching.
  */
 final class TaxonomyService
 {
     private const CACHE_TTL = 86400; // 24 hours
     private const CACHE_TAG = 'taxonomy';
-    
+
     public function __construct(
         private readonly Connection $connection,
         private readonly ?CacheManager $cache = null,
-    ) {}
+    ) {
+    }
 
     // ─────────────────────────────────────────────────────────────
     // Vocabulary Methods
@@ -32,7 +33,7 @@ final class TaxonomyService
 
     /**
      * Get all vocabularies
-     * 
+     *
      * @return Vocabulary[]
      */
     public function getAllVocabularies(): array
@@ -60,7 +61,7 @@ final class TaxonomyService
             "SELECT * FROM vocabularies WHERE id = :id"
         );
         $stmt->execute(['id' => $id]);
-        
+
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) {
             return null;
@@ -80,7 +81,7 @@ final class TaxonomyService
             "SELECT * FROM vocabularies WHERE machine_name = :machine_name"
         );
         $stmt->execute(['machine_name' => $machineName]);
-        
+
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) {
             return null;
@@ -93,7 +94,7 @@ final class TaxonomyService
 
     /**
      * Get vocabularies for an entity type
-     * 
+     *
      * @return Vocabulary[]
      */
     public function getVocabulariesForEntity(string $entityType): array
@@ -106,7 +107,7 @@ final class TaxonomyService
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $vocabulary = new Vocabulary();
             $vocabulary->hydrate($row);
-            
+
             if ($vocabulary->allowsEntityType($entityType)) {
                 $vocabularies[] = $vocabulary;
             }
@@ -211,7 +212,7 @@ final class TaxonomyService
             "SELECT * FROM terms WHERE id = :id"
         );
         $stmt->execute(['id' => $id]);
-        
+
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) {
             return null;
@@ -234,7 +235,7 @@ final class TaxonomyService
             'vocabulary_id' => $vocabularyId,
             'slug' => $slug,
         ]);
-        
+
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) {
             return null;
@@ -247,7 +248,7 @@ final class TaxonomyService
 
     /**
      * Get all terms for a vocabulary
-     * 
+     *
      * @return Term[]
      */
     public function getTerms(int $vocabularyId, bool $publishedOnly = false): array
@@ -273,7 +274,7 @@ final class TaxonomyService
 
     /**
      * Get terms as hierarchical tree
-     * 
+     *
      * @return Term[]
      */
     public function getTermTree(int $vocabularyId, bool $publishedOnly = false): array
@@ -284,7 +285,7 @@ final class TaxonomyService
 
     /**
      * Build hierarchical tree from flat term list
-     * 
+     *
      * @param Term[] $terms
      * @return Term[]
      */
@@ -313,7 +314,7 @@ final class TaxonomyService
 
     /**
      * Get child terms
-     * 
+     *
      * @return Term[]
      */
     public function getChildTerms(int $parentId): array
@@ -478,7 +479,7 @@ final class TaxonomyService
     {
         $terms = $this->getTerms($vocabularyId);
         $termMap = [];
-        
+
         foreach ($terms as $term) {
             $termMap[$term->id] = $term;
         }
@@ -512,7 +513,7 @@ final class TaxonomyService
 
     /**
      * Get terms for an entity
-     * 
+     *
      * @return Term[]
      */
     public function getEntityTerms(string $entityType, int $entityId, ?int $vocabularyId = null): array
@@ -549,7 +550,7 @@ final class TaxonomyService
 
     /**
      * Get entities for a term
-     * 
+     *
      * @return array<array{entity_type: string, entity_id: int}>
      */
     public function getTermEntities(int $termId, ?string $entityType = null): array
@@ -644,7 +645,7 @@ final class TaxonomyService
 
     /**
      * Set entity terms for a vocabulary (replaces existing)
-     * 
+     *
      * @param int[] $termIds
      */
     public function setEntityTerms(
@@ -717,7 +718,7 @@ final class TaxonomyService
 
     /**
      * Search terms by name
-     * 
+     *
      * @return Term[]
      */
     public function searchTerms(string $query, ?int $vocabularyId = null, int $limit = 20): array
@@ -773,7 +774,7 @@ final class TaxonomyService
 
     /**
      * Get terms as options for select widget
-     * 
+     *
      * @return array<array{value: int, label: string, depth: int}>
      */
     public function getTermOptions(int $vocabularyId, bool $hierarchical = true): array

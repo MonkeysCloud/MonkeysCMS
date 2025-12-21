@@ -52,7 +52,7 @@ final class CheckboxWidget extends AbstractWidget
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
         $checkboxLabel = $settings->getString('checkbox_label', $field->name);
-        
+
         return Html::div()
             ->class('field-checkbox')
             ->child(

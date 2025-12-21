@@ -11,7 +11,7 @@ use App\Cms\Core\BaseEntity;
 
 /**
  * VocabularyEntity - Database-defined taxonomy vocabularies
- * 
+ *
  * Vocabularies can be defined both in code and in the database.
  * Database-defined vocabularies can have custom fields added to their terms.
  */
@@ -79,7 +79,7 @@ class VocabularyEntity extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->vocabulary_id)) {
             $this->vocabulary_id = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $this->name));
         }

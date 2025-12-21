@@ -24,8 +24,9 @@ final class ThemeInfo
         public readonly array $supports = [],
         public readonly array $assets = [],
         public readonly array $menus = [],
-    ) {}
-    
+    ) {
+    }
+
     /**
      * Check if this theme has a parent theme
      */
@@ -33,7 +34,7 @@ final class ThemeInfo
     {
         return $this->parent !== null;
     }
-    
+
     /**
      * Check if this is an admin theme
      */
@@ -41,7 +42,7 @@ final class ThemeInfo
     {
         return $this->type === 'admin';
     }
-    
+
     /**
      * Check if theme supports a feature
      */
@@ -49,7 +50,7 @@ final class ThemeInfo
     {
         return in_array($feature, $this->supports, true);
     }
-    
+
     /**
      * Get the views path for this theme
      */
@@ -57,7 +58,7 @@ final class ThemeInfo
     {
         return $this->path . '/views';
     }
-    
+
     /**
      * Get the components path for this theme
      */
@@ -65,7 +66,7 @@ final class ThemeInfo
     {
         return $this->path . '/components';
     }
-    
+
     /**
      * Get the assets path for this theme
      */
@@ -73,7 +74,7 @@ final class ThemeInfo
     {
         return $this->path . '/assets';
     }
-    
+
     /**
      * Get CSS asset files
      */
@@ -81,7 +82,7 @@ final class ThemeInfo
     {
         return $this->assets['css'] ?? [];
     }
-    
+
     /**
      * Get JS asset files
      */
@@ -89,7 +90,7 @@ final class ThemeInfo
     {
         return $this->assets['js'] ?? [];
     }
-    
+
     /**
      * Get a config value
      */
@@ -97,17 +98,17 @@ final class ThemeInfo
     {
         return $this->config[$key] ?? $default;
     }
-    
+
     /**
      * Get available regions
-     * 
+     *
      * @return array<string, string> Region ID => Label
      */
     public function getRegions(): array
     {
         return $this->regions;
     }
-    
+
     /**
      * Check if theme has a specific region
      */
@@ -115,7 +116,7 @@ final class ThemeInfo
     {
         return isset($this->regions[$regionId]);
     }
-    
+
     /**
      * Get menu locations
      */
@@ -123,7 +124,7 @@ final class ThemeInfo
     {
         return $this->menus;
     }
-    
+
     /**
      * Convert to array for API responses
      */

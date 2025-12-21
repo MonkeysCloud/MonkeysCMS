@@ -130,7 +130,7 @@ class GalleryBlock extends AbstractBlockType
         $gapClass = "gallery-block--gap-{$gap}";
         $layoutClass = "gallery-block--{$layout}";
         $columnsStyle = $layout === 'grid' ? " style=\"--columns: {$columns};\"" : '';
-        
+
         $dataAttrs = '';
         if ($lightbox) {
             $dataAttrs .= ' data-lightbox="true"';
@@ -141,7 +141,7 @@ class GalleryBlock extends AbstractBlockType
         }
 
         $html = "<div class=\"gallery-block {$layoutClass} {$gapClass}\"{$columnsStyle}{$dataAttrs}>";
-        
+
         if ($layout === 'slider') {
             $html .= '<div class="gallery-block__slider">';
         }
@@ -154,21 +154,21 @@ class GalleryBlock extends AbstractBlockType
             $caption = $imageData['caption'] ?? '';
 
             $html .= '<div class="gallery-block__item">';
-            
+
             if ($lightbox) {
                 $html .= "<a href=\"{$fullUrl}\" class=\"gallery-block__link\" data-lightbox-group=\"block-{$block->id}\">";
             }
-            
+
             $html .= "<img src=\"{$thumbUrl}\" alt=\"{$this->escape($alt)}\" class=\"gallery-block__image\" loading=\"lazy\">";
-            
+
             if ($lightbox) {
                 $html .= '</a>';
             }
-            
+
             if ($showCaptions && $caption) {
                 $html .= "<div class=\"gallery-block__caption\">{$this->escape($caption)}</div>";
             }
-            
+
             $html .= '</div>';
         }
 
@@ -187,12 +187,12 @@ class GalleryBlock extends AbstractBlockType
     public function getCacheTags(Block $block): array
     {
         $tags = parent::getCacheTags($block);
-        
+
         $images = $this->getFieldValue($block, 'images', []);
         foreach ($images as $imageId) {
             $tags[] = 'media:' . $imageId;
         }
-        
+
         return $tags;
     }
 

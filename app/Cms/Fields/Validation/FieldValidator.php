@@ -8,7 +8,7 @@ use App\Cms\Fields\FieldDefinition;
 
 /**
  * FieldValidator - Validates field values using registered rules
- * 
+ *
  * Provides a pluggable validation system where rules can be
  * registered and applied to field values.
  */
@@ -33,7 +33,7 @@ final class FieldValidator
 
     /**
      * Register multiple rules
-     * 
+     *
      * @param ValidationRuleInterface[] $rules
      */
     public function registerRules(array $rules): self
@@ -62,7 +62,7 @@ final class FieldValidator
 
     /**
      * Validate a single field value
-     * 
+     *
      * @return array<string> Error messages
      */
     public function validateField(FieldDefinition $field, mixed $value, array $allValues = []): array
@@ -108,7 +108,7 @@ final class FieldValidator
 
     /**
      * Validate multiple field values
-     * 
+     *
      * @param FieldDefinition[] $fields
      * @param array $values Values indexed by field machine_name
      * @return array<string, array<string>> Errors indexed by field machine_name
@@ -120,7 +120,7 @@ final class FieldValidator
         foreach ($fields as $field) {
             $value = $values[$field->machine_name] ?? null;
             $errors = $this->validateField($field, $value, $values);
-            
+
             if (!empty($errors)) {
                 $allErrors[$field->machine_name] = $errors;
             }
@@ -135,11 +135,11 @@ final class FieldValidator
     public function validate(FieldDefinition $field, mixed $value): ValidationResult
     {
         $errors = $this->validateField($field, $value);
-        
+
         if (empty($errors)) {
             return ValidationResult::success();
         }
-        
+
         return ValidationResult::failure($errors);
     }
 
@@ -149,7 +149,7 @@ final class FieldValidator
     private function applyRule(string $ruleName, mixed $parameter, mixed $value, ValidationContext $context): ValidationResult
     {
         $rule = $this->getRule($ruleName);
-        
+
         if ($rule === null) {
             // Unknown rule - skip
             return ValidationResult::success();

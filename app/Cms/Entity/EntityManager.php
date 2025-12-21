@@ -8,35 +8,35 @@ use App\Cms\Cache\CmsCacheService;
 
 /**
  * EntityManager - Central CRUD operations for all CMS entities
- * 
+ *
  * The EntityManager provides a unified interface for working with all entities:
  * - Create, read, update, delete operations
  * - Query building via EntityQuery
  * - Event dispatching for entity lifecycle
  * - Caching integration
  * - Transaction support
- * 
+ *
  * Usage:
  * ```php
  * $em = new EntityManager($pdo);
- * 
+ *
  * // Create
  * $node = new Node(['title' => 'Hello']);
  * $em->save($node);
- * 
+ *
  * // Query
  * $nodes = $em->query(Node::class)
  *     ->where('status', 'published')
  *     ->orderBy('created_at', 'DESC')
  *     ->get();
- * 
+ *
  * // Find
  * $node = $em->find(Node::class, 1);
- * 
+ *
  * // Update
  * $node->title = 'Updated';
  * $em->save($node);
- * 
+ *
  * // Delete
  * $em->delete($node);
  * ```
@@ -63,7 +63,7 @@ class EntityManager
 
     /**
      * Create a query builder for an entity
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @return EntityQuery
@@ -75,7 +75,7 @@ class EntityManager
 
     /**
      * Find entity by ID
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @return T|null
@@ -100,7 +100,7 @@ class EntityManager
 
     /**
      * Find entity by ID or throw exception
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @return T
@@ -109,7 +109,7 @@ class EntityManager
     public function findOrFail(string $entityClass, int $id): EntityInterface
     {
         $entity = $this->find($entityClass, $id);
-        
+
         if ($entity === null) {
             throw new EntityNotFoundException("Entity not found: {$entityClass} #{$id}");
         }
@@ -119,7 +119,7 @@ class EntityManager
 
     /**
      * Find entities by IDs
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @param int[] $ids
@@ -136,7 +136,7 @@ class EntityManager
 
     /**
      * Get all entities
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @return T[]
@@ -148,7 +148,7 @@ class EntityManager
 
     /**
      * Find entity by criteria
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @param array<string, mixed> $criteria
@@ -167,7 +167,7 @@ class EntityManager
 
     /**
      * Find entities by criteria
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @param array<string, mixed> $criteria
@@ -407,7 +407,7 @@ class EntityManager
 
     /**
      * Insert multiple entities
-     * 
+     *
      * @param EntityInterface[] $entities
      */
     public function insertMany(array $entities): void
@@ -416,7 +416,7 @@ class EntityManager
             return;
         }
 
-        $this->transaction(function() use ($entities) {
+        $this->transaction(function () use ($entities) {
             foreach ($entities as $entity) {
                 $this->insert($entity);
             }
@@ -425,14 +425,14 @@ class EntityManager
 
     /**
      * Delete by criteria
-     * 
+     *
      * @param class-string<EntityInterface> $entityClass
      * @param array<string, mixed> $criteria
      */
     public function deleteBy(string $entityClass, array $criteria): int
     {
         $table = $entityClass::getTableName();
-        
+
         $wheres = [];
         $params = [];
         foreach ($criteria as $column => $value) {
@@ -454,7 +454,7 @@ class EntityManager
 
     /**
      * Update by criteria
-     * 
+     *
      * @param class-string<EntityInterface> $entityClass
      * @param array<string, mixed> $criteria
      * @param array<string, mixed> $data
@@ -519,7 +519,7 @@ class EntityManager
 
     /**
      * Execute callback within a transaction
-     * 
+     *
      * @template T
      * @param callable(): T $callback
      * @return T
@@ -544,7 +544,7 @@ class EntityManager
 
     /**
      * Register an event listener
-     * 
+     *
      * @param string $event Event name (preSave, postSave, preDelete, postDelete, etc.)
      * @param callable $listener
      */
@@ -567,7 +567,7 @@ class EntityManager
 
     /**
      * Get repository for an entity
-     * 
+     *
      * @template T of EntityInterface
      * @param class-string<T> $entityClass
      * @return EntityRepository<T>
@@ -583,7 +583,7 @@ class EntityManager
 
     /**
      * Register a custom repository
-     * 
+     *
      * @param class-string<EntityInterface> $entityClass
      */
     public function setRepository(string $entityClass, EntityRepositoryInterface $repository): void
@@ -643,7 +643,8 @@ class EntityEvent
         public readonly string $name,
         public readonly EntityInterface $entity,
         public readonly array $data = []
-    ) {}
+    ) {
+    }
 }
 
 /**
@@ -684,7 +685,7 @@ class EntityEventDispatcher
 
     /**
      * Get all listeners for an event
-     * 
+     *
      * @return callable[]
      */
     public function getListeners(string $event): array

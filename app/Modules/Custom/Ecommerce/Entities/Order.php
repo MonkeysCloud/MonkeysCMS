@@ -11,7 +11,7 @@ use DateTimeImmutable;
 
 /**
  * Order Entity - E-commerce order/transaction record
- * 
+ *
  * Demonstrates a more complex entity with:
  * - Multiple field types
  * - JSON storage for line items (normalized approach would use OrderItem entity)
@@ -366,7 +366,7 @@ class Order extends BaseEntity
         $prefix = 'ORD';
         $timestamp = date('Ymd');
         $random = strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
-        
+
         return "{$prefix}-{$timestamp}-{$random}";
     }
 
@@ -376,7 +376,7 @@ class Order extends BaseEntity
     public function calculateTotals(): void
     {
         $subtotal = 0.00;
-        
+
         foreach ($this->line_items as $item) {
             $quantity = (int) ($item['quantity'] ?? 0);
             $price = (float) ($item['price'] ?? 0);

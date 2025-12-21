@@ -51,7 +51,7 @@ final class SlugWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $fieldId = $this->getFieldId($field, $context);
         $sourceField = $settings->getString('source_field');
-        
+
         $wrapper = Html::div()->class('field-slug');
 
         // Slug input
@@ -84,7 +84,7 @@ final class SlugWidget extends AbstractWidget
     {
         $settings = $this->getSettings($field);
         $sourceField = $settings->getString('source_field');
-        
+
         if (!$sourceField) {
             return null;
         }

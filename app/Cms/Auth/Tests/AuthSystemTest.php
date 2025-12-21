@@ -16,7 +16,7 @@ use App\Cms\Entity\EntityManager;
 
 /**
  * AuthSystemTest - Comprehensive tests for the authentication system
- * 
+ *
  * Run: php app/Cms/Auth/Tests/AuthSystemTest.php
  */
 class AuthSystemTest
@@ -28,7 +28,7 @@ class AuthSystemTest
     private SessionManager $session;
     private LoginAttempt $loginAttempt;
     private CmsApiKeyService $apiKeys;
-    
+
     private array $testResults = [];
     private int $passed = 0;
     private int $failed = 0;
@@ -37,7 +37,7 @@ class AuthSystemTest
     {
         $this->db = $db;
         $this->em = new EntityManager($db);
-        
+
         // Initialize services
         AuthServiceProvider::init($db, [
             'jwt_secret' => 'test-secret-at-least-32-chars-long',
@@ -90,7 +90,7 @@ class AuthSystemTest
         $user->setPassword('TestPass123');
         $user->setDisplayName('Entity Test');
         $user->setStatus('active');
-        
+
         $this->em->save($user);
 
         $this->assert($user->getId() > 0, 'User should have ID after save');
@@ -148,8 +148,10 @@ class AuthSystemTest
         $this->assert($user->getEmail() === 'test@example.com', 'Should return correct user');
 
         // Test can()
-        $this->assert($this->auth->can('access_admin') || $this->auth->hasRole('admin'), 
-            'Test user should have some permissions');
+        $this->assert(
+            $this->auth->can('access_admin') || $this->auth->hasRole('admin'),
+            'Test user should have some permissions'
+        );
 
         // Test logout
         $this->auth->logout();
@@ -318,7 +320,7 @@ class AuthSystemTest
         $user->setDisplayName('Test User');
         $user->setStatus('active');
         $user->verifyEmail();
-        
+
         $this->em->save($user);
 
         // Assign role
@@ -362,7 +364,7 @@ class AuthSystemTest
             echo "    ✗ {$message}\n";
             $this->failed++;
         }
-        
+
         $this->testResults[] = [
             'message' => $message,
             'passed' => $condition,
@@ -372,10 +374,10 @@ class AuthSystemTest
     private function printReport(): void
     {
         $total = $this->passed + $this->failed;
-        
+
         echo "\n" . str_repeat('=', 50) . "\n";
         echo "Results: {$this->passed}/{$total} tests passed\n";
-        
+
         if ($this->failed > 0) {
             echo "\nFailed tests:\n";
             foreach ($this->testResults as $result) {
@@ -384,7 +386,7 @@ class AuthSystemTest
                 }
             }
         }
-        
+
         echo str_repeat('=', 50) . "\n\n";
 
         if ($this->failed > 0) {
@@ -429,7 +431,6 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['PHP_S
 
         $test = new AuthSystemTest($db);
         $test->run();
-
     } catch (\PDOException $e) {
         echo "Database connection failed: " . $e->getMessage() . "\n";
         exit(1);

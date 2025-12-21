@@ -59,7 +59,7 @@ final class FileWidget extends AbstractWidget
         $fieldName = $this->getFieldName($field, $context);
         $allowedExtensions = $settings->getArray('allowed_extensions', []);
         $maxSize = $settings->getInt('max_size', 10 * 1024 * 1024); // 10MB default
-        
+
         $wrapper = Html::div()
             ->class('field-file')
             ->data('field-id', $fieldId);
@@ -134,7 +134,7 @@ final class FileWidget extends AbstractWidget
     private function getFileIcon(string $filename): string
     {
         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-        
+
         return match ($ext) {
             'pdf' => '📕',
             'doc', 'docx' => '📘',

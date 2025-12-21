@@ -21,7 +21,7 @@ final class InArrayRule implements ValidationRuleInterface
         }
 
         $allowed = is_array($parameter) ? $parameter : explode(',', (string) $parameter);
-        
+
         if (!in_array($value, $allowed, true)) {
             return ValidationResult::failure("{$context->fieldLabel} must be one of: " . implode(', ', $allowed));
         }

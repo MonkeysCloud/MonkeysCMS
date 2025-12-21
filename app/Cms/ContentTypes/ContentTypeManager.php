@@ -13,19 +13,19 @@ use MonkeysLegion\Cache\CacheManager;
 
 /**
  * ContentTypeManager - Registry and manager for all content types
- * 
+ *
  * Manages both:
  * - Code-defined content types (PHP Entity classes with #[ContentType] attribute)
  * - Database-defined content types (stored in content_types table)
- * 
+ *
  * @example
  * ```php
  * // Get all content types
  * $types = $manager->getTypes();
- * 
+ *
  * // Get a specific type
  * $type = $manager->getType('article');
- * 
+ *
  * // Create a database-defined type
  * $manager->createDatabaseType([
  *     'label' => 'Product',
@@ -35,7 +35,7 @@ use MonkeysLegion\Cache\CacheManager;
  *         ['name' => 'SKU', 'type' => 'string', 'required' => true],
  *     ]
  * ]);
- * 
+ *
  * // Create content
  * $manager->createContent('product', ['title' => 'Widget', 'field_price' => 29.99]);
  * ```
@@ -58,7 +58,8 @@ final class ContentTypeManager
         private readonly ?ModuleManager $moduleManager = null,
         private readonly ?SchemaGenerator $schemaGenerator = null,
         private readonly ?CacheManager $cache = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Register a code-defined content type from an entity class
@@ -121,14 +122,14 @@ final class ContentTypeManager
     public function getTypes(): array
     {
         $this->ensureInitialized();
-        
+
         $types = [];
-        
+
         // Code-defined types
         foreach ($this->codeTypes as $id => $type) {
             $types[$id] = $type;
         }
-        
+
         // Database-defined types
         foreach ($this->dbTypes as $id => $type) {
             $types[$id] = [
@@ -146,10 +147,10 @@ final class ContentTypeManager
                 'entity' => $type,
             ];
         }
-        
+
         // Sort by label
         uasort($types, fn($a, $b) => strcmp($a['label'], $b['label']));
-        
+
         return $types;
     }
 
@@ -159,11 +160,11 @@ final class ContentTypeManager
     public function getType(string $id): ?array
     {
         $this->ensureInitialized();
-        
+
         if (isset($this->codeTypes[$id])) {
             return $this->codeTypes[$id];
         }
-        
+
         if (isset($this->dbTypes[$id])) {
             $type = $this->dbTypes[$id];
             return [
@@ -181,7 +182,7 @@ final class ContentTypeManager
                 'entity' => $type,
             ];
         }
-        
+
         return null;
     }
 
@@ -218,9 +219,9 @@ final class ContentTypeManager
         $entity->settings = $data['settings'] ?? [];
         $entity->allowed_vocabularies = $data['allowed_vocabularies'] ?? [];
         $entity->enabled = $data['enabled'] ?? true;
-        
+
         $entity->prePersist();
-        
+
         // Save the entity
         $stmt = $this->connection->prepare("
             INSERT INTO content_types (
@@ -235,7 +236,7 @@ final class ContentTypeManager
                 :allowed_vocabularies, :weight, :created_at, :updated_at
             )
         ");
-        
+
         $stmt->execute([
             'type_id' => $entity->type_id,
             'label' => $entity->label,
@@ -260,9 +261,9 @@ final class ContentTypeManager
             'created_at' => $entity->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $entity->updated_at->format('Y-m-d H:i:s'),
         ]);
-        
+
         $entity->id = (int) $this->connection->lastInsertId();
-        
+
         // Add fields if provided
         if (!empty($data['fields'])) {
             foreach ($data['fields'] as $fieldData) {
@@ -270,14 +271,14 @@ final class ContentTypeManager
             }
             $entity->fields = $this->loadTypeFields($entity->id);
         }
-        
+
         // Create the content table
         $this->createContentTable($entity);
-        
+
         // Update cache
         $this->dbTypes[$entity->type_id] = $entity;
         $this->invalidateCache();
-        
+
         return $entity;
     }
 
@@ -291,16 +292,36 @@ final class ContentTypeManager
             return null;
         }
 
-        if (isset($data['label'])) $entity->label = $data['label'];
-        if (isset($data['label_plural'])) $entity->label_plural = $data['label_plural'];
-        if (isset($data['description'])) $entity->description = $data['description'];
-        if (isset($data['icon'])) $entity->icon = $data['icon'];
-        if (isset($data['publishable'])) $entity->publishable = $data['publishable'];
-        if (isset($data['revisionable'])) $entity->revisionable = $data['revisionable'];
-        if (isset($data['translatable'])) $entity->translatable = $data['translatable'];
-        if (isset($data['url_pattern'])) $entity->url_pattern = $data['url_pattern'];
-        if (isset($data['settings'])) $entity->settings = $data['settings'];
-        if (isset($data['enabled'])) $entity->enabled = $data['enabled'];
+        if (isset($data['label'])) {
+            $entity->label = $data['label'];
+        }
+        if (isset($data['label_plural'])) {
+            $entity->label_plural = $data['label_plural'];
+        }
+        if (isset($data['description'])) {
+            $entity->description = $data['description'];
+        }
+        if (isset($data['icon'])) {
+            $entity->icon = $data['icon'];
+        }
+        if (isset($data['publishable'])) {
+            $entity->publishable = $data['publishable'];
+        }
+        if (isset($data['revisionable'])) {
+            $entity->revisionable = $data['revisionable'];
+        }
+        if (isset($data['translatable'])) {
+            $entity->translatable = $data['translatable'];
+        }
+        if (isset($data['url_pattern'])) {
+            $entity->url_pattern = $data['url_pattern'];
+        }
+        if (isset($data['settings'])) {
+            $entity->settings = $data['settings'];
+        }
+        if (isset($data['enabled'])) {
+            $entity->enabled = $data['enabled'];
+        }
 
         $entity->updated_at = new \DateTimeImmutable();
 
@@ -374,7 +395,7 @@ final class ContentTypeManager
     public function addFieldToType(int $typeId, array $fieldData): FieldDefinition
     {
         $entity = $this->getTypeEntityById($typeId);
-        
+
         $field = new FieldDefinition();
         $field->name = $fieldData['name'];
         $field->machine_name = $fieldData['machine_name'] ?? 'field_' . strtolower(preg_replace('/[^a-z0-9]+/i', '_', $fieldData['name']));
@@ -487,7 +508,7 @@ final class ContentTypeManager
 
         $tableName = $type['table_name'];
         $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
-        
+
         // Build insert data
         $insertData = [
             'uuid' => $this->generateUuid(),
@@ -528,9 +549,9 @@ final class ContentTypeManager
         // Build SQL
         $columns = array_keys($insertData);
         $placeholders = array_map(fn($c) => ":{$c}", $columns);
-        
+
         $sql = "INSERT INTO {$tableName} (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $placeholders) . ")";
-        
+
         $stmt = $this->connection->prepare($sql);
         $stmt->execute($insertData);
 
@@ -579,9 +600,9 @@ final class ContentTypeManager
         // Build SQL
         $sets = array_map(fn($c) => "{$c} = :{$c}", array_keys($updateData));
         $sql = "UPDATE {$tableName} SET " . implode(', ', $sets) . " WHERE id = :id";
-        
+
         $updateData['id'] = $id;
-        
+
         $stmt = $this->connection->prepare($sql);
         $stmt->execute($updateData);
 
@@ -599,7 +620,7 @@ final class ContentTypeManager
         }
 
         $tableName = $type['table_name'];
-        
+
         $stmt = $this->connection->prepare("DELETE FROM {$tableName} WHERE id = :id");
         $stmt->execute(['id' => $id]);
 
@@ -617,10 +638,10 @@ final class ContentTypeManager
         }
 
         $tableName = $type['table_name'];
-        
+
         $stmt = $this->connection->prepare("SELECT * FROM {$tableName} WHERE id = :id");
         $stmt->execute(['id' => $id]);
-        
+
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) {
             return null;
@@ -673,7 +694,7 @@ final class ContentTypeManager
         // Get items
         $offset = ($page - 1) * $perPage;
         $sql = "SELECT * FROM {$tableName} {$whereClause} ORDER BY {$sortField} {$sortDir} LIMIT {$perPage} OFFSET {$offset}";
-        
+
         $stmt = $this->connection->prepare($sql);
         $stmt->execute($params);
 
@@ -705,7 +726,7 @@ final class ContentTypeManager
     {
         $columnDef = $field->getSqlColumnDefinition();
         $sql = "ALTER TABLE {$tableName} ADD COLUMN {$columnDef}";
-        
+
         try {
             $this->connection->exec($sql);
         } catch (\Exception $e) {
@@ -837,12 +858,14 @@ final class ContentTypeManager
     private function getClassNameFromFile(string $file): ?string
     {
         $content = file_get_contents($file);
-        
-        if (preg_match('/namespace\s+([^;]+);/', $content, $nsMatch) &&
-            preg_match('/class\s+(\w+)/', $content, $classMatch)) {
+
+        if (
+            preg_match('/namespace\s+([^;]+);/', $content, $nsMatch) &&
+            preg_match('/class\s+(\w+)/', $content, $classMatch)
+        ) {
             return $nsMatch[1] . '\\' . $classMatch[1];
         }
-        
+
         return null;
     }
 
@@ -867,11 +890,11 @@ final class ContentTypeManager
         return match ($type) {
             'json', 'array' => is_array($value) ? json_encode($value) : $value,
             'boolean' => $value ? 1 : 0,
-            'datetime' => $value instanceof \DateTimeInterface 
-                ? $value->format('Y-m-d H:i:s') 
+            'datetime' => $value instanceof \DateTimeInterface
+                ? $value->format('Y-m-d H:i:s')
                 : $value,
-            'date' => $value instanceof \DateTimeInterface 
-                ? $value->format('Y-m-d') 
+            'date' => $value instanceof \DateTimeInterface
+                ? $value->format('Y-m-d')
                 : $value,
             default => $value,
         };
@@ -900,11 +923,14 @@ final class ContentTypeManager
     {
         return sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
             mt_rand(0, 0xffff),
             mt_rand(0, 0x0fff) | 0x4000,
             mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
         );
     }
 

@@ -49,7 +49,7 @@ final class TextareaWidget extends AbstractWidget
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
-        
+
         $textarea = Html::textarea()
             ->attrs($this->buildCommonAttributes($field, $context))
             ->attr('rows', $settings->getInt('rows', 5))
@@ -84,7 +84,7 @@ final class TextareaWidget extends AbstractWidget
     protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
         $settings = $this->getSettings($field);
-        
+
         if (!$settings->getBool('show_counter') || !$settings->getInt('max_length')) {
             return null;
         }

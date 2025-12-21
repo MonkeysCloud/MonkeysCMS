@@ -11,10 +11,10 @@ use App\Cms\Core\BaseEntity;
 
 /**
  * Permission Entity - Granular permissions for RBAC
- * 
+ *
  * Permissions follow the pattern: {action}_{entity}
  * Examples: view_products, create_products, edit_products, delete_products
- * 
+ *
  * Special permissions:
  * - view_own_{entity}: Can only view own content
  * - edit_own_{entity}: Can only edit own content
@@ -140,7 +140,7 @@ class Permission extends BaseEntity
     public function prePersist(): void
     {
         parent::prePersist();
-        
+
         if (empty($this->slug) && !empty($this->action) && !empty($this->entity_type)) {
             $this->slug = $this->action . '_' . $this->entity_type;
         }
@@ -172,7 +172,7 @@ class Permission extends BaseEntity
 
     /**
      * Generate permissions for an entity type
-     * 
+     *
      * @return array<array<string, mixed>>
      */
     public static function generateForEntity(
@@ -182,7 +182,7 @@ class Permission extends BaseEntity
         array $actions = ['view', 'create', 'edit', 'delete']
     ): array {
         $permissions = [];
-        
+
         $actionLabels = [
             'view' => 'View',
             'view_own' => 'View own',
@@ -197,10 +197,10 @@ class Permission extends BaseEntity
             'export' => 'Export',
             'import' => 'Import',
         ];
-        
+
         foreach ($actions as $action) {
             $label = $actionLabels[$action] ?? ucfirst($action);
-            
+
             $permissions[] = [
                 'name' => "{$label} {$entityLabel}",
                 'slug' => "{$action}_{$entityType}",
@@ -212,7 +212,7 @@ class Permission extends BaseEntity
                 'is_system' => false,
             ];
         }
-        
+
         return $permissions;
     }
 

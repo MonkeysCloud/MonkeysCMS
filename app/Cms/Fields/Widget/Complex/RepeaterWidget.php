@@ -62,19 +62,19 @@ final class RepeaterWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
-        
+
         $subfields = $settings->getArray('subfields', []);
         $minItems = $settings->getInt('min_items', 0);
         $maxItems = $settings->getInt('max_items', -1);
         $collapsed = $settings->getBool('collapsed', false);
         $sortable = $settings->getBool('sortable', true);
         $itemLabel = $settings->getString('item_label', 'Item');
-        
+
         $items = is_array($value) ? $value : [];
         $items = array_values($items); // Ensure indexed array
         $itemCount = count($items);
         $canAdd = $maxItems < 0 || $itemCount < $maxItems;
-        
+
         $wrapper = Html::div()
             ->class('field-repeater')
             ->id($fieldId . '_wrapper')
@@ -125,17 +125,17 @@ final class RepeaterWidget extends AbstractWidget
     }
 
     private function buildItem(
-        FieldDefinition $field, 
-        string $fieldName, 
-        array $subfields, 
-        array $data, 
-        int|string $index, 
-        bool $collapsed, 
+        FieldDefinition $field,
+        string $fieldName,
+        array $subfields,
+        array $data,
+        int|string $index,
+        bool $collapsed,
         string $itemLabel
     ): HtmlBuilder {
         $collapsedClass = $collapsed ? ' field-repeater__item--collapsed' : '';
         $itemNumber = is_numeric($index) ? (int)$index + 1 : '';
-        
+
         $item = Html::div()
             ->class('field-repeater__item' . $collapsedClass)
             ->data('index', $index);
@@ -150,21 +150,21 @@ final class RepeaterWidget extends AbstractWidget
 
         // Content
         $content = Html::div()->class('field-repeater__item-content');
-        
+
         foreach ($subfields as $subfield) {
             $subfieldName = $subfield['name'] ?? $subfield['machine_name'] ?? '';
             $subfieldType = $subfield['type'] ?? 'string';
             $subfieldLabel = $subfield['label'] ?? ucfirst($subfieldName);
             $subfieldValue = $data[$subfieldName] ?? ($subfield['default'] ?? null);
             $inputName = "{$fieldName}[{$index}][{$subfieldName}]";
-            
+
             $subfieldWrapper = Html::div()->class('field-repeater__subfield');
             $subfieldWrapper->child(Html::label()->text($subfieldLabel));
             $subfieldWrapper->child($this->buildSubfield($subfieldType, $inputName, $subfieldValue, $subfield));
-            
+
             $content->child($subfieldWrapper);
         }
-        
+
         $item->child($content);
 
         return $item;
@@ -215,7 +215,7 @@ final class RepeaterWidget extends AbstractWidget
             'collapsed' => $settings->getBool('collapsed', false),
             'itemLabel' => $settings->getString('item_label', 'Item'),
         ]);
-        
+
         return "window.initRepeater && window.initRepeater('{$elementId}', {$options});";
     }
 
@@ -224,11 +224,11 @@ final class RepeaterWidget extends AbstractWidget
         if ($this->isEmpty($value)) {
             return [];
         }
-        
+
         if (!is_array($value)) {
             return [];
         }
-        
+
         // Filter out empty items and re-index
         return array_values(array_filter($value, fn($item) => !empty($item)));
     }
@@ -238,22 +238,22 @@ final class RepeaterWidget extends AbstractWidget
         if ($this->isEmpty($value) || !is_array($value)) {
             return parent::renderDisplay($field, null, $context);
         }
-        
+
         $settings = $this->getSettings($field);
         $subfields = $settings->getArray('subfields', []);
-        
+
         $wrapper = Html::div()->class('field-display', 'field-display--repeater');
-        
+
         foreach ($value as $index => $item) {
             $itemWrapper = Html::div()->class('field-repeater-display__item');
             $itemWrapper->child(Html::strong()->text('Item ' . ($index + 1)));
-            
+
             $list = Html::ul();
             foreach ($subfields as $subfield) {
                 $name = $subfield['name'] ?? $subfield['machine_name'] ?? '';
                 $label = $subfield['label'] ?? ucfirst($name);
                 $itemValue = $item[$name] ?? '';
-                
+
                 $list->child(
                     Html::li()
                         ->child(Html::element('em')->text($label . ': '))

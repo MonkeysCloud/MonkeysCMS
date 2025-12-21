@@ -11,7 +11,7 @@ use App\Cms\Core\BaseEntity;
 
 /**
  * EntityTerm Junction Entity - Links any entity to taxonomy terms
- * 
+ *
  * This is a polymorphic relationship table that can link any
  * content type to taxonomy terms.
  */

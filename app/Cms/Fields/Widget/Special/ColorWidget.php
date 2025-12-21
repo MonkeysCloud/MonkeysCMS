@@ -53,7 +53,7 @@ final class ColorWidget extends AbstractWidget
         $showPreview = $settings->getBool('show_preview', true);
         $showHex = $settings->getBool('show_hex', true);
         $currentValue = $value ?: '#000000';
-        
+
         $wrapper = Html::div()->class('field-color');
 
         // Color input
@@ -91,7 +91,7 @@ final class ColorWidget extends AbstractWidget
     protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
         $settings = $this->getSettings($field);
-        
+
         if (!$settings->getBool('show_hex', true)) {
             return null;
         }

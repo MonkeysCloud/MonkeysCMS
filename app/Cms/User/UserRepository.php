@@ -10,7 +10,7 @@ use App\Cms\Entity\ScopedRepository;
 
 /**
  * UserRepository - Specialized repository for users
- * 
+ *
  * @extends ScopedRepository<User>
  */
 class UserRepository extends ScopedRepository
@@ -72,7 +72,7 @@ class UserRepository extends ScopedRepository
 
     /**
      * Find active users
-     * 
+     *
      * @return User[]
      */
     public function findActive(): array
@@ -82,7 +82,7 @@ class UserRepository extends ScopedRepository
 
     /**
      * Find users by role
-     * 
+     *
      * @return User[]
      */
     public function findByRole(string $role): array
@@ -113,7 +113,7 @@ class UserRepository extends ScopedRepository
     public function emailExists(string $email, ?int $excludeId = null): bool
     {
         $query = $this->createQuery()->where('email', strtolower($email));
-        
+
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
@@ -127,7 +127,7 @@ class UserRepository extends ScopedRepository
     public function usernameExists(string $username, ?int $excludeId = null): bool
     {
         $query = $this->createQuery()->where('username', $username);
-        
+
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
@@ -137,7 +137,7 @@ class UserRepository extends ScopedRepository
 
     /**
      * Search users
-     * 
+     *
      * @return User[]
      */
     public function search(string $term, int $limit = 20): array
@@ -155,13 +155,13 @@ class UserRepository extends ScopedRepository
 
     /**
      * Get status counts
-     * 
+     *
      * @return array<string, int>
      */
     public function getStatusCounts(): array
     {
         $db = $this->getEntityManager()->getConnection();
-        
+
         $stmt = $db->query("
             SELECT status, COUNT(*) as count 
             FROM users 
@@ -179,7 +179,7 @@ class UserRepository extends ScopedRepository
 
     /**
      * Get recent logins
-     * 
+     *
      * @return User[]
      */
     public function getRecentLogins(int $limit = 10): array
@@ -197,7 +197,7 @@ class UserRepository extends ScopedRepository
     public function findWithRoles(int $id): ?User
     {
         $user = $this->find($id);
-        
+
         if ($user) {
             $this->loadRoles($user);
         }
@@ -247,7 +247,7 @@ class UserRepository extends ScopedRepository
     public function findFull(int $id): ?User
     {
         $user = $this->find($id);
-        
+
         if ($user) {
             $this->loadRoles($user);
             $this->loadPermissions($user);
@@ -287,7 +287,7 @@ class UserRepository extends ScopedRepository
 
     /**
      * Sync user roles
-     * 
+     *
      * @param string[] $roles
      */
     public function syncRoles(User $user, array $roles): void

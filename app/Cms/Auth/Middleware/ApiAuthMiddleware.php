@@ -14,11 +14,11 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * ApiAuthMiddleware - Handles API authentication via Bearer tokens or API keys
- * 
+ *
  * Supports:
  * - JWT Bearer tokens: Authorization: Bearer <token>
  * - API keys: X-API-Key: <key>
- * 
+ *
  * Usage:
  * ```php
  * $middleware = new ApiAuthMiddleware($auth, $userProvider, $apiKeys, [
@@ -125,7 +125,7 @@ class ApiAuthMiddleware implements MiddlewareInterface
     private function extractBearerToken(ServerRequestInterface $request): ?string
     {
         $header = $request->getHeaderLine('Authorization');
-        
+
         if (preg_match('/^Bearer\s+(.+)$/i', $header, $matches)) {
             return $matches[1];
         }
@@ -160,7 +160,7 @@ class ApiAuthMiddleware implements MiddlewareInterface
 
             // Get user
             $user = $this->userProvider->findById($payload->sub);
-            
+
             if (!$user) {
                 return $request;
             }
@@ -181,7 +181,6 @@ class ApiAuthMiddleware implements MiddlewareInterface
                 ->withAttribute('user', $user)
                 ->withAttribute('auth_type', 'bearer')
                 ->withAttribute('token_payload', $payload);
-
         } catch (\Exception $e) {
             return $request;
         }
@@ -197,13 +196,13 @@ class ApiAuthMiddleware implements MiddlewareInterface
         }
 
         $keyData = $this->apiKeys->validate($apiKey);
-        
+
         if (!$keyData) {
             return $request;
         }
 
         $user = $this->apiKeys->getUser($keyData);
-        
+
         if (!$user || !$user->isActive()) {
             return $request;
         }
@@ -272,7 +271,7 @@ class RequireScopeMiddleware implements MiddlewareInterface
         }
 
         $keyData = $request->getAttribute('api_key');
-        
+
         if (!$keyData) {
             return $this->forbidden('API key data not found');
         }
@@ -340,7 +339,7 @@ class RateLimitMiddleware implements MiddlewareInterface
     {
         // Use API key ID if available, otherwise use IP
         $keyData = $request->getAttribute('api_key');
-        
+
         if ($keyData) {
             return $this->keyPrefix . 'key:' . $keyData['id'];
         }
@@ -403,7 +402,7 @@ class RateLimitMiddleware implements MiddlewareInterface
     private function getClientIp(ServerRequestInterface $request): string
     {
         $headers = ['X-Forwarded-For', 'X-Real-IP'];
-        
+
         foreach ($headers as $header) {
             $value = $request->getHeaderLine($header);
             if ($value) {

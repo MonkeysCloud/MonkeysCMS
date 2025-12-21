@@ -15,7 +15,7 @@ use App\Cms\Fields\Widget\WidgetRegistry;
 
 /**
  * RepeaterWidget - Repeatable field groups
- * 
+ *
  * Allows creating multiple instances of a set of sub-fields.
  * Supports drag-drop reordering, min/max items, and collapsible items.
  */
@@ -80,14 +80,14 @@ final class RepeaterWidget extends AbstractWidget
         $fieldName = $this->getFieldName($field, $context);
         $subFields = $this->getSubFields($field);
         $items = is_array($value) ? $value : [];
-        
+
         $minItems = $settings->getInt('min_items', 0);
         $maxItems = $settings->getInt('max_items', 0);
         $collapsible = $settings->getBool('collapsible', true);
         $confirmDelete = $settings->getBool('confirm_delete', true);
         $itemLabel = $settings->getString('item_label', 'Item');
         $addLabel = $settings->getString('add_label', '+ Add ' . $itemLabel);
-        
+
         $wrapper = Html::div()
             ->class('field-repeater')
             ->data('field-id', $fieldId)
@@ -142,7 +142,7 @@ final class RepeaterWidget extends AbstractWidget
         $fieldName = $this->getFieldName($field, $context);
         $settings = $this->getSettings($field);
         $collapsible = $settings->getBool('collapsible', true);
-        
+
         $item = Html::div()
             ->class('field-repeater__item')
             ->data('index', $index);
@@ -250,14 +250,14 @@ final class RepeaterWidget extends AbstractWidget
     {
         $settings = $this->getSettings($field);
         $subFieldsConfig = $settings->getArray('sub_fields', []);
-        
+
         $subFields = [];
         foreach ($subFieldsConfig as $config) {
             $subField = new FieldDefinition();
             $subField->hydrate($config);
             $subFields[] = $subField;
         }
-        
+
         return $subFields;
     }
 
@@ -270,7 +270,7 @@ final class RepeaterWidget extends AbstractWidget
                 return strlen($title) > 40 ? substr($title, 0, 40) . '...' : $title;
             }
         }
-        
+
         return '';
     }
 
@@ -288,7 +288,7 @@ final class RepeaterWidget extends AbstractWidget
         // Re-index array and filter empty items
         $prepared = [];
         $subFields = $this->getSubFields($field);
-        
+
         foreach ($value as $item) {
             if (!is_array($item)) {
                 continue;
@@ -297,14 +297,14 @@ final class RepeaterWidget extends AbstractWidget
             $preparedItem = [];
             foreach ($subFields as $subField) {
                 $subValue = $item[$subField->machine_name] ?? null;
-                
+
                 if ($this->widgetRegistry) {
                     $preparedItem[$subField->machine_name] = $this->widgetRegistry->prepareValue($subField, $subValue);
                 } else {
                     $preparedItem[$subField->machine_name] = $subValue;
                 }
             }
-            
+
             // Only add non-empty items
             if (!empty(array_filter($preparedItem, fn($v) => $v !== null && $v !== ''))) {
                 $prepared[] = $preparedItem;
@@ -327,7 +327,7 @@ final class RepeaterWidget extends AbstractWidget
 
         // Check min/max items
         $count = count($value);
-        
+
         if ($minItems > 0 && $count < $minItems) {
             $errors[] = "At least {$minItems} items are required";
         }
@@ -339,14 +339,14 @@ final class RepeaterWidget extends AbstractWidget
         // Validate each item's sub-fields
         if ($this->widgetRegistry) {
             $subFields = $this->getSubFields($field);
-            
+
             foreach ($value as $index => $itemValues) {
                 if (!is_array($itemValues)) {
                     continue;
                 }
 
                 $itemErrors = $this->widgetRegistry->validateFields($subFields, $itemValues);
-                
+
                 foreach ($itemErrors as $subFieldName => $subErrors) {
                     foreach ($subErrors as $error) {
                         $errors[] = "Item " . ($index + 1) . " - {$error}";
@@ -361,7 +361,7 @@ final class RepeaterWidget extends AbstractWidget
     public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult
     {
         $items = is_array($value) ? $value : [];
-        
+
         if (empty($items)) {
             return parent::renderDisplay($field, null, $context);
         }
@@ -374,7 +374,7 @@ final class RepeaterWidget extends AbstractWidget
 
         foreach ($items as $index => $itemValues) {
             $listItem = Html::element('li');
-            
+
             // Item header
             $title = $this->getItemTitle($itemValues, $subFields) ?: $itemLabel . ' ' . ($index + 1);
             $listItem->child(
@@ -383,10 +383,10 @@ final class RepeaterWidget extends AbstractWidget
 
             // Item fields
             $fieldList = Html::element('ul');
-            
+
             foreach ($subFields as $subField) {
                 $subValue = $itemValues[$subField->machine_name] ?? null;
-                
+
                 if ($subValue !== null && $subValue !== '') {
                     $fieldList->child(
                         Html::element('li')
@@ -394,7 +394,7 @@ final class RepeaterWidget extends AbstractWidget
                     );
                 }
             }
-            
+
             $listItem->child($fieldList);
             $list->child($listItem);
         }
