@@ -76,19 +76,56 @@ try {
         // Database Connection (PDO)
         PDO::class => function (ContainerInterface $c) {
             $config = $c->get('config');
-            // Support 'mysql' connection by default. 
-            // In a real app, we might select based on 'database.default'
-            $dbConfig = $config->get('database.connections.mysql');
             
-            $dsn = sprintf(
-                'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-                $dbConfig['host'],
-                $dbConfig['port'],
-                $dbConfig['database'],
-                $dbConfig['charset']
-            );
+            // 1. Get default connection name (mysql, pgsql, sqlite, etc.)
+            $default = $config->get('database.default');
             
-            return new PDO($dsn, $dbConfig['username'], $dbConfig['password'], [
+            // 2. Get config for that specific connection
+            $dbConfig = $config->get("database.connections.{$default}");
+            
+            // 3. Build DSN using Builder Factory (similar to installer)
+            try {
+                // Determine driver alias (e.g. 'pgsql' -> 'postgresql' enum if needed, or string)
+                // The DsnBuilderFactory::createByString handles mapping 'pgsql' -> POSTGRESQL
+                $builder = \MonkeysLegion\Database\DSN\DsnBuilderFactory::createByString($dbConfig['driver']);
+                
+                if ($builder instanceof \MonkeysLegion\Database\DSN\MySQLDsnBuilder) {
+                    $builder->host($dbConfig['host'])
+                            ->port((int)$dbConfig['port'])
+                            ->database($dbConfig['database'])
+                            ->charset($dbConfig['charset'] ?? 'utf8mb4');
+                } elseif ($builder instanceof \MonkeysLegion\Database\DSN\PostgreSQLDsnBuilder) {
+                    $builder->host($dbConfig['host'])
+                            ->port((int)$dbConfig['port'])
+                            ->database($dbConfig['database']);
+                } elseif ($builder instanceof \MonkeysLegion\Database\DSN\SQLiteDsnBuilder) {
+                    $builder->file($dbConfig['database']); // In SQLite config 'database' holds path
+                }
+                
+                $dsn = $builder->build();
+                
+            } catch (\InvalidArgumentException $e) {
+                // Fallback for sqlsrv or unsupported drivers
+                if (($dbConfig['driver'] ?? '') === 'sqlsrv') {
+                     $dsn = sprintf(
+                        'sqlsrv:Server=%s,%s;Database=%s',
+                        $dbConfig['host'],
+                        $dbConfig['port'] ?? 1433,
+                        $dbConfig['database']
+                    );
+                } else {
+                    // Fallback to MySQL legacy generation if builder fails
+                     $dsn = sprintf(
+                        'mysql:host=%s;port=%s;dbname=%s;charset=%s',
+                        $dbConfig['host'],
+                        $dbConfig['port'],
+                        $dbConfig['database'],
+                        $dbConfig['charset'] ?? 'utf8mb4'
+                    );
+                }
+            }
+            
+            return new PDO($dsn, $dbConfig['username'] ?? null, $dbConfig['password'] ?? null, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,

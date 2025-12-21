@@ -199,50 +199,17 @@ class InstallerRequestHandler implements RequestHandlerInterface
     {
         $data = $request->getParsedBody();
         $envPath = $this->basePath . '/.env';
-        
-        // 1. Verify connection first
-        try {
-             $dsn = $this->getDsn($data);
-             new PDO($dsn, $data['DB_USERNAME'] ?? null, $data['DB_PASSWORD'] ?? null);
-        } catch (\Throwable $e) {
-             return new JsonResponse(['success' => false, 'error' => 'Could not connect to database: ' . $e->getMessage()]);
-        }
 
-        // 2. Update/Create .env file
         try {
-            $envContent = "";
-            if (file_exists($envPath)) {
-                $envContent = file_get_contents($envPath);
-            }
-            
-            // Extended keys to update
-            $keys = [
-                'DB_CONNECTION', 
-                'DB_HOST', 
-                'DB_PORT', 
-                'DB_DATABASE', 
-                'DB_USERNAME', 
-                'DB_PASSWORD',
-                'DB_CHARSET',
-                'DB_PREFIX'
-            ];
-            
-            foreach ($keys as $key) {
-                $value = $data[$key] ?? '';
-                // Quote value if it contains spaces or special chars
-                if (str_contains($value, ' ') || str_contains($value, '#')) {
-                    $value = '"' . $value . '"';
-                }
-
-                if (preg_match("/^{$key}=.*/m", $envContent)) {
-                    $envContent = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $envContent);
-                } else {
-                    $envContent .= "\n{$key}={$value}";
+            $envContent = '';
+            foreach ($data as $key => $value) {
+                if (is_string($value) || is_numeric($value)) {
+                    $envContent .= "{$key}={$value}\n";
                 }
             }
-            
+
             if (!str_contains($envContent, 'APP_ENV=')) {
-                $envContent .= "\nAPP_ENV=local";
+                $envContent .= "APP_ENV=local\n";
             }
 
             file_put_contents($envPath, trim($envContent));

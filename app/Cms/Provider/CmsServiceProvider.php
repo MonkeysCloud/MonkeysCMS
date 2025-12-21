@@ -74,5 +74,8 @@ final class CmsServiceProvider
                 $route['handler']
             );
         }
+
+        // Register installer redirect (only active when DB is connected/app is installed)
+        $router->add('GET', '/install', [\App\Controllers\InstallRedirectController::class, 'index']);
     }
 }
