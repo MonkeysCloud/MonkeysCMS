@@ -43,6 +43,10 @@ class InstallerRequestHandler implements RequestHandlerInterface
             return $this->handleSaveConfig($request);
         }
 
+        if ($request->getMethod() === 'POST' && preg_match('#^/install/api/execute-step/(.+)$#', $path, $matches)) {
+            return $this->handleExecuteStep($request, $matches[1]);
+        }
+
         if ($path !== '/install') {
             return new RedirectResponse('/install');
         }
@@ -57,8 +61,114 @@ class InstallerRequestHandler implements RequestHandlerInterface
             return new HtmlResponse($html);
         }
 
-        // Fallback for safety if renderer not provided
         return new HtmlResponse('<h1>Installer Template Error</h1><p>Renderer not initialized.</p>', 500);
+    }
+
+    /**
+     * Execute a specific installation step via API
+     */
+    private function handleExecuteStep(ServerRequestInterface $request, string $step): ResponseInterface
+    {
+        try {
+            // 1. Establish DB connection logic
+            $envPath = $this->basePath . '/.env';
+            if (!file_exists($envPath)) {
+                return new JsonResponse(['success' => false, 'error' => '.env file not found. Please save configuration first.']);
+            }
+            
+            // Parse .env manually (simple parser) since Dotenv might not be loaded or stale
+            $envData = parse_ini_file($envPath, false, INI_SCANNER_RAW);
+            if ($envData === false) {
+                 return new JsonResponse(['success' => false, 'error' => 'Failed to parse .env file']);
+            }
+            // Strip quotes
+            array_walk($envData, function(&$val) { $val = trim($val, '"\''); });
+
+            // Create PDO
+            $dsn = $this->getDsn($envData);
+            $pdo = new PDO($dsn, $envData['DB_USERNAME'] ?? null, $envData['DB_PASSWORD'] ?? null, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ]);
+
+            // 2. Instantiate dependencies
+            $schemaGenerator = new \App\Cms\Core\SchemaGenerator();
+            
+            // Instantiate ModuleManager - needs a ConnectionInterface wrapper around config
+            // Since we can't easily inject existing PDO into AbstractConnection, we re-create config array for it.
+            $dbConfig = [
+                'driver' => $envData['DB_CONNECTION'] ?? 'mysql',
+                'host' => $envData['DB_HOST'] ?? '127.0.0.1',
+                'port' => (int) ($envData['DB_PORT'] ?? 3306),
+                'database' => $envData['DB_DATABASE'] ?? '',
+                'username' => $envData['DB_USERNAME'] ?? '',
+                'password' => $envData['DB_PASSWORD'] ?? '',
+                'charset' => $envData['DB_CHARSET'] ?? 'utf8mb4'
+            ];
+            
+            // Determine class based on driver
+            $connectionClass = match($dbConfig['driver']) {
+                'pgsql' => \MonkeysLegion\Database\PostgreSQL\Connection::class,
+                'sqlite' => \MonkeysLegion\Database\SQLite\Connection::class,
+                default => \MonkeysLegion\Database\MySQL\Connection::class,
+            };
+
+            if (!class_exists($connectionClass)) {
+                 return new JsonResponse(['success' => false, 'error' => "Driver class $connectionClass not found"]);
+            }
+            
+            $connection = new $connectionClass($dbConfig);
+            // Verify connection works
+            try {
+                $connection->connect();
+            } catch (\Exception $e) {
+                 return new JsonResponse(['success' => false, 'error' => 'DB Connection failed for ModuleManager: ' . $e->getMessage()]);
+            }
+
+            $moduleManager = new \App\Cms\Modules\ModuleManager(
+                $schemaGenerator,
+                $connection,
+                null, // logger
+                null, // dispatcher
+                $this->basePath
+            );
+
+            // 3. Instantiate InstallerService
+            // Note: InstallerService uses the raw PDO we created above (or we could use $connection->pdo())
+            $installer = new \App\Installer\InstallerService($pdo, $moduleManager, $schemaGenerator);
+
+            // 4. Execute Step
+            $log = [];
+            switch ($step) {
+                case 'tables':
+                    $log = $installer->createCoreTables();
+                    break;
+                case 'roles':
+                    $log = $installer->seedRoles();
+                    break;
+                case 'permissions':
+                    $log = $installer->seedPermissions();
+                    break;
+                case 'content':
+                    $log = $installer->seedContent();
+                    break;
+                case 'admin':
+                    $params = $request->getParsedBody();
+                    $email = $params['email'] ?? ($envData['ADMIN_EMAIL'] ?? 'admin@example.com');
+                    $password = $params['password'] ?? ($envData['ADMIN_PASSWORD'] ?? 'password');
+                    $log = $installer->createAdminUser($email, $password);
+                    break;
+                case 'modules':
+                    $log = $installer->enableCoreModule();
+                    break;
+                default:
+                    return new JsonResponse(['success' => false, 'error' => "Unknown step: $step"]);
+            }
+
+            return new JsonResponse(['success' => true, 'log' => $log]);
+
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        }
     }
 
     private function getDsn(array $data, bool $withDb = true): string
@@ -200,11 +310,30 @@ class InstallerRequestHandler implements RequestHandlerInterface
         $data = $request->getParsedBody();
         $envPath = $this->basePath . '/.env';
 
+        // Allowed prefixes for .env file
+        $allowedPrefixes = ['DB_', 'APP_', 'ML_'];
+
         try {
             $envContent = '';
             foreach ($data as $key => $value) {
-                if (is_string($value) || is_numeric($value)) {
-                    $envContent .= "{$key}={$value}\n";
+                // Skip if not a string/number
+                if (!is_string($value) && !is_numeric($value)) {
+                    continue;
+                }
+
+                // Check if key starts with an allowed prefix
+                $isAllowed = false;
+                foreach ($allowedPrefixes as $prefix) {
+                    if (str_starts_with($key, $prefix)) {
+                        $isAllowed = true;
+                        break;
+                    }
+                }
+
+                if ($isAllowed) {
+                    // Escape double quotes if present
+                    $safeValue = str_replace('"', '\"', (string)$value);
+                    $envContent .= "{$key}=\"{$safeValue}\"\n";
                 }
             }
 

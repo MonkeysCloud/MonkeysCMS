@@ -103,10 +103,10 @@ class Media extends BaseEntity
     #[Field(type: 'boolean', label: 'Published', default: true)]
     public bool $is_published = true;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
 
     public function prePersist(): void
@@ -228,9 +228,9 @@ class Media extends BaseEntity
         $this->metadata[$key] = $value;
     }
 
-    public function toArray(): array
+    public function toArray(bool $includeNulls = false): array
     {
-        $data = parent::toArray();
+        $data = parent::toArray($includeNulls);
         $data['url'] = $this->getUrl();
         $data['formatted_size'] = $this->getFormattedSize();
         $data['dimensions'] = $this->getDimensions();

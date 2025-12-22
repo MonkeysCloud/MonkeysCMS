@@ -40,7 +40,7 @@ class RolePermission extends BaseEntity
     )]
     public int $permission_id = 0;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
     /**

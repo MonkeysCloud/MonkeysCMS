@@ -13,7 +13,7 @@ use App\Cms\Core\BaseEntity;
  * Term Entity - Individual taxonomy terms within a vocabulary
  */
 #[ContentType(
-    tableName: 'terms',
+    tableName: 'taxonomy_terms',
     label: 'Term',
     description: 'Taxonomy terms for categorizing content',
     icon: '🏷️',
@@ -145,10 +145,10 @@ class Term extends BaseEntity
     )]
     public ?string $meta_description = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
 
     /**
@@ -263,7 +263,7 @@ class Term extends BaseEntity
         }
 
         $parts = explode('/', trim($this->path, '/'));
-        array_pop(); // Remove self
+        array_pop($parts); // Remove self
 
         return array_map('intval', array_filter($parts));
     }
@@ -299,9 +299,9 @@ class Term extends BaseEntity
     /**
      * Convert to array with additional computed fields
      */
-    public function toArray(): array
+    public function toArray(bool $includeNulls = false): array
     {
-        $data = parent::toArray();
+        $data = parent::toArray($includeNulls);
         $data['hierarchical_name'] = $this->getHierarchicalName();
         $data['has_children'] = $this->hasChildren();
         $data['is_root'] = $this->isRoot();

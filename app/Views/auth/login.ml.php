@@ -1,8 +1,8 @@
 <?php
-$title = 'Login - MonkeysCMS (Theme)';
-$heading = 'Login';
-$subheading = 'Sign in to your account';
-echo $this->render('layouts/header', get_defined_vars());
+$title = 'Login - MonkeysCMS';
+$heading = 'Welcome Back';
+$subheading = 'Sign in to access your dashboard.';
+include ML_BASE_PATH . '/app/Views/layouts/header.ml.php';
 ?>
 
 <form action="/login" method="POST" class="space-y-6">

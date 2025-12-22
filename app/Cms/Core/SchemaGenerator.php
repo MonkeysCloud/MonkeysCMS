@@ -45,16 +45,10 @@ final class SchemaGenerator
     private array $statements = [];
 
     /**
-     * Foreign key constraints to add after table creation
+     * Inline index and constraint definitions for CREATE TABLE
      * @var array<string>
      */
-    private array $foreignKeys = [];
-
-    /**
-     * Index definitions to add after table creation
-     * @var array<string>
-     */
-    private array $indexes = [];
+    private array $tableConstraints = [];
 
     /**
      * Generate complete SQL schema for an entity class
@@ -85,8 +79,7 @@ final class SchemaGenerator
 
         // Reset state
         $this->statements = [];
-        $this->foreignKeys = [];
-        $this->indexes = [];
+        $this->tableConstraints = [];
 
         // Build column definitions
         $columns = $this->extractColumns($reflection);
@@ -95,22 +88,16 @@ final class SchemaGenerator
         $createTable = $this->buildCreateTableStatement($tableName, $columns);
         $this->statements[] = $createTable;
 
-        // Add indexes
-        foreach ($this->indexes as $indexSql) {
-            $this->statements[] = $indexSql;
-        }
-
-        // Add foreign keys
-        foreach ($this->foreignKeys as $fkSql) {
-            $this->statements[] = $fkSql;
-        }
-
         // Add revision table if revisionable
         if ($contentType->revisionable) {
             $this->statements[] = $this->generateRevisionTable($tableName, $columns);
         }
-
-        return implode("\n\n", $this->statements);
+        
+        // Wrap everything in foreign key checks disable/enable to handle circular dependencies
+        // and allow creating tables with FKs to not-yet-existing tables.
+        $sql = implode("\n\n", $this->statements);
+        
+        return "SET FOREIGN_KEY_CHECKS=0;\n\n" . $sql . "\n\nSET FOREIGN_KEY_CHECKS=1;";
     }
 
     /**
@@ -133,6 +120,9 @@ final class SchemaGenerator
         $contentType = $contentTypeAttrs[0]->newInstance();
         $tableName = $contentType->tableName;
 
+        // Note: extractColumns populates $this->tableConstraints, but we ignore them for ALTER 
+        // unless we want to diff/add missing indexes (not implemented yet)
+        $this->tableConstraints = [];
         $columns = $this->extractColumns($reflection);
         $alterStatements = [];
 
@@ -151,7 +141,6 @@ final class SchemaGenerator
         foreach ($columns as $columnName => $definition) {
             if (isset($existingSchema[$columnName])) {
                 // Parse the definition to check if type changed
-                // This is a simplified comparison - production code would be more thorough
                 $existingType = strtoupper($existingSchema[$columnName]['Type'] ?? '');
                 $definedType = $this->extractTypeFromDefinition($definition);
 
@@ -244,26 +233,26 @@ final class SchemaGenerator
                         $relation->required ? ' NOT NULL' : ' DEFAULT NULL'
                     );
 
-                    // Add foreign key constraint
+                    // Add foreign key constraint inline
                     $targetTable = $this->getTargetTableName($relation->target);
-                    $this->foreignKeys[] = sprintf(
-                        "ALTER TABLE `%s` ADD CONSTRAINT `fk_%s_%s` FOREIGN KEY (`%s`) REFERENCES `%s`(`id`) ON DELETE %s ON UPDATE %s;",
+                    
+                    // Explicit index for FK performance
+                    $this->tableConstraints[] = sprintf(
+                        "INDEX `idx_%s_%s` (`%s`)",
                         $tableName,
+                        $fkColumn,
+                        $fkColumn
+                    );
+
+                    // Inline FK Constraint
+                    $this->tableConstraints[] = sprintf(
+                        "CONSTRAINT `fk_%s_%s` FOREIGN KEY (`%s`) REFERENCES `%s`(`id`) ON DELETE %s ON UPDATE %s",
                         $tableName,
                         $fkColumn,
                         $fkColumn,
                         $targetTable,
                         $relation->onDelete,
                         $relation->onUpdate
-                    );
-
-                    // Add index on foreign key
-                    $this->indexes[] = sprintf(
-                        "CREATE INDEX `idx_%s_%s` ON `%s`(`%s`);",
-                        $tableName,
-                        $fkColumn,
-                        $tableName,
-                        $fkColumn
                     );
                 }
 
@@ -291,22 +280,25 @@ final class SchemaGenerator
         if ($field->required) {
             $parts[] = 'NOT NULL';
         } else {
-            $parts[] = 'DEFAULT NULL';
+            $parts[] = 'NULL';
         }
 
         // Default value
-        if ($field->default !== null && !$field->required) {
-            $defaultValue = is_string($field->default)
-                ? sprintf("'%s'", addslashes($field->default))
-                : $field->default;
-            $parts[] = sprintf("DEFAULT %s", $defaultValue);
+        // Note: MySQL does not support defaults for BLOB/TEXT/JSON/GEOMETRY
+        $noDefaultTypes = ['text', 'blob', 'json', 'geometry', 'longtext', 'mediumtext', 'tinytext'];
+        $sqlTypeBase = strtolower(preg_replace('/\(.*/', '', $field->toSqlType()));
+
+        if ($field->default !== null && !in_array($sqlTypeBase, $noDefaultTypes, true)) {
+            $parts[] = sprintf("DEFAULT %s", $this->formatDefaultValue($field->default));
+        } elseif (!$field->required && !in_array($sqlTypeBase, $noDefaultTypes, true)) {
+            $parts[] = 'DEFAULT NULL';
         }
 
         // Handle unique constraint
         if ($field->unique) {
-            $this->indexes[] = sprintf(
-                "ALTER TABLE `%s` ADD UNIQUE KEY `uk_%s_%s` (`%s`);",
-                $tableName,
+            // Inline unique key
+            $this->tableConstraints[] = sprintf(
+                "UNIQUE KEY `uk_%s_%s` (`%s`)",
                 $tableName,
                 $columnName,
                 $columnName
@@ -315,11 +307,11 @@ final class SchemaGenerator
 
         // Handle index
         if ($field->indexed && !$field->unique) {
-            $this->indexes[] = sprintf(
-                "CREATE INDEX `idx_%s_%s` ON `%s`(`%s`);",
+            // Inline index
+            $this->tableConstraints[] = sprintf(
+                "INDEX `idx_%s_%s` (`%s`)",
                 $tableName,
                 $columnName,
-                $tableName,
                 $columnName
             );
         }
@@ -328,16 +320,38 @@ final class SchemaGenerator
     }
 
     /**
+     * Format PHP value for SQL DEFAULT clause
+     */
+    private function formatDefaultValue(mixed $value): string
+    {
+        if (is_string($value)) {
+            return sprintf("'%s'", addslashes($value));
+        }
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+        if (is_array($value)) {
+            return sprintf("'%s'", addslashes(json_encode($value)));
+        }
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+        return 'NULL';
+    }
+
+    /**
      * Build the CREATE TABLE statement
      */
     private function buildCreateTableStatement(string $tableName, array $columns): string
     {
-        $columnDefs = implode(",\n    ", $columns);
+        // Merge columns and inline constraints (indexes + FKs)
+        $definitions = array_merge(array_values($columns), $this->tableConstraints);
+        $body = implode(",\n    ", $definitions);
 
         return sprintf(
             "CREATE TABLE IF NOT EXISTS `%s` (\n    %s\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
             $tableName,
-            $columnDefs
+            $body
         );
     }
 
@@ -363,6 +377,15 @@ final class SchemaGenerator
             // Remove PRIMARY KEY from definitions for revision table
             $revisionColumns[$name] = preg_replace('/\s*PRIMARY KEY\s*/i', '', $def);
         }
+        
+        // Don't include unique keys in revision table as multiple revisions can have same values
+        // We only want the column definitions here.
+        // But $columns from extractColumns() are just strings.
+        // Wait, $columns passed here are ONLY the column strings, not the inline indexes because 
+        // generateSql calls extractColumns -> $columns, then buildCreateTable uses them + $this->inlineIndexes.
+        // generateSql passes the raw $columns to generateRevisionTable.
+        // So we are safe from including UNIQUE keys... UNLESS they are defined within the column string (which they are NOT in this implementation).
+        // Correct.
 
         $columnDefs = implode(",\n    ", $revisionColumns);
 

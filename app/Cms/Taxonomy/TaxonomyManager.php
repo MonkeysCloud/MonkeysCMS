@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Cms\Taxonomy;
 
 use App\Cms\Fields\FieldDefinition;
-use App\Modules\Core\Entities\TaxonomyTerm;
-use MonkeysLegion\Database\Connection;
+use App\Modules\Core\Entities\Term;
+use MonkeysLegion\Database\Contracts\ConnectionInterface;
 use MonkeysLegion\Cache\CacheManager;
 
 /**
@@ -56,7 +56,7 @@ final class TaxonomyManager
     private bool $initialized = false;
 
     public function __construct(
-        private readonly Connection $connection,
+        private readonly ConnectionInterface $connection,
         private readonly ?CacheManager $cache = null,
     ) {
     }
@@ -183,7 +183,7 @@ final class TaxonomyManager
 
         $entity->prePersist();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             INSERT INTO vocabularies (
                 vocabulary_id, name, description, icon, is_system, enabled,
                 hierarchical, multiple, required, max_depth, settings,
@@ -213,7 +213,7 @@ final class TaxonomyManager
             'updated_at' => $entity->updated_at->format('Y-m-d H:i:s'),
         ]);
 
-        $entity->id = (int) $this->connection->lastInsertId();
+        $entity->id = (int) $this->connection->pdo()->lastInsertId();
 
         // Add fields if provided
         if (!empty($data['fields'])) {
@@ -272,7 +272,7 @@ final class TaxonomyManager
 
         $entity->updated_at = new \DateTimeImmutable();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             UPDATE vocabularies SET
                 name = :name, description = :description, icon = :icon,
                 hierarchical = :hierarchical, multiple = :multiple, required = :required,
@@ -314,20 +314,20 @@ final class TaxonomyManager
 
         // Delete terms if requested
         if ($deleteTerms) {
-            $stmt = $this->connection->prepare(
+            $stmt = $this->connection->pdo()->prepare(
                 "DELETE FROM taxonomy_terms WHERE vocabulary_id = :vocab_id"
             );
             $stmt->execute(['vocab_id' => $entity->vocabulary_id]);
         }
 
         // Delete field definitions
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM vocabulary_fields WHERE vocabulary_id = :id"
         );
         $stmt->execute(['id' => $id]);
 
         // Delete the vocabulary
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM vocabularies WHERE id = :id AND is_system = 0"
         );
         $stmt->execute(['id' => $id]);
@@ -361,7 +361,7 @@ final class TaxonomyManager
 
         $field->prePersist();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             INSERT INTO vocabulary_fields (
                 vocabulary_id, name, machine_name, field_type, description, help_text,
                 widget, required, multiple, cardinality, default_value, settings,
@@ -393,7 +393,7 @@ final class TaxonomyManager
             'updated_at' => $field->updated_at->format('Y-m-d H:i:s'),
         ]);
 
-        $field->id = (int) $this->connection->lastInsertId();
+        $field->id = (int) $this->connection->pdo()->lastInsertId();
         $this->invalidateCache();
 
         return $field;
@@ -404,7 +404,7 @@ final class TaxonomyManager
      */
     public function removeFieldFromVocabulary(int $vocabularyId, string $machineName): bool
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM vocabulary_fields WHERE vocabulary_id = :vocab_id AND machine_name = :machine_name"
         );
         $stmt->execute(['vocab_id' => $vocabularyId, 'machine_name' => $machineName]);
@@ -450,12 +450,12 @@ final class TaxonomyManager
             }
         }
 
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->connection->pdo()->prepare($sql);
         $stmt->execute($params);
 
         $terms = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $term = new TaxonomyTerm();
+            $term = new Term();
             $term->hydrate($row);
             $terms[] = $term;
         }
@@ -475,9 +475,9 @@ final class TaxonomyManager
     /**
      * Get a single term by ID
      */
-    public function getTerm(int $termId): ?TaxonomyTerm
+    public function getTerm(int $termId): ?Term
     {
-        $stmt = $this->connection->prepare("SELECT * FROM taxonomy_terms WHERE id = :id");
+        $stmt = $this->connection->pdo()->prepare("SELECT * FROM taxonomy_terms WHERE id = :id");
         $stmt->execute(['id' => $termId]);
 
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -485,7 +485,7 @@ final class TaxonomyManager
             return null;
         }
 
-        $term = new TaxonomyTerm();
+        $term = new Term();
         $term->hydrate($row);
         return $term;
     }
@@ -493,9 +493,9 @@ final class TaxonomyManager
     /**
      * Get a term by slug
      */
-    public function getTermBySlug(string $vocabularyId, string $slug): ?TaxonomyTerm
+    public function getTermBySlug(string $vocabularyId, string $slug): ?Term
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT * FROM taxonomy_terms WHERE vocabulary_id = :vocab_id AND slug = :slug"
         );
         $stmt->execute(['vocab_id' => $vocabularyId, 'slug' => $slug]);
@@ -505,7 +505,7 @@ final class TaxonomyManager
             return null;
         }
 
-        $term = new TaxonomyTerm();
+        $term = new Term();
         $term->hydrate($row);
         return $term;
     }
@@ -513,21 +513,34 @@ final class TaxonomyManager
     /**
      * Create a term
      */
-    public function createTerm(string $vocabularyId, array $data): TaxonomyTerm
+    public function createTerm(string $vocabularyId, array $data): Term
     {
-        $term = new TaxonomyTerm();
-        $term->vocabulary_id = $vocabularyId;
+        $vocab = $this->getVocabulary($vocabularyId);
+        if (!$vocab) {
+            throw new \InvalidArgumentException("Vocabulary '{$vocabularyId}' not found");
+        }
+        
+        // Use the INT id from the entity if available (db vocabulary), otherwise 0 (code vocabulary?)
+        // Code vocabularies might not have INT ids if they aren't in DB.
+        // But Terms table requires INT vocabulary_id FK.
+        // Code vocabularies cannot have terms stored in DB unless mapped.
+        // For now assuming DB vocabulary.
+        if (!isset($vocab['entity'])) {
+             throw new \InvalidArgumentException("Terms can only be created for database-defined vocabularies");
+        }
+        
+        $term = new Term();
+        $term->vocabulary_id = $vocab['entity']->id;
         $term->name = $data['name'];
         $term->slug = $data['slug'] ?? $this->generateSlug($data['name']);
         $term->description = $data['description'] ?? null;
         $term->parent_id = $data['parent_id'] ?? null;
         $term->weight = $data['weight'] ?? 0;
-        $term->status = $data['status'] ?? 'active';
+        $term->is_published = $data['status'] === 'active'; // Map status to is_published boolean
         $term->metadata = $data['metadata'] ?? [];
 
         // Store custom field values in metadata
-        $vocab = $this->getVocabulary($vocabularyId);
-        if ($vocab && !empty($vocab['fields'])) {
+        if (!empty($vocab['fields'])) {
             foreach ($vocab['fields'] as $fieldName => $fieldDef) {
                 if (isset($data[$fieldName])) {
                     $term->metadata[$fieldName] = $data[$fieldName];
@@ -537,13 +550,13 @@ final class TaxonomyManager
 
         $term->prePersist();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             INSERT INTO taxonomy_terms (
                 vocabulary_id, name, slug, description, parent_id,
-                weight, status, metadata, created_at, updated_at
+                weight, is_published, metadata, created_at, updated_at
             ) VALUES (
                 :vocabulary_id, :name, :slug, :description, :parent_id,
-                :weight, :status, :metadata, :created_at, :updated_at
+                :weight, :is_published, :metadata, :created_at, :updated_at
             )
         ");
 
@@ -554,13 +567,13 @@ final class TaxonomyManager
             'description' => $term->description,
             'parent_id' => $term->parent_id,
             'weight' => $term->weight,
-            'status' => $term->status,
+            'is_published' => $term->is_published ? 1 : 0,
             'metadata' => json_encode($term->metadata),
             'created_at' => $term->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $term->updated_at->format('Y-m-d H:i:s'),
         ]);
 
-        $term->id = (int) $this->connection->lastInsertId();
+        $term->id = (int) $this->connection->pdo()->lastInsertId();
 
         return $term;
     }
@@ -568,7 +581,7 @@ final class TaxonomyManager
     /**
      * Update a term
      */
-    public function updateTerm(int $termId, array $data): ?TaxonomyTerm
+    public function updateTerm(int $termId, array $data): ?Term
     {
         $term = $this->getTerm($termId);
         if (!$term) {
@@ -591,13 +604,16 @@ final class TaxonomyManager
             $term->weight = $data['weight'];
         }
         if (isset($data['status'])) {
-            $term->status = $data['status'];
+            $term->is_published = $data['status'] === 'active';
         }
 
         // Update custom field values
-        $vocab = $this->getVocabulary($term->vocabulary_id);
-        if ($vocab && !empty($vocab['fields'])) {
-            foreach ($vocab['fields'] as $fieldName => $fieldDef) {
+        // Need to load vocabulary by INT id
+        $vocabEntity = $this->getVocabularyEntityById($term->vocabulary_id);
+        
+        if ($vocabEntity) {
+            $fields = $this->getFieldsArray($vocabEntity);
+            foreach ($fields as $fieldName => $fieldDef) {
                 if (array_key_exists($fieldName, $data)) {
                     $term->metadata[$fieldName] = $data[$fieldName];
                 }
@@ -610,10 +626,10 @@ final class TaxonomyManager
 
         $term->updated_at = new \DateTimeImmutable();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             UPDATE taxonomy_terms SET
                 name = :name, slug = :slug, description = :description,
-                parent_id = :parent_id, weight = :weight, status = :status,
+                parent_id = :parent_id, weight = :weight, is_published = :is_published,
                 metadata = :metadata, updated_at = :updated_at
             WHERE id = :id
         ");
@@ -625,7 +641,7 @@ final class TaxonomyManager
             'description' => $term->description,
             'parent_id' => $term->parent_id,
             'weight' => $term->weight,
-            'status' => $term->status,
+            'is_published' => $term->is_published ? 1 : 0,
             'metadata' => json_encode($term->metadata),
             'updated_at' => $term->updated_at->format('Y-m-d H:i:s'),
         ]);
@@ -643,17 +659,17 @@ final class TaxonomyManager
             $childIds = $this->getChildTermIds($termId);
             if (!empty($childIds)) {
                 $placeholders = implode(',', array_fill(0, count($childIds), '?'));
-                $stmt = $this->connection->prepare("DELETE FROM taxonomy_terms WHERE id IN ({$placeholders})");
+                $stmt = $this->connection->pdo()->prepare("DELETE FROM taxonomy_terms WHERE id IN ({$placeholders})");
                 $stmt->execute($childIds);
             }
         } else {
             // Orphan children (set parent_id to null)
-            $stmt = $this->connection->prepare("UPDATE taxonomy_terms SET parent_id = NULL WHERE parent_id = :id");
+            $stmt = $this->connection->pdo()->prepare("UPDATE taxonomy_terms SET parent_id = NULL WHERE parent_id = :id");
             $stmt->execute(['id' => $termId]);
         }
 
         // Delete the term
-        $stmt = $this->connection->prepare("DELETE FROM taxonomy_terms WHERE id = :id");
+        $stmt = $this->connection->pdo()->prepare("DELETE FROM taxonomy_terms WHERE id = :id");
         $stmt->execute(['id' => $termId]);
 
         return $stmt->rowCount() > 0;
@@ -665,7 +681,7 @@ final class TaxonomyManager
     public function reorderTerms(array $order): void
     {
         foreach ($order as $index => $termId) {
-            $stmt = $this->connection->prepare("UPDATE taxonomy_terms SET weight = :weight WHERE id = :id");
+            $stmt = $this->connection->pdo()->prepare("UPDATE taxonomy_terms SET weight = :weight WHERE id = :id");
             $stmt->execute(['weight' => $index, 'id' => $termId]);
         }
     }
@@ -683,7 +699,7 @@ final class TaxonomyManager
             }
         }
 
-        $stmt = $this->connection->prepare("UPDATE taxonomy_terms SET parent_id = :parent_id WHERE id = :id");
+        $stmt = $this->connection->pdo()->prepare("UPDATE taxonomy_terms SET parent_id = :parent_id WHERE id = :id");
         $stmt->execute(['parent_id' => $newParentId, 'id' => $termId]);
 
         return true;
@@ -694,7 +710,7 @@ final class TaxonomyManager
      */
     public function getTermCount(string $vocabularyId): int
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT COUNT(*) FROM taxonomy_terms WHERE vocabulary_id = :vocab_id"
         );
         $stmt->execute(['vocab_id' => $vocabularyId]);
@@ -719,7 +735,7 @@ final class TaxonomyManager
             $sql .= " LIMIT " . (int) $options['limit'];
         }
 
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->connection->pdo()->prepare($sql);
         $stmt->execute($params);
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -731,13 +747,13 @@ final class TaxonomyManager
     public function attachTermsToContent(int $contentId, string $contentType, array $termIds): void
     {
         // Remove existing
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM content_taxonomy WHERE content_id = :content_id AND content_type = :content_type"
         );
         $stmt->execute(['content_id' => $contentId, 'content_type' => $contentType]);
 
         // Add new
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             INSERT INTO content_taxonomy (content_id, content_type, term_id)
             VALUES (:content_id, :content_type, :term_id)
         ");
@@ -770,12 +786,12 @@ final class TaxonomyManager
 
         $sql .= " ORDER BY t.vocabulary_id, t.weight, t.name";
 
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->connection->pdo()->prepare($sql);
         $stmt->execute($params);
 
         $terms = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $term = new TaxonomyTerm();
+            $term = new Term();
             $term->hydrate($row);
             $terms[] = $term;
         }
@@ -806,7 +822,7 @@ final class TaxonomyManager
     {
         $ids = [];
 
-        $stmt = $this->connection->prepare("SELECT id FROM taxonomy_terms WHERE parent_id = :parent_id");
+        $stmt = $this->connection->pdo()->prepare("SELECT id FROM taxonomy_terms WHERE parent_id = :parent_id");
         $stmt->execute(['parent_id' => $parentId]);
 
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
@@ -836,7 +852,7 @@ final class TaxonomyManager
         }
 
         try {
-            $stmt = $this->connection->query(
+            $stmt = $this->connection->pdo()->query(
                 "SELECT * FROM vocabularies WHERE enabled = 1 ORDER BY weight, name"
             );
 
@@ -857,7 +873,7 @@ final class TaxonomyManager
 
     private function loadVocabularyFields(int $vocabularyId): array
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT * FROM vocabulary_fields WHERE vocabulary_id = :vocab_id ORDER BY weight, name"
         );
         $stmt->execute(['vocab_id' => $vocabularyId]);
@@ -874,7 +890,7 @@ final class TaxonomyManager
 
     private function getVocabularyEntityById(int $id): ?VocabularyEntity
     {
-        $stmt = $this->connection->prepare("SELECT * FROM vocabularies WHERE id = :id");
+        $stmt = $this->connection->pdo()->prepare("SELECT * FROM vocabularies WHERE id = :id");
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -960,7 +976,7 @@ final class TaxonomyManager
         return "
             CREATE TABLE IF NOT EXISTS vocabulary_fields (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                vocabulary_id INT NOT NULL,
+                vocabulary_id INT UNSIGNED NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 machine_name VARCHAR(100) NOT NULL,
                 field_type VARCHAR(50) NOT NULL,
@@ -992,9 +1008,9 @@ final class TaxonomyManager
         return "
             CREATE TABLE IF NOT EXISTS content_taxonomy (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                content_id INT NOT NULL,
+                content_id INT UNSIGNED NOT NULL,
                 content_type VARCHAR(100) NOT NULL,
-                term_id INT NOT NULL,
+                term_id INT UNSIGNED NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (term_id) REFERENCES taxonomy_terms(id) ON DELETE CASCADE,
                 UNIQUE KEY uk_content_term (content_id, content_type, term_id),

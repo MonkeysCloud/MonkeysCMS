@@ -54,6 +54,13 @@ interface EntityInterface
     public static function getCasts(): array;
 
     /**
+     * Fill entity with data (mass assignment)
+     *
+     * @param array<string, mixed> $data
+     */
+    public function fill(array $data): static;
+
+    /**
      * Convert entity to array
      *
      * @return array<string, mixed>

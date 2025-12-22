@@ -63,8 +63,25 @@ class CmsUserProvider implements UserProviderInterface
     /**
      * Find user by credentials (email or username)
      */
-    public function findByCredentials(string $identifier): ?AuthenticatableInterface
+    public function findByCredentials(array $credentials): ?AuthenticatableInterface
     {
+        // Try to find a suitable identifier from the credentials
+        $identifier = $credentials['email'] ?? $credentials['username'] ?? $credentials['identifier'] ?? null;
+
+        // If not found by standard keys, try to find first non-password field
+        if (!$identifier) {
+            foreach ($credentials as $key => $value) {
+                if (!str_contains($key, 'password')) {
+                    $identifier = $value;
+                    break;
+                }
+            }
+        }
+
+        if (!$identifier) {
+            return null;
+        }
+
         $user = $this->repository->findByEmailOrUsername($identifier);
 
         if ($user) {
@@ -79,7 +96,56 @@ class CmsUserProvider implements UserProviderInterface
      */
     public function validateCredentials(AuthenticatableInterface $user, string $password): bool
     {
-        return $user->verifyPassword($password);
+        return password_verify($password, $user->getAuthPassword());
+    }
+
+    /**
+     * Create a new user.
+     * 
+     * @param array<string, mixed> $attributes
+     * @throws \RuntimeException If creation fails
+     */
+    public function create(array $attributes): AuthenticatableInterface
+    {
+        try {
+            $user = new User();
+            
+            // Map common attributes to setters
+            if (isset($attributes['username'])) $user->setUsername($attributes['username']);
+            if (isset($attributes['email'])) $user->setEmail($attributes['email']);
+            
+            // Handle password
+            if (isset($attributes['password'])) {
+                $user->setPassword($attributes['password']);
+            } elseif (isset($attributes['password_hash'])) {
+                $user->setPasswordHash($attributes['password_hash']);
+            }
+            
+            // Handle other attributes via magic setters convention or fill mechanism
+            // For now, we manually map common ones or assume a fill method exists if User extends BaseEntity
+            // But since I verified BaseEntity usage but not its content, I'll stick to manual mapping 
+            // of what we saw in getFillable + nice-to-haves
+            if (isset($attributes['display_name'])) $user->setDisplayName($attributes['display_name']);
+            if (isset($attributes['status'])) $user->setStatus($attributes['status']);
+
+            $this->save($user);
+            return $user;
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('User creation failed: ' . $e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Update user's password hash.
+     */
+    public function updatePassword(int|string $userId, string $passwordHash): void
+    {
+        $user = $this->findById($userId);
+        
+        if ($user instanceof User) {
+            $user->setPasswordHash($passwordHash);
+            $this->save($user);
+        }
     }
 
     /**

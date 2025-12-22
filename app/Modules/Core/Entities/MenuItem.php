@@ -95,10 +95,10 @@ class MenuItem extends BaseEntity
     #[Field(type: 'json', label: 'Visibility Rules', default: [])]
     public array $visibility = [];
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
 
     /** @var MenuItem[] */
@@ -150,9 +150,9 @@ class MenuItem extends BaseEntity
         return true;
     }
 
-    public function toArray(): array
+    public function toArray(bool $includeNulls = false): array
     {
-        $data = parent::toArray();
+        $data = parent::toArray($includeNulls);
         $data['resolved_url'] = $this->getResolvedUrl();
         $data['has_children'] = !empty($this->children);
         return $data;

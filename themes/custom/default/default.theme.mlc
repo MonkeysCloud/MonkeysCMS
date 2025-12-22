@@ -1,0 +1,43 @@
+theme {
+    name = "Default Theme"
+    description = "The default MonkeysCMS theme"
+    version = "1.0.0"
+    
+    # Define directory structure
+    paths {
+        views = "views"
+        assets = "assets"
+    }
+
+    # Theme Regions
+    regions {
+        header = "Header"
+        content = "Main Content" 
+        sidebar = "Sidebar"
+        footer = "Footer"
+    }
+
+    # Default Block Placement
+    blocks {
+        header {
+            site_branding {
+                weight = 0
+            }
+            main_menu {
+                weight = 10
+            }
+        }
+        
+        sidebar {
+            search_widget {
+                weight = 0
+            }
+        }
+        
+        footer {
+            copyright {
+                weight = 0
+            }
+        }
+    }
+}

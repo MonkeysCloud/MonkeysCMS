@@ -127,10 +127,10 @@ class Permission extends BaseEntity
     )]
     public int $weight = 0;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
 
     // ─────────────────────────────────────────────────────────────

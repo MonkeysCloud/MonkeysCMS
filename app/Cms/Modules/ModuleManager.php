@@ -6,7 +6,7 @@ namespace App\Cms\Modules;
 
 use App\Cms\Attributes\ContentType;
 use App\Cms\Core\SchemaGenerator;
-use MonkeysLegion\Database\Connection;
+use MonkeysLegion\Database\Contracts\ConnectionInterface;
 use MonkeysLegion\Mlc\Parser;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -64,14 +64,14 @@ final class ModuleManager
 
     /**
      * @param SchemaGenerator $schemaGenerator SQL generator from entity classes
-     * @param Connection $database Database connection for executing SQL
+     * @param ConnectionInterface $database Database connection for executing SQL
      * @param LoggerInterface|null $logger Optional PSR-3 logger
      * @param EventDispatcherInterface|null $dispatcher Optional event dispatcher
      * @param string $basePath Application base path
      */
     public function __construct(
         private readonly SchemaGenerator $schemaGenerator,
-        private readonly Connection $database,
+        private readonly ConnectionInterface $database,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?EventDispatcherInterface $dispatcher = null,
         string $basePath = '',
@@ -442,7 +442,7 @@ final class ModuleManager
         }
 
         $parser = new Parser();
-        return $parser->parse($content);
+        return $parser->parseContent($content);
     }
 
     /**

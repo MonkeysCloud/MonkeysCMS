@@ -160,10 +160,10 @@ class User extends BaseEntity
     )]
     public array $metadata = [];
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
 
     /**
@@ -332,9 +332,9 @@ class User extends BaseEntity
     /**
      * Convert to array (excludes sensitive data)
      */
-    public function toArray(): array
+    public function toArray(bool $includeNulls = false): array
     {
-        $data = parent::toArray();
+        $data = parent::toArray($includeNulls);
 
         // Never expose password hash
         unset($data['password_hash']);

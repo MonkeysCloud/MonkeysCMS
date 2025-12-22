@@ -45,7 +45,7 @@ class EntityMedia extends BaseEntity
     #[Field(type: 'json', label: 'Metadata', default: [])]
     public array $metadata = [];
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
     public ?Media $media = null;

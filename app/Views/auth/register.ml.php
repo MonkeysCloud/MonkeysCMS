@@ -1,8 +1,8 @@
 <?php
-$title = 'Register - MonkeysCMS (Theme)';
+$title = 'Register - MonkeysCMS';
 $heading = 'Create an Account';
-$subheading = 'Join MonkeysCMS today.';
-echo $this->render('layouts/header', get_defined_vars());
+$subheading = 'Start your journey with MonkeysCMS.';
+include ML_BASE_PATH . '/app/Views/layouts/header.ml.php';
 ?>
 
 <form action="/register" method="POST" class="space-y-6">

@@ -67,26 +67,6 @@ include ML_BASE_PATH . '/app/Views/layouts/header.ml.php';
         </div>
     </div>
 
-    <div class="space-y-5">
-        <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
-            <div class="p-2 rounded-lg bg-orange-50 text-brand">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-800">Admin Account</h3>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div class="input-group">
-                <label>Admin Email</label>
-                <input type="email" name="admin_email" class="input-field" placeholder="admin@example.com" required>
-            </div>
-            <div class="input-group">
-                <label>Admin Password</label>
-                <input type="password" name="admin_password" class="input-field" placeholder="••••••••" required>
-            </div>
-        </div>
-    </div>
-
     <div class="pt-6 border-t border-gray-100 flex justify-between items-center bg-gray-50 -mx-8 -mb-8 p-8 rounded-b-xl">
          <button type="button" onclick="testConnection()" class="px-6 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition font-medium text-sm shadow-sm">
             Test Connection
@@ -97,43 +77,9 @@ include ML_BASE_PATH . '/app/Views/layouts/header.ml.php';
     </div>
 </form>
 
-<!-- Progress Modal -->
-<div id="progressModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
-        <div class="p-6">
-            <div class="flex items-center gap-4 mb-6">
-                <div class="p-3 bg-brand/10 text-brand rounded-full">
-                    <svg class="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900" id="modal-title">Installing MonkeysCMS...</h3>
-                    <p class="text-sm text-gray-500" id="progressStatus">Starting installation...</p>
-                </div>
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="w-full bg-gray-100 rounded-full h-3 mb-6 overflow-hidden">
-                <div id="progressBar" class="bg-brand h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
-            </div>
-
-            <!-- Log Box -->
-            <div id="progressLog" class="bg-gray-900 text-gray-300 rounded-lg p-3 h-48 overflow-y-auto text-xs font-mono space-y-1">
-                <!-- Logs will appear here -->
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     const form = document.getElementById('setupForm');
     const alertBox = document.getElementById('alert');
-    const progressModal = document.getElementById('progressModal');
-    const progressBar = document.getElementById('progressBar');
-    const progressStatus = document.getElementById('progressStatus');
-    const progressLog = document.getElementById('progressLog');
 
     function toggleFields() {
         const type = document.getElementById('db_connection').value;
@@ -180,22 +126,6 @@ include ML_BASE_PATH . '/app/Views/layouts/header.ml.php';
         alertBox.classList.remove('hidden');
     }
 
-    function addLog(message, type = 'info') {
-        const line = document.createElement('div');
-        if (type === 'success') line.className = 'text-green-400';
-        else if (type === 'error') line.className = 'text-red-400';
-        else line.className = 'text-gray-300';
-        
-        line.textContent = '> ' + message;
-        progressLog.appendChild(line);
-        progressLog.scrollTop = progressLog.scrollHeight;
-    }
-
-    function updateProgress(percent, status) {
-        progressBar.style.width = percent + '%';
-        progressStatus.textContent = status;
-    }
-
     async function createDatabase() {
         const formData = new FormData(form);
         showAlert('Creating database...', 'info');
@@ -226,98 +156,30 @@ include ML_BASE_PATH . '/app/Views/layouts/header.ml.php';
             const data = await res.json();
             if (data.success) {
                 showAlert('Connection successful!', 'success');
-                return true;
             } else {
                 showAlert('Connection failed: ' + data.error, 'error', data.can_create);
-                return false;
             }
         } catch (e) {
             showAlert('An error occurred during testing.');
-            return false;
-        }
-    }
-
-    async function runStep(stepId, stepName, percent) {
-        updateProgress(percent, `Installing ${stepName}...`);
-        addLog(`Starting step: ${stepName}...`);
-        
-        try {
-            const formData = new FormData(form);
-            // Rename admin fields for the API
-            const email = formData.get('admin_email');
-            const password = formData.get('admin_password');
-            if (email) formData.append('email', email);
-            if (password) formData.append('password', password);
-
-            const res = await fetch(`/install/api/execute-step/${stepId}`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            
-            if (!data.success) {
-                throw new Error(data.error);
-            }
-
-            if (data.log && Array.isArray(data.log)) {
-                data.log.forEach(msg => addLog(msg));
-            }
-
-            addLog(`${stepName} completed.`, 'success');
-            return true;
-        } catch (e) {
-            addLog(`Error in ${stepName}: ${e.message}`, 'error');
-            updateProgress(percent, 'Installation Failed');
-            throw e;
         }
     }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        // 1. Connection check
-        const isConnected = await testConnection();
-        if (!isConnected) return;
-
-        // 2. Save Config (.env)
         const formData = new FormData(form);
         try {
-            const resSave = await fetch('/install/save', {
+            const res = await fetch('/install/save', {
                 method: 'POST',
                 body: formData
             });
-            const dataSave = await resSave.json();
-            if (!dataSave.success) {
-                showAlert('Failed to save configuration: ' + dataSave.error);
-                return;
+            const data = await res.json();
+            if (data.success) {
+                window.location.href = '/';
+            } else {
+                showAlert('Installation failed: ' + data.error);
             }
         } catch (e) {
-            showAlert('Failed to save configuration.');
-            return;
-        }
-
-        // 3. Start Installation Flow
-        progressModal.classList.remove('hidden');
-        alertBox.classList.add('hidden');
-        
-        try {
-            await runStep('tables', 'Database Tables', 10);
-            await runStep('roles', 'System Roles', 25);
-            await runStep('permissions', 'Permissions', 40);
-            await runStep('content', 'Default Content', 60);
-            await runStep('admin', 'Admin User', 80);
-            await runStep('modules', 'Core Module', 95);
-
-            updateProgress(100, 'Installation Complete!');
-            addLog('Redirecting to dashboard...', 'success');
-            
-            setTimeout(() => {
-                window.location.href = '/admin';
-            }, 1000);
-
-        } catch (e) {
-            // Error already logged in runStep
-            alert('Installation failed. Check the log for details.');
+            showAlert('An error occurred during installation.');
         }
     });
 </script>

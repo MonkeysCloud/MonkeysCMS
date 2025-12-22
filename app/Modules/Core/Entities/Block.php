@@ -110,10 +110,10 @@ class Block extends BaseEntity
     #[Field(type: 'int', label: 'Author ID', required: false, indexed: true)]
     public ?int $author_id = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
 
     public function prePersist(): void

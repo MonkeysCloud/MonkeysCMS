@@ -65,10 +65,10 @@ class Setting extends BaseEntity
     #[Field(type: 'boolean', label: 'Autoload', default: true)]
     public bool $autoload = true;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
 
     /**

@@ -66,10 +66,10 @@ class Menu extends BaseEntity
     )]
     public string $location = 'header';
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Created At')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
 
     /** @var MenuItem[] */
@@ -105,5 +105,31 @@ class Menu extends BaseEntity
         }
 
         return $tree;
+    }
+    public static function getDefaults(): array
+    {
+        return [
+            [
+                'name' => 'Main Navigation',
+                'machine_name' => 'main',
+                'description' => 'Primary site navigation',
+                'location' => 'header',
+                'settings' => ['depth' => 2],
+            ],
+            [
+                'name' => 'Footer Menu',
+                'machine_name' => 'footer',
+                'description' => 'Footer links',
+                'location' => 'footer',
+                'settings' => ['depth' => 1],
+            ],
+            [
+                'name' => 'Administration',
+                'machine_name' => 'admin',
+                'description' => 'Admin dashboard menu',
+                'location' => 'admin_sidebar',
+                'settings' => ['depth' => 3],
+            ],
+        ];
     }
 }
