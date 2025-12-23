@@ -68,9 +68,6 @@ class Kernel
         $this->registerServices($builder, $config);
         $this->container = $builder->build();
         
-        // Boot CMS Services
-        $cmsProvider = new CmsServiceProvider($this->container);
-        $cmsProvider->boot();
     }
 
     private function handleRequest()
@@ -84,10 +81,10 @@ class Kernel
         }
 
         try {
-            // CMS Services are already booted in bootstrap() if it was called via run()
-            // However, run() calls bootstrap() which boots.
-            // If we want handleRequest to be safe to call on its own (e.g. tests), check if booted?
-            // For now, removing it here since run() controls the flow.
+            // Boot CMS Services here so that database errors during boot (e.g. Auth) are caught
+            // and redirected to the installer.
+            $cmsProvider = new CmsServiceProvider($this->container);
+            $cmsProvider->boot();
             
             $handler = $this->container->get(CoreRequestHandler::class);
             return $handler->handle($request);
