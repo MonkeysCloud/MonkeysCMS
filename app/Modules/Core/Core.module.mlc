@@ -1,0 +1,93 @@
+# MonkeysCMS Core Module
+# Core CMS functionality including users, roles, permissions, taxonomies, menus, blocks, media, and settings
+
+name = "Core"
+version = "1.0.0"
+description = "Core CMS functionality including users, roles, permissions, taxonomies, menus, blocks, media, and settings"
+namespace = "App\\Modules\\Core"
+type = "core"
+
+# Module entities
+entities = [
+    "App\\Modules\\Core\\Entities\\User",
+    "App\\Modules\\Core\\Entities\\Role",
+    "App\\Modules\\Core\\Entities\\Permission",
+    "App\\Modules\\Core\\Entities\\UserRole",
+    "App\\Modules\\Core\\Entities\\RolePermission",
+    "App\\Modules\\Core\\Entities\\Vocabulary",
+    "App\\Modules\\Core\\Entities\\Term",
+    "App\\Modules\\Core\\Entities\\EntityTerm",
+    "App\\Modules\\Core\\Entities\\Menu",
+    "App\\Modules\\Core\\Entities\\MenuItem",
+    "App\\Modules\\Core\\Entities\\Block",
+    "App\\Modules\\Core\\Entities\\Media",
+    "App\\Modules\\Core\\Entities\\EntityMedia",
+    "App\\Modules\\Core\\Entities\\Setting"
+]
+
+# Module dependencies
+dependencies = []
+
+# Controllers
+controllers = [
+    "App\\Controllers\\Admin\\UserController",
+    "App\\Controllers\\Admin\\RoleController",
+    "App\\Controllers\\Admin\\TaxonomyController",
+    "App\\Controllers\\Admin\\MenuController",
+    "App\\Controllers\\Admin\\SettingsController"
+]
+
+# Services
+services {
+    permission = "App\\Cms\\Security\\PermissionService"
+    taxonomy = "App\\Modules\\Core\\Services\\TaxonomyService"
+    menu = "App\\Modules\\Core\\Services\\MenuService"
+    settings = "App\\Modules\\Core\\Services\\SettingsService"
+}
+
+# Admin routes
+routes {
+    admin {
+        paths = [
+            "/admin/users",
+            "/admin/roles",
+            "/admin/permissions",
+            "/admin/vocabularies",
+            "/admin/terms",
+            "/admin/menus",
+            "/admin/menu-items",
+            "/admin/blocks",
+            "/admin/media",
+            "/admin/settings"
+        ]
+    }
+}
+
+# Module permissions
+permissions {
+    access_admin = "Access administration area"
+    administer_users = "Administer users"
+    view_users = "View users"
+    create_users = "Create users"
+    edit_users = "Edit users"
+    delete_users = "Delete users"
+    administer_roles = "Administer roles and permissions"
+    administer_taxonomies = "Administer vocabularies and terms"
+    administer_menus = "Administer menus"
+    administer_blocks = "Administer blocks"
+    administer_media = "Administer media library"
+    administer_settings = "Administer site settings"
+    view_media = "View media library"
+    create_media = "Upload files"
+    edit_media = "Edit media metadata"
+    delete_media = "Delete media files"
+}
+
+# Module configuration
+config {
+    password_min_length = 8
+    password_require_special = false
+    session_timeout = 120
+    max_login_attempts = 5
+    lockout_duration = 900
+}

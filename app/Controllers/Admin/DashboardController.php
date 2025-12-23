@@ -15,18 +15,22 @@ use Psr\Http\Message\ResponseInterface;
  * Provides overview data for the CMS admin panel.
  */
 #[Route('/admin', name: 'admin')]
-final class DashboardController
+final class DashboardController extends BaseAdminController
 {
     public function __construct(
         private readonly ModuleManager $moduleManager,
         private readonly CmsRepository $repository,
+        \MonkeysLegion\Template\MLView $view,
+        \App\Modules\Core\Services\MenuService $menuService,
     ) {
+        parent::__construct($view, $menuService);
     }
 
     /**
      * Dashboard overview data
      */
     #[Route('GET', '/dashboard', name: 'dashboard')]
+    #[Route('GET', '/', name: 'admin.index')]
     public function index(): ResponseInterface
     {
         $enabledModules = $this->moduleManager->getEnabledModules();
@@ -48,21 +52,18 @@ final class DashboardController
             }
         }
 
-        return json([
-            'success' => true,
-            'data' => [
-                'modules' => [
-                    'enabled' => count($enabledModules),
-                    'available' => count($availableModules),
-                    'list' => $enabledModules,
-                ],
-                'content' => $contentStats,
-                'system' => [
-                    'php_version' => PHP_VERSION,
-                    'cms_version' => '1.0.0',
-                    'memory_usage' => $this->formatBytes(memory_get_usage(true)),
-                    'peak_memory' => $this->formatBytes(memory_get_peak_usage(true)),
-                ],
+        return $this->render('admin.dashboard', [
+            'modules' => [
+                'enabled' => count($enabledModules),
+                'available' => count($availableModules),
+                'list' => $enabledModules,
+            ],
+            'content' => $contentStats,
+            'system' => [
+                'php_version' => PHP_VERSION,
+                'cms_version' => '1.0.0',
+                'memory_usage' => $this->formatBytes(memory_get_usage(true)),
+                'peak_memory' => $this->formatBytes(memory_get_peak_usage(true)),
             ],
         ]);
     }

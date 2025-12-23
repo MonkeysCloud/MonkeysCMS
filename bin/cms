@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 /**
  * MonkeysCMS CLI Tool
- * Usage: php cms [command]
+ * Usage: php bin/cms [command]
  */
 
 use App\Core\Kernel;
@@ -16,11 +16,10 @@ if (php_sapi_name() !== 'cli') {
     exit;
 }
 
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 // 1. Bootstrap Application
-$rootDir = __DIR__;
-
+$rootDir = dirname(__DIR__);
 // Define ML_BASE_PATH for helpers.php to resolve correctly
 if (!defined('ML_BASE_PATH')) {
     define('ML_BASE_PATH', $rootDir);
@@ -42,6 +41,12 @@ if ($vendorDirs) {
 
         foreach ($files as $file) {
             require_once $file;
+            // Guess class name from file path
+            // e.g. .../monkeyslegion-cache/src/Commands/CacheClearCommand.php
+            // -> MonkeysLegion\Cache\Commands\CacheClearCommand
+            
+            // We can iterate declared classes to be safe, or parse the file.
+            // Let's use declared classes check which is safer given we just required it.
         }
     }
 }
@@ -49,7 +54,7 @@ if ($vendorDirs) {
 // Find all Command subclasses currently declared (that are likely from vendors)
 foreach (get_declared_classes() as $class) {
     if (str_starts_with($class, 'MonkeysLegion\\') && 
-        str_contains($class, '\\Commands\\') && 
+        str_contains($class, '\\Commands\\') && // Note: our cache commands are in \Commands\ namespace
         is_subclass_of($class, Command::class) &&
         !(new ReflectionClass($class))->isAbstract()
     ) {
@@ -58,6 +63,9 @@ foreach (get_declared_classes() as $class) {
 }
 
 // 3. Run CLI Kernel
+// CliKernel automatically discovers App\Cli\Command and MonkeysLegion\Cli\Command
+// We explicitly pass the additional vendor commands we found.
+
 try {
     $cli = new CliKernel($container, $vendorCommands);
     exit($cli->run($argv));

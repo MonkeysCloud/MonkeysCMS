@@ -244,12 +244,20 @@ final class ThemeManager
             return ["Theme '{$themeName}' not found"];
         }
 
-        // Check for theme config file (.mlc or .json)
+        // Check for theme config file
+        // Priority: 1. [theme].theme.mlc, 2. theme.mlc, 3. theme.json
+        $namedMlcFile = $path . '/' . $themeName . '.theme.mlc';
         $mlcFile = $path . '/theme.mlc';
         $jsonFile = $path . '/theme.json';
 
-        if (!file_exists($mlcFile) && !file_exists($jsonFile)) {
-            $errors[] = "Missing theme.mlc or theme.json";
+        if (file_exists($namedMlcFile)) {
+             try {
+                $data = $this->parseMlcFile($namedMlcFile);
+                if (empty($data['name'])) $errors[] = "{$themeName}.theme.mlc missing 'name' field";
+                if (empty($data['version'])) $errors[] = "{$themeName}.theme.mlc missing 'version' field";
+            } catch (\Exception $e) {
+                $errors[] = "Invalid {$themeName}.theme.mlc: " . $e->getMessage();
+            }
         } elseif (file_exists($mlcFile)) {
             try {
                 $data = $this->parseMlcFile($mlcFile);
@@ -262,7 +270,7 @@ final class ThemeManager
             } catch (\Exception $e) {
                 $errors[] = "Invalid theme.mlc: " . $e->getMessage();
             }
-        } else {
+        } elseif (file_exists($jsonFile)) {
             $json = file_get_contents($jsonFile);
             $data = json_decode($json, true);
 
@@ -276,6 +284,8 @@ final class ThemeManager
                     $errors[] = "theme.json missing 'version' field";
                 }
             }
+        } else {
+            $errors[] = "Missing {$themeName}.theme.mlc, theme.mlc or theme.json";
         }
 
         // Check views directory
@@ -432,11 +442,14 @@ MLC;
             throw new RuntimeException("Theme '{$themeName}' not found in contrib or custom directories");
         }
 
-        // Try .mlc first, then fall back to .json
+        // Try named .mlc first, then theme.mlc, then .json
+        $namedMlcFile = $path . '/' . $themeName . '.theme.mlc';
         $mlcFile = $path . '/theme.mlc';
         $jsonFile = $path . '/theme.json';
 
-        if (file_exists($mlcFile)) {
+        if (file_exists($namedMlcFile)) {
+            $data = $this->parseMlcFile($namedMlcFile);
+        } elseif (file_exists($mlcFile)) {
             $data = $this->parseMlcFile($mlcFile);
         } elseif (file_exists($jsonFile)) {
             $data = json_decode(file_get_contents($jsonFile), true);
@@ -447,7 +460,7 @@ MLC;
                 );
             }
         } else {
-            throw new RuntimeException("Theme '{$themeName}' missing theme.mlc or theme.json at {$path}");
+            throw new RuntimeException("Theme '{$themeName}' missing configuration file at {$path}");
         }
 
         $info = new ThemeInfo(
@@ -482,10 +495,10 @@ MLC;
     {
         $content = file_get_contents($filePath);
         $parser = new Parser();
-        return $parser->parse($content);
+        return $parser->parseContent($content);
     }
 
-    private function findThemePath(string $themeName): ?string
+    public function findThemePath(string $themeName): ?string
     {
         // Check custom first (higher priority)
         $customPath = $this->customPath . '/' . $themeName;
@@ -517,11 +530,12 @@ MLC;
 
         foreach ($dirs as $dir) {
             $themeName = basename($dir);
+            $namedMlcFile = $dir . '/' . $themeName . '.theme.mlc';
             $mlcFile = $dir . '/theme.mlc';
             $jsonFile = $dir . '/theme.json';
 
-            // Skip if neither config file exists
-            if (!file_exists($mlcFile) && !file_exists($jsonFile)) {
+            // Skip if no config file exists
+            if (!file_exists($namedMlcFile) && !file_exists($mlcFile) && !file_exists($jsonFile)) {
                 continue;
             }
 
@@ -551,12 +565,17 @@ MLC;
         }
 
         // Validate cache - check if theme config was modified
+        // Check both potential config files
+        $namedMlcFile = $data->path . '/' . $themeName . '.theme.mlc';
         $mlcFile = $data->path . '/theme.mlc';
         $jsonFile = $data->path . '/theme.json';
 
-        $configFile = file_exists($mlcFile) ? $mlcFile : $jsonFile;
+        $configFile = null;
+        if (file_exists($namedMlcFile)) $configFile = $namedMlcFile;
+        elseif (file_exists($mlcFile)) $configFile = $mlcFile;
+        elseif (file_exists($jsonFile)) $configFile = $jsonFile;
 
-        if (file_exists($configFile) && filemtime($configFile) > filemtime($cacheFile)) {
+        if ($configFile && file_exists($configFile) && filemtime($configFile) > filemtime($cacheFile)) {
             return null; // Cache invalidated
         }
 

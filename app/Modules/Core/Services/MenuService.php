@@ -7,7 +7,7 @@ namespace App\Modules\Core\Services;
 use App\Modules\Core\Entities\Menu;
 use App\Modules\Core\Entities\MenuItem;
 use App\Modules\Core\Entities\User;
-use MonkeysLegion\Database\Connection;
+use PDO;
 use MonkeysLegion\Cache\CacheManager;
 
 /**
@@ -24,7 +24,7 @@ final class MenuService
     private array $localCache = [];
 
     public function __construct(
-        private readonly Connection $connection,
+        private readonly PDO $pdo,
         private readonly ?CacheManager $cache = null,
     ) {
     }
@@ -36,10 +36,10 @@ final class MenuService
      */
     public function getAllMenus(): array
     {
-        $stmt = $this->connection->query(
+        $stmt = $this->pdo->query(
             "SELECT * FROM menus ORDER BY name"
         );
-
+        
         $menus = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $menu = new Menu();
@@ -55,7 +55,7 @@ final class MenuService
      */
     public function getMenu(int $id): ?Menu
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->pdo->prepare(
             "SELECT * FROM menus WHERE id = :id"
         );
         $stmt->execute(['id' => $id]);
@@ -91,7 +91,7 @@ final class MenuService
             }
         }
 
-        $stmt = $this->connection->prepare(
+        $stmt = $this->pdo->prepare(
             "SELECT * FROM menus WHERE machine_name = :machine_name"
         );
         $stmt->execute(['machine_name' => $machineName]);
@@ -155,9 +155,10 @@ final class MenuService
         if ($publishedOnly) {
             $sql .= " AND is_published = 1";
         }
-        $sql .= " ORDER BY parent_id NULLS FIRST, weight, title";
-
-        $stmt = $this->connection->prepare($sql);
+        // MySQL doesn't support NULLS FIRST standard syntax
+        $sql .= " ORDER BY (parent_id IS NULL) DESC, parent_id, weight, title";
+        
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['menu_id' => $menuId]);
 
         $items = [];
@@ -217,7 +218,7 @@ final class MenuService
         $menu->prePersist();
 
         if ($menu->isNew()) {
-            $stmt = $this->connection->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO menus (name, machine_name, description, location, created_at, updated_at)
                 VALUES (:name, :machine_name, :description, :location, :created_at, :updated_at)
             ");
@@ -229,9 +230,9 @@ final class MenuService
                 'created_at' => $menu->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $menu->updated_at->format('Y-m-d H:i:s'),
             ]);
-            $menu->id = (int) $this->connection->lastInsertId();
+            $menu->id = (int) $this->pdo->lastInsertId();
         } else {
-            $stmt = $this->connection->prepare("
+            $stmt = $this->pdo->prepare("
                 UPDATE menus SET
                     name = :name,
                     machine_name = :machine_name,
@@ -261,12 +262,12 @@ final class MenuService
      */
     public function deleteMenu(Menu $menu): void
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->pdo->prepare(
             "DELETE FROM menu_items WHERE menu_id = :menu_id"
         );
         $stmt->execute(['menu_id' => $menu->id]);
 
-        $stmt = $this->connection->prepare(
+        $stmt = $this->pdo->prepare(
             "DELETE FROM menus WHERE id = :id"
         );
         $stmt->execute(['id' => $menu->id]);
@@ -280,7 +281,7 @@ final class MenuService
      */
     public function getMenuItem(int $id): ?MenuItem
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->pdo->prepare(
             "SELECT * FROM menu_items WHERE id = :id"
         );
         $stmt->execute(['id' => $id]);
@@ -312,7 +313,7 @@ final class MenuService
         }
 
         if ($item->isNew()) {
-            $stmt = $this->connection->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO menu_items (menu_id, parent_id, title, url, link_type, entity_type, entity_id, icon, css_class, target, weight, depth, expanded, is_published, attributes, visibility, created_at, updated_at)
                 VALUES (:menu_id, :parent_id, :title, :url, :link_type, :entity_type, :entity_id, :icon, :css_class, :target, :weight, :depth, :expanded, :is_published, :attributes, :visibility, :created_at, :updated_at)
             ");
@@ -336,9 +337,9 @@ final class MenuService
                 'created_at' => $item->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $item->updated_at->format('Y-m-d H:i:s'),
             ]);
-            $item->id = (int) $this->connection->lastInsertId();
+            $item->id = (int) $this->pdo->lastInsertId();
         } else {
-            $stmt = $this->connection->prepare("
+            $stmt = $this->pdo->prepare("
                 UPDATE menu_items SET
                     parent_id = :parent_id,
                     title = :title,
@@ -398,7 +399,7 @@ final class MenuService
             $this->deleteChildItems($item->id);
         } else {
             // Move children to parent
-            $stmt = $this->connection->prepare(
+            $stmt = $this->pdo->prepare(
                 "UPDATE menu_items SET parent_id = :parent_id WHERE parent_id = :item_id"
             );
             $stmt->execute([
@@ -407,7 +408,7 @@ final class MenuService
             ]);
         }
 
-        $stmt = $this->connection->prepare(
+        $stmt = $this->pdo->prepare(
             "DELETE FROM menu_items WHERE id = :id"
         );
         $stmt->execute(['id' => $item->id]);
@@ -422,7 +423,7 @@ final class MenuService
 
     private function deleteChildItems(int $parentId): void
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->pdo->prepare(
             "SELECT id FROM menu_items WHERE parent_id = :parent_id"
         );
         $stmt->execute(['parent_id' => $parentId]);
@@ -431,7 +432,7 @@ final class MenuService
             $this->deleteChildItems($row['id']);
         }
 
-        $stmt = $this->connection->prepare(
+        $stmt = $this->pdo->prepare(
             "DELETE FROM menu_items WHERE parent_id = :parent_id"
         );
         $stmt->execute(['parent_id' => $parentId]);
@@ -446,7 +447,7 @@ final class MenuService
             $itemId = is_array($data) ? $data['id'] : $data;
             $parentId = is_array($data) ? ($data['parent_id'] ?? null) : null;
 
-            $stmt = $this->connection->prepare(
+            $stmt = $this->pdo->prepare(
                 "UPDATE menu_items SET weight = :weight, parent_id = :parent_id WHERE id = :id AND menu_id = :menu_id"
             );
             $stmt->execute([
@@ -487,7 +488,7 @@ final class MenuService
             }
 
             if ($item->depth !== $depth) {
-                $stmt = $this->connection->prepare(
+                $stmt = $this->pdo->prepare(
                     "UPDATE menu_items SET depth = :depth WHERE id = :id"
                 );
                 $stmt->execute(['depth' => $depth, 'id' => $item->id]);
