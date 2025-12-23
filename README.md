@@ -41,7 +41,7 @@ cp .env.example .env
 # Start the development server
 composer serve
 # or
-./monkeys serve
+php cms serve
 ```
 
 ## Quick Start
@@ -49,16 +49,19 @@ composer serve
 ### 1. Enable a Module
 
 Via CLI:
+
 ```bash
-./monkeys cms:module:enable Custom/Ecommerce
+php cms cms:module:enable Custom/Ecommerce
 ```
 
 Via API:
+
 ```bash
 curl -X POST http://localhost:8000/admin/modules/Custom/Ecommerce/enable
 ```
 
 When you enable a module, MonkeysCMS:
+
 1. Discovers all entity classes in the module
 2. Reads their attributes (ContentType, Field, Relation)
 3. Generates SQL schema
@@ -68,6 +71,7 @@ When you enable a module, MonkeysCMS:
 ### 2. Work with Content
 
 **Create a product:**
+
 ```bash
 curl -X POST http://localhost:8000/admin/content/products \
   -H "Content-Type: application/json" \
@@ -81,21 +85,25 @@ curl -X POST http://localhost:8000/admin/content/products \
 ```
 
 **List products with pagination:**
+
 ```bash
 curl "http://localhost:8000/admin/content/products?page=1&per_page=20&sort=created_at&direction=DESC"
 ```
 
 **Search products:**
+
 ```bash
 curl "http://localhost:8000/admin/content/products/search?q=widget"
 ```
 
 **Get a single product:**
+
 ```bash
 curl http://localhost:8000/admin/content/products/1
 ```
 
 **Update a product:**
+
 ```bash
 curl -X PUT http://localhost:8000/admin/content/products/1 \
   -H "Content-Type: application/json" \
@@ -103,6 +111,7 @@ curl -X PUT http://localhost:8000/admin/content/products/1 \
 ```
 
 **Delete a product:**
+
 ```bash
 curl -X DELETE http://localhost:8000/admin/content/products/1
 ```
@@ -241,7 +250,7 @@ class Loader
 ### 5. Enable Your Module
 
 ```bash
-./monkeys cms:module:enable Custom/YourModule
+php cms cms:module:enable Custom/YourModule
 ```
 
 ## Architecture
@@ -255,15 +264,15 @@ class Loader
 
 ### Field Types
 
-| Type | SQL Mapping | PHP Type |
-|------|-------------|----------|
-| string | VARCHAR(length) | string |
-| text | LONGTEXT | string |
-| int | INT | int |
-| decimal | DECIMAL(precision, scale) | string |
-| boolean | TINYINT(1) | bool |
-| datetime | DATETIME | DateTimeImmutable |
-| json | JSON | array |
+| Type     | SQL Mapping               | PHP Type          |
+| -------- | ------------------------- | ----------------- |
+| string   | VARCHAR(length)           | string            |
+| text     | LONGTEXT                  | string            |
+| int      | INT                       | int               |
+| decimal  | DECIMAL(precision, scale) | string            |
+| boolean  | TINYINT(1)                | bool              |
+| datetime | DATETIME                  | DateTimeImmutable |
+| json     | JSON                      | array             |
 
 ### Core Components
 
@@ -276,96 +285,96 @@ class Loader
 
 ### Modules
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /admin/modules | List all modules |
-| GET | /admin/modules/enabled | List enabled modules |
-| GET | /admin/modules/{module}/details | Get module details |
-| POST | /admin/modules/{module}/enable | Enable a module |
-| POST | /admin/modules/{module}/disable | Disable a module |
-| POST | /admin/modules/{module}/sync | Re-sync schema |
-| GET | /admin/modules/{module}/schema-preview | Preview SQL |
+| Method | Endpoint                               | Description          |
+| ------ | -------------------------------------- | -------------------- |
+| GET    | /admin/modules                         | List all modules     |
+| GET    | /admin/modules/enabled                 | List enabled modules |
+| GET    | /admin/modules/{module}/details        | Get module details   |
+| POST   | /admin/modules/{module}/enable         | Enable a module      |
+| POST   | /admin/modules/{module}/disable        | Disable a module     |
+| POST   | /admin/modules/{module}/sync           | Re-sync schema       |
+| GET    | /admin/modules/{module}/schema-preview | Preview SQL          |
 
 ### Content
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /admin/content/types | List all content types |
-| GET | /admin/content/{type} | List content with pagination |
-| GET | /admin/content/{type}/{id} | Get single item |
-| POST | /admin/content/{type} | Create new item |
-| PUT | /admin/content/{type}/{id} | Update item |
-| DELETE | /admin/content/{type}/{id} | Delete item |
-| GET | /admin/content/{type}/search?q= | Search content |
+| Method | Endpoint                        | Description                  |
+| ------ | ------------------------------- | ---------------------------- |
+| GET    | /admin/content/types            | List all content types       |
+| GET    | /admin/content/{type}           | List content with pagination |
+| GET    | /admin/content/{type}/{id}      | Get single item              |
+| POST   | /admin/content/{type}           | Create new item              |
+| PUT    | /admin/content/{type}/{id}      | Update item                  |
+| DELETE | /admin/content/{type}/{id}      | Delete item                  |
+| GET    | /admin/content/{type}/search?q= | Search content               |
 
 ### Users & Authentication
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /admin/users | List users with pagination |
-| GET | /admin/users/{id} | Get user details |
-| POST | /admin/users | Create user |
-| PUT | /admin/users/{id} | Update user |
-| DELETE | /admin/users/{id} | Delete user |
-| GET | /admin/users/{id}/roles | Get user's roles |
-| PUT | /admin/users/{id}/roles | Set user's roles |
-| GET | /admin/users/{id}/permissions | Get user's permissions |
+| Method | Endpoint                      | Description                |
+| ------ | ----------------------------- | -------------------------- |
+| GET    | /admin/users                  | List users with pagination |
+| GET    | /admin/users/{id}             | Get user details           |
+| POST   | /admin/users                  | Create user                |
+| PUT    | /admin/users/{id}             | Update user                |
+| DELETE | /admin/users/{id}             | Delete user                |
+| GET    | /admin/users/{id}/roles       | Get user's roles           |
+| PUT    | /admin/users/{id}/roles       | Set user's roles           |
+| GET    | /admin/users/{id}/permissions | Get user's permissions     |
 
 ### Roles & Permissions
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /admin/roles | List all roles |
-| GET | /admin/roles/{id} | Get role with permissions |
-| POST | /admin/roles | Create role |
-| PUT | /admin/roles/{id} | Update role |
-| DELETE | /admin/roles/{id} | Delete role |
-| PUT | /admin/roles/{id}/permissions | Set role permissions |
-| GET | /admin/permissions | List all permissions |
-| GET | /admin/permissions/grouped | List permissions by group |
-| GET | /admin/permissions/matrix | Get permission matrix for UI |
-| PUT | /admin/permissions/matrix | Batch update permissions |
+| Method | Endpoint                      | Description                  |
+| ------ | ----------------------------- | ---------------------------- |
+| GET    | /admin/roles                  | List all roles               |
+| GET    | /admin/roles/{id}             | Get role with permissions    |
+| POST   | /admin/roles                  | Create role                  |
+| PUT    | /admin/roles/{id}             | Update role                  |
+| DELETE | /admin/roles/{id}             | Delete role                  |
+| PUT    | /admin/roles/{id}/permissions | Set role permissions         |
+| GET    | /admin/permissions            | List all permissions         |
+| GET    | /admin/permissions/grouped    | List permissions by group    |
+| GET    | /admin/permissions/matrix     | Get permission matrix for UI |
+| PUT    | /admin/permissions/matrix     | Batch update permissions     |
 
 ### Taxonomy (Categories & Tags)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /admin/vocabularies | List all vocabularies |
-| GET | /admin/vocabularies/{id} | Get vocabulary with terms |
-| POST | /admin/vocabularies | Create vocabulary |
-| PUT | /admin/vocabularies/{id} | Update vocabulary |
-| DELETE | /admin/vocabularies/{id} | Delete vocabulary |
-| GET | /admin/vocabularies/{id}/terms | Get terms (flat or tree) |
-| GET | /admin/vocabularies/{id}/options | Get terms for select widget |
-| POST | /admin/vocabularies/{id}/terms | Create term |
-| PUT | /admin/terms/{id} | Update term |
-| DELETE | /admin/terms/{id} | Delete term |
-| GET | /admin/entity-terms/{type}/{id} | Get entity's terms |
-| PUT | /admin/entity-terms/{type}/{id}/{vocab} | Set entity terms |
+| Method | Endpoint                                | Description                 |
+| ------ | --------------------------------------- | --------------------------- |
+| GET    | /admin/vocabularies                     | List all vocabularies       |
+| GET    | /admin/vocabularies/{id}                | Get vocabulary with terms   |
+| POST   | /admin/vocabularies                     | Create vocabulary           |
+| PUT    | /admin/vocabularies/{id}                | Update vocabulary           |
+| DELETE | /admin/vocabularies/{id}                | Delete vocabulary           |
+| GET    | /admin/vocabularies/{id}/terms          | Get terms (flat or tree)    |
+| GET    | /admin/vocabularies/{id}/options        | Get terms for select widget |
+| POST   | /admin/vocabularies/{id}/terms          | Create term                 |
+| PUT    | /admin/terms/{id}                       | Update term                 |
+| DELETE | /admin/terms/{id}                       | Delete term                 |
+| GET    | /admin/entity-terms/{type}/{id}         | Get entity's terms          |
+| PUT    | /admin/entity-terms/{type}/{id}/{vocab} | Set entity terms            |
 
 ### Menus
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /admin/menus | List all menus |
-| GET | /admin/menus/{id} | Get menu with items |
-| POST | /admin/menus | Create menu |
-| PUT | /admin/menus/{id} | Update menu |
-| DELETE | /admin/menus/{id} | Delete menu |
-| POST | /admin/menus/{id}/items | Add menu item |
-| PUT | /admin/menus/{id}/items/{itemId} | Update menu item |
-| DELETE | /admin/menus/{id}/items/{itemId} | Delete menu item |
-| PUT | /admin/menus/{id}/items/reorder | Reorder items |
+| Method | Endpoint                         | Description         |
+| ------ | -------------------------------- | ------------------- |
+| GET    | /admin/menus                     | List all menus      |
+| GET    | /admin/menus/{id}                | Get menu with items |
+| POST   | /admin/menus                     | Create menu         |
+| PUT    | /admin/menus/{id}                | Update menu         |
+| DELETE | /admin/menus/{id}                | Delete menu         |
+| POST   | /admin/menus/{id}/items          | Add menu item       |
+| PUT    | /admin/menus/{id}/items/{itemId} | Update menu item    |
+| DELETE | /admin/menus/{id}/items/{itemId} | Delete menu item    |
+| PUT    | /admin/menus/{id}/items/reorder  | Reorder items       |
 
 ### Settings
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /admin/settings | List all settings |
-| GET | /admin/settings/group/{group} | Get settings by group |
-| GET | /admin/settings/{key} | Get single setting |
-| PUT | /admin/settings/{key} | Update setting |
-| PUT | /admin/settings | Batch update settings |
+| Method | Endpoint                      | Description           |
+| ------ | ----------------------------- | --------------------- |
+| GET    | /admin/settings               | List all settings     |
+| GET    | /admin/settings/group/{group} | Get settings by group |
+| GET    | /admin/settings/{key}         | Get single setting    |
+| PUT    | /admin/settings/{key}         | Update setting        |
+| PUT    | /admin/settings               | Batch update settings |
 
 ## Role-Based Access Control (RBAC)
 
@@ -399,15 +408,15 @@ Permissions follow the pattern `{action}_{entity_type}`:
 public function edit(int $id): JsonResponse
 {
     $product = $this->repository->find(Product::class, $id);
-    
+
     // Check permission
     $this->permissions->authorizeEntity('edit', $product);
-    
+
     // Or check manually
     if (!$this->permissions->canOnEntity('edit', $product)) {
         return new JsonResponse(['error' => 'Access denied'], 403);
     }
-    
+
     // ...
 }
 ```
@@ -489,51 +498,69 @@ $terms = $taxonomyService->getEntityTerms('products', $product->id);
 
 ### vs Drupal
 
-| Drupal | MonkeysCMS |
-|--------|------------|
-| hook_install(), hook_update_N() | Auto-sync on enable |
-| drush updb | Not needed |
-| Field configuration tables | Single normalized table |
-| Entity API complexity | Simple BaseEntity |
-| YAML configuration | PHP attributes |
+| Drupal                          | MonkeysCMS              |
+| ------------------------------- | ----------------------- |
+| hook_install(), hook_update_N() | Auto-sync on enable     |
+| drush updb                      | Not needed              |
+| Field configuration tables      | Single normalized table |
+| Entity API complexity           | Simple BaseEntity       |
+| YAML configuration              | PHP attributes          |
 
 ### vs WordPress
 
-| WordPress | MonkeysCMS |
-|-----------|------------|
-| wp_postmeta EAV | Proper normalized tables |
-| wp_insert_post arrays | Typed entity classes |
-| No foreign keys | Real relationships |
-| Global functions | Namespaced modules |
-| No dependency management | Module dependencies |
+| WordPress                | MonkeysCMS               |
+| ------------------------ | ------------------------ |
+| wp_postmeta EAV          | Proper normalized tables |
+| wp_insert_post arrays    | Typed entity classes     |
+| No foreign keys          | Real relationships       |
+| Global functions         | Namespaced modules       |
+| No dependency management | Module dependencies      |
 
 ## CLI Commands
 
+MonkeysCMS includes a unified CLI tool `cms` (or `bin/cms`) that provides access to all framework and application commands.
+
 ```bash
-# List all modules
-./monkeys cms:module:list
+# List all available commands
+php cms list
 
-# Enable a module
-./monkeys cms:module:enable Custom/Ecommerce
+# Core CMS Commands
+php cms cms:module:list           # List all modules
+php cms cms:module:enable <name>  # Enable a module
+php cms cms:module:disable <name> # Disable a module
+php cms menu:seed                 # Seed default admin menus (Admin Dashboard)
 
-# Disable a module
-./monkeys cms:module:disable Custom/Ecommerce
+# Cache Management
+php cms cache:clear               # Clear default cache store
+php cms cache:clear --store=redis # Clear specific store
+php cms cache:config              # Display cache configuration
+php cms cache:flush-all           # Flush all configured cache stores
+php cms cache:set key val         # Set a cache value
+php cms cache:get key             # Get a cache value
+php cms cache:forget key          # Remove a cache key
+php cms cache:monitor             # Monitor cache performance
 
-# Cache management
-./monkeys cache:clear              # Clear default cache store
-./monkeys cache:clear --store=redis # Clear specific store
-./monkeys cache:clear --tags=users  # Clear by tags
-./monkeys cache:stats              # View cache statistics
-./monkeys cache:get user:123       # Get a cached value
-./monkeys cache:set key value --ttl=3600  # Set a value
-./monkeys cache:forget user:123    # Delete a key
+# Database & Schema
+php cms migrate                   # Run pending migrations
+php cms rollback                  # Rollback migrations
+php cms db:seed                   # Run database seeders
+php cms schema:update             # Update database schema from entities
 
-# CMS installation
-./monkeys cms:install             # Install CMS (create tables, seed data)
-
-# Start development server
-./monkeys serve
+# Generators (Make)
+php cms make:controller Name      # Create a new controller
+php cms make:entity Name          # Create a new entity
+php cms make:migration            # Create a migration from entities
 ```
+
+## Admin Interface
+
+MonkeysCMS now features a fully functional Admin UI with a dynamic menu system.
+
+- **Dashboard**: Overview of system status and modules (`/admin/dashboard`)
+- **Menu Management**: Manage Admin and Frontend menus via UI (`/admin/menus`)
+- **Admin Theme**: Custom admin theme located in `themes/custom/admin`
+
+The Admin Sidebar is dynamically populated from the 'admin' menu, which can be seeded using `php cms menu:seed`.
 
 ## Caching (MonkeysLegion-Cache)
 
@@ -758,7 +785,7 @@ app {
 
 themes {
     active = ${CMS_THEME:default}
-    
+
     paths {
         contrib = "themes/contrib"
         custom = "themes/custom"
@@ -771,7 +798,7 @@ view {
         "themes/contrib/${CMS_THEME}/views",
         "app/Views"
     ]
-    
+
     cache {
         enabled = ${VIEW_CACHE:true}
         path = "var/cache/views"
@@ -816,35 +843,35 @@ themes/contrib/default/
 
 ```json
 {
-    "name": "default",
-    "version": "1.0.0",
-    "description": "MonkeysCMS Default Theme",
-    "parent": null,
-    "regions": {
-        "header": "Header",
-        "content": "Main Content",
-        "sidebar": "Sidebar",
-        "footer": "Footer"
-    },
-    "config": {
-        "primary_color": "#3b82f6",
-        "show_sidebar": true
-    }
+  "name": "default",
+  "version": "1.0.0",
+  "description": "MonkeysCMS Default Theme",
+  "parent": null,
+  "regions": {
+    "header": "Header",
+    "content": "Main Content",
+    "sidebar": "Sidebar",
+    "footer": "Footer"
+  },
+  "config": {
+    "primary_color": "#3b82f6",
+    "show_sidebar": true
+  }
 }
 ```
 
 ### Theme API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /admin/themes | List all themes |
-| GET | /admin/themes/contrib | List contrib themes |
-| GET | /admin/themes/custom | List custom themes |
-| GET | /admin/themes/{theme} | Get theme details |
-| POST | /admin/themes/{theme}/activate | Activate a theme |
-| POST | /admin/themes | Create new custom theme |
-| GET | /admin/themes/{theme}/validate | Validate theme structure |
-| POST | /admin/themes/cache/clear | Clear theme cache |
+| Method | Endpoint                       | Description              |
+| ------ | ------------------------------ | ------------------------ |
+| GET    | /admin/themes                  | List all themes          |
+| GET    | /admin/themes/contrib          | List contrib themes      |
+| GET    | /admin/themes/custom           | List custom themes       |
+| GET    | /admin/themes/{theme}          | Get theme details        |
+| POST   | /admin/themes/{theme}/activate | Activate a theme         |
+| POST   | /admin/themes                  | Create new custom theme  |
+| GET    | /admin/themes/{theme}/validate | Validate theme structure |
+| POST   | /admin/themes/cache/clear      | Clear theme cache        |
 
 ### Creating a Custom Theme
 
@@ -868,7 +895,7 @@ Templates use the `.ml.php` extension with blade-like syntax:
 
 @section('content')
     <h1>{{ $title }}</h1>
-    
+
     @foreach($items as $item)
         <x-card title="{{ $item->name }}">
             {{ $item->description }}
@@ -889,8 +916,8 @@ Templates use the `.ml.php` extension with blade-like syntax:
 
 {{-- Component with slots --}}
 <x-card>
-    <x-slot name="header">Card Title</x-slot>
-    Card content goes here
+  <x-slot name="header">Card Title</x-slot>
+  Card content goes here
 </x-card>
 
 {{-- Passing attributes --}}
@@ -908,15 +935,15 @@ MonkeysCMS features a comprehensive block system for reusable content blocks and
 
 ### Built-in Block Types
 
-| Type | Category | Description |
-|------|----------|-------------|
-| `html` | Basic | Raw HTML content |
-| `text` | Basic | WYSIWYG rich text |
-| `image` | Media | Single image with caption |
-| `gallery` | Media | Image gallery with multiple layouts |
-| `video` | Media | YouTube/Vimeo/uploaded videos |
-| `menu` | Navigation | Display a navigation menu |
-| `views` | Content | Dynamic content queries |
+| Type      | Category   | Description                         |
+| --------- | ---------- | ----------------------------------- |
+| `html`    | Basic      | Raw HTML content                    |
+| `text`    | Basic      | WYSIWYG rich text                   |
+| `image`   | Media      | Single image with caption           |
+| `gallery` | Media      | Image gallery with multiple layouts |
+| `video`   | Media      | YouTube/Vimeo/uploaded videos       |
+| `menu`    | Navigation | Display a navigation menu           |
+| `views`   | Content    | Dynamic content queries             |
 
 ### Creating a Code-Defined Block Type
 
@@ -946,7 +973,7 @@ class HeroBlock extends AbstractBlockType
     {
         $heading = $this->getFieldValue($block, 'heading', '');
         $subheading = $this->getFieldValue($block, 'subheading', '');
-        
+
         return <<<HTML
             <section class="hero">
                 <h1>{$this->escape($heading)}</h1>
@@ -1051,15 +1078,15 @@ curl -X POST http://localhost:8000/admin/content-types/product/content \
 
 ### Available Field Types
 
-| Category | Types |
-|----------|-------|
-| Text | string, text, textarea, html, markdown |
-| Number | integer, float, decimal |
-| Date/Time | date, datetime, time |
-| Selection | boolean, select, radio, checkbox, multiselect |
-| Media | image, file, gallery, video |
+| Category  | Types                                                |
+| --------- | ---------------------------------------------------- |
+| Text      | string, text, textarea, html, markdown               |
+| Number    | integer, float, decimal                              |
+| Date/Time | date, datetime, time                                 |
+| Selection | boolean, select, radio, checkbox, multiselect        |
+| Media     | image, file, gallery, video                          |
 | Reference | entity_reference, taxonomy_reference, user_reference |
-| Special | email, url, phone, color, slug, json, code |
+| Special   | email, url, phone, color, slug, json, code           |
 
 ## Taxonomy System
 
@@ -1132,12 +1159,12 @@ $taxonomyManager->setContentTerms($contentId, 'article', [1, 5, 12]);
 
 MonkeysCMS provides a unified "Structure" admin section for managing all structural elements:
 
-| Path | Description |
-|------|-------------|
-| /admin/structure/block-types | Manage block types |
-| /admin/structure/content-types | Manage content types |
-| /admin/structure/taxonomies | Manage vocabularies |
-| /admin/structure/menus | Manage navigation menus |
+| Path                           | Description             |
+| ------------------------------ | ----------------------- |
+| /admin/structure/block-types   | Manage block types      |
+| /admin/structure/content-types | Manage content types    |
+| /admin/structure/taxonomies    | Manage vocabularies     |
+| /admin/structure/menus         | Manage navigation menus |
 
 ## License
 

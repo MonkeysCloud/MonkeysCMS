@@ -38,6 +38,13 @@ class CascadingLoader extends Loader
             $view .= '.' . $this->getTemplateExtension();
         }
 
+        // Support dot notation: admin.dashboard -> admin/dashboard.ml.php
+        // We only replace dots in the name part, preserving the extension
+        $extensionLength = strlen('.' . $this->getTemplateExtension());
+        $namePart = substr($view, 0, -$extensionLength);
+        $namePart = str_replace('.', '/', $namePart);
+        $view = $namePart . '.' . $this->getTemplateExtension();
+
         foreach ($this->paths as $path) {
             $file = rtrim($path, '/') . '/' . ltrim($view, '/');
             if (file_exists($file)) {

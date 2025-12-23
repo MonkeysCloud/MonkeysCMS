@@ -325,7 +325,7 @@ final class ModuleManager
         return array_keys(
             array_filter(
                 $this->moduleStates,
-                fn(array $state) => ($state['enabled'] ?? false) === true
+                fn($state) => is_array($state) && ($state['enabled'] ?? false) === true
             )
         );
     }
@@ -373,14 +373,25 @@ final class ModuleManager
                 continue;
             }
 
-            // Check for module.mlc, module.json, or Loader.php
-            if (
-                file_exists($dir . '/module.mlc') ||
-                file_exists($dir . '/module.json') ||
-                file_exists($dir . '/Loader.php')
-            ) {
+            $mlcFile = $dir . '/' . $dirName . '.module.mlc';
+            $jsonFile = $dir . '/module.json';
+            $loaderFile = $dir . '/Loader.php';
+
+            $moduleFile = null;
+            if (file_exists($mlcFile)) {
+                $moduleFile = $mlcFile;
+            } elseif (file_exists($jsonFile)) {
+                $moduleFile = $jsonFile;
+            } elseif (file_exists($loaderFile)) {
+                $moduleFile = $loaderFile;
+            }
+
+            if ($moduleFile !== null) {
                 $moduleName = $prefix . $dirName;
-                $this->availableModules[$moduleName] = $dir;
+                $this->availableModules[$moduleName] = [
+                    'path' => $dir,
+                    'file' => $moduleFile,
+                ];
             }
         }
     }
@@ -396,7 +407,8 @@ final class ModuleManager
             throw new ModuleException("Module '{$moduleName}' not found");
         }
 
-        return $this->availableModules[$moduleName];
+        $info = $this->availableModules[$moduleName];
+        return is_array($info) ? $info['path'] : $info;
     }
 
     /**
@@ -406,21 +418,31 @@ final class ModuleManager
      */
     private function getModuleMetadata(string $moduleName): array
     {
-        $modulePath = $this->getModulePath($moduleName);
-        $mlcFile = $modulePath . '/module.mlc';
-        $jsonFile = $modulePath . '/module.json';
+        $moduleInfo = $this->availableModules[$this->normalizeModuleName($moduleName)] ?? null;
 
-        // Try .mlc first, then fall back to .json
-        if (file_exists($mlcFile)) {
-            return $this->parseMlcFile($mlcFile);
+        if (!$moduleInfo) {
+            throw new ModuleException("Module '{$moduleName}' not found");
         }
 
-        if (file_exists($jsonFile)) {
-            $content = file_get_contents($jsonFile);
-            if ($content === false) {
-                return [];
+        $modulePath = $moduleInfo['path'] ?? $moduleInfo; // Handle simple path string (legacy) if any
+        $moduleFile = $moduleInfo['file'] ?? ($modulePath . '/module.mlc'); // Fallback
+
+        // Check if it's an MLC file
+        if (str_ends_with($moduleFile, '.mlc')) {
+            if (file_exists($moduleFile)) {
+                return $this->parseMlcFile($moduleFile);
             }
-            return json_decode($content, true) ?? [];
+        }
+
+        // Check if it's a JSON file
+        if (str_ends_with($moduleFile, '.json')) {
+            if (file_exists($moduleFile)) {
+                $content = file_get_contents($moduleFile);
+                if ($content === false) {
+                    return [];
+                }
+                return json_decode($content, true) ?? [];
+            }
         }
 
         return [

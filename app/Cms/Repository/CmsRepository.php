@@ -6,7 +6,7 @@ namespace App\Cms\Repository;
 
 use App\Cms\Attributes\ContentType;
 use App\Cms\Core\BaseEntity;
-use MonkeysLegion\Database\Connection;
+use MonkeysLegion\Database\Contracts\ConnectionInterface;
 use MonkeysLegion\Query\QueryBuilder;
 use PDO;
 use ReflectionClass;
@@ -44,11 +44,11 @@ use ReflectionClass;
 final class CmsRepository
 {
     /**
-     * @param Connection $connection Database connection
+     * @param ConnectionInterface $connection Database connection
      * @param QueryBuilder $qb Query builder instance
      */
     public function __construct(
-        private readonly Connection $connection,
+        private readonly ConnectionInterface $connection,
         private readonly QueryBuilder $qb,
     ) {
     }

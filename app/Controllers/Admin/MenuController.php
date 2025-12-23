@@ -14,11 +14,14 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * MenuController - Admin API for menu management
  */
-final class MenuController
+final class MenuController extends BaseAdminController
 {
     public function __construct(
-        private readonly MenuService $menus,
+        protected readonly MenuService $menus,
+        \MonkeysLegion\Template\MLView $view,
+        MenuService $menuService,
     ) {
+        parent::__construct($view, $menuService);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -31,65 +34,53 @@ final class MenuController
     #[Route('GET', '/admin/menus')]
     public function index(): ResponseInterface
     {
-        $menus = $this->menus->getAllMenus();
+        $allMenus = $this->menus->getAllMenus();
 
-        return json([
-            'menus' => array_map(fn(Menu $m) => $m->toArray(), $menus),
+        return $this->render('admin.menus.index', [
+            'menus' => $allMenus,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // HTML Endpoints
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Create Menu Form
+     */
+    #[Route('GET', '/admin/menus/create')]
+    public function create(): ResponseInterface
+    {
+        return $this->render('admin.menus.form', [
+            'menu' => new Menu(),
+            'isNew' => true,
         ]);
     }
 
     /**
-     * Get single menu with items
-     */
-    #[Route('GET', '/admin/menus/{id}')]
-    public function show(int $id): ResponseInterface
-    {
-        $menu = $this->menus->getMenuWithItems($id);
-
-        if (!$menu) {
-            return json(['error' => 'Menu not found'], 404);
-        }
-
-        return json(array_merge($menu->toArray(), [
-            'items' => array_map(fn(MenuItem $i) => $i->toArray(), $menu->items),
-            'tree' => $this->formatTree($menu->getItemTree()),
-        ]));
-    }
-
-    /**
-     * Get menu by machine name
-     */
-    #[Route('GET', '/admin/menus/by-name/{name}')]
-    public function showByName(string $name): ResponseInterface
-    {
-        $menu = $this->menus->getMenuByNameWithItems($name);
-
-        if (!$menu) {
-            return json(['error' => 'Menu not found'], 404);
-        }
-
-        return json(array_merge($menu->toArray(), [
-            'items' => array_map(fn(MenuItem $i) => $i->toArray(), $menu->items),
-            'tree' => $this->formatTree($menu->getItemTree()),
-        ]));
-    }
-
-    /**
-     * Create menu
+     * Store Menu
      */
     #[Route('POST', '/admin/menus')]
-    public function create(ServerRequestInterface $request): ResponseInterface
+    public function store(ServerRequestInterface $request): ResponseInterface
     {
-        $data = json_decode((string) $request->getBody(), true) ?? [];
-
-        if (empty($data['name'])) {
-            return json(['errors' => ['name' => 'Name is required']], 422);
+        $data = (array) $request->getParsedBody();
+        // Fallback if parsed body is empty (depends on middleware)
+        if (empty($data)) {
+            $data = $_POST; 
         }
 
-        $machineName = $data['machine_name'] ?? strtolower(preg_replace('/[^a-z0-9]+/', '_', $data['name']));
+        if (empty($data['name'])) {
+            // TODO: Flash error
+            return $this->redirect('/admin/menus/create');
+        }
+
+        $machineName = !empty($data['machine_name']) 
+            ? $data['machine_name'] 
+            : strtolower(preg_replace('/[^a-z0-9]+/', '_', $data['name']));
 
         if ($this->menus->getMenuByName($machineName)) {
-            return json(['errors' => ['machine_name' => 'Machine name already exists']], 422);
+            // TODO: Flash error
+            return $this->redirect('/admin/menus/create');
         }
 
         $menu = new Menu();
@@ -100,313 +91,78 @@ final class MenuController
 
         $this->menus->saveMenu($menu);
 
-        return json([
-            'success' => true,
-            'message' => 'Menu created',
-            'menu' => $menu->toArray(),
-        ], 201);
+        return $this->redirect('/admin/menus');
     }
 
     /**
-     * Update menu
+     * Edit Menu Form
      */
-    #[Route('PUT', '/admin/menus/{id}')]
+    #[Route('GET', '/admin/menus/{id}/edit')]
+    public function edit(int $id): ResponseInterface
+    {
+        $menu = $this->menus->getMenuWithItems($id);
+
+        if (!$menu) {
+            return $this->redirect('/admin/menus');
+        }
+
+        return $this->render('admin.menus.form', [
+            'menu' => $menu,
+            'isNew' => false,
+            // 'items' => $menu->getItemTree(), // Pass if we want to manage items in same form
+        ]);
+    }
+
+    /**
+     * Update Menu
+     */
+    #[Route('POST', '/admin/menus/{id}')] // Using POST for update to avoid method spoofing issues if not setup
     public function update(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $menu = $this->menus->getMenu($id);
-
         if (!$menu) {
-            return json(['error' => 'Menu not found'], 404);
+            return $this->redirect('/admin/menus');
         }
 
-        $data = json_decode((string) $request->getBody(), true) ?? [];
+        $data = (array) $request->getParsedBody();
+         if (empty($data)) { $data = $_POST; }
 
-        if (isset($data['name'])) {
+        if (!empty($data['name'])) {
             $menu->name = $data['name'];
         }
-        if (isset($data['machine_name']) && $data['machine_name'] !== $menu->machine_name) {
-            if ($this->menus->getMenuByName($data['machine_name'])) {
-                return json(['errors' => ['machine_name' => 'Machine name already exists']], 422);
-            }
+        
+        if (!empty($data['machine_name'])) {
             $menu->machine_name = $data['machine_name'];
         }
+
         if (isset($data['description'])) {
             $menu->description = $data['description'];
         }
+        
         if (isset($data['location'])) {
             $menu->location = $data['location'];
         }
 
         $this->menus->saveMenu($menu);
 
-        return json([
-            'success' => true,
-            'message' => 'Menu updated',
-            'menu' => $menu->toArray(),
-        ]);
+        return $this->redirect('/admin/menus');
     }
 
     /**
-     * Delete menu
+     * Delete Menu
      */
-    #[Route('DELETE', '/admin/menus/{id}')]
+    #[Route('GET', '/admin/menus/{id}/delete')] // GET for simple link delete, usually unsfae but quick
     public function delete(int $id): ResponseInterface
     {
         $menu = $this->menus->getMenu($id);
-
-        if (!$menu) {
-            return json(['error' => 'Menu not found'], 404);
+        if ($menu) {
+            $this->menus->deleteMenu($menu);
         }
-
-        $this->menus->deleteMenu($menu);
-
-        return json([
-            'success' => true,
-            'message' => 'Menu deleted',
-        ]);
+        return $this->redirect('/admin/menus');
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Menu Item Endpoints
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Get menu items
-     */
-    #[Route('GET', '/admin/menus/{menuId}/items')]
-    public function listItems(int $menuId, ServerRequestInterface $request): ResponseInterface
+    private function redirect(string $url): ResponseInterface
     {
-        $menu = $this->menus->getMenu($menuId);
-
-        if (!$menu) {
-            return json(['error' => 'Menu not found'], 404);
-        }
-
-        $flat = filter_var($request->getQueryParams()['flat'] ?? false, FILTER_VALIDATE_BOOLEAN);
-
-        if ($flat) {
-            $items = $this->menus->getMenuItems($menuId, null, false);
-            return json([
-                'menu_id' => $menuId,
-                'items' => array_map(fn(MenuItem $i) => $i->toArray(), $items),
-            ]);
-        }
-
-        $tree = $this->menus->getMenuTree($menuId);
-
-        return json([
-            'menu_id' => $menuId,
-            'tree' => $this->formatTree($tree),
-        ]);
-    }
-
-    /**
-     * Get single menu item
-     */
-    #[Route('GET', '/admin/menu-items/{id}')]
-    public function showItem(int $id): ResponseInterface
-    {
-        $item = $this->menus->getMenuItem($id);
-
-        if (!$item) {
-            return json(['error' => 'Menu item not found'], 404);
-        }
-
-        return json($item->toArray());
-    }
-
-    /**
-     * Create menu item
-     */
-    #[Route('POST', '/admin/menus/{menuId}/items')]
-    public function createItem(int $menuId, ServerRequestInterface $request): ResponseInterface
-    {
-        $menu = $this->menus->getMenu($menuId);
-
-        if (!$menu) {
-            return json(['error' => 'Menu not found'], 404);
-        }
-
-        $data = json_decode((string) $request->getBody(), true) ?? [];
-
-        if (empty($data['title'])) {
-            return json(['errors' => ['title' => 'Title is required']], 422);
-        }
-
-        // Validate parent
-        if (!empty($data['parent_id'])) {
-            $parent = $this->menus->getMenuItem($data['parent_id']);
-            if (!$parent || $parent->menu_id !== $menuId) {
-                return json(['errors' => ['parent_id' => 'Invalid parent']], 422);
-            }
-        }
-
-        $item = new MenuItem();
-        $item->menu_id = $menuId;
-        $item->parent_id = $data['parent_id'] ?? null;
-        $item->title = $data['title'];
-        $item->url = $data['url'] ?? null;
-        $item->link_type = $data['link_type'] ?? 'custom';
-        $item->entity_type = $data['entity_type'] ?? null;
-        $item->entity_id = $data['entity_id'] ?? null;
-        $item->icon = $data['icon'] ?? null;
-        $item->css_class = $data['css_class'] ?? null;
-        $item->target = $data['target'] ?? '_self';
-        $item->weight = $data['weight'] ?? 0;
-        $item->expanded = $data['expanded'] ?? false;
-        $item->is_published = $data['is_published'] ?? true;
-        $item->attributes = $data['attributes'] ?? [];
-        $item->visibility = $data['visibility'] ?? [];
-
-        $this->menus->saveMenuItem($item);
-
-        return json([
-            'success' => true,
-            'message' => 'Menu item created',
-            'item' => $item->toArray(),
-        ], 201);
-    }
-
-    /**
-     * Update menu item
-     */
-    #[Route('PUT', '/admin/menu-items/{id}')]
-    public function updateItem(int $id, ServerRequestInterface $request): ResponseInterface
-    {
-        $item = $this->menus->getMenuItem($id);
-
-        if (!$item) {
-            return json(['error' => 'Menu item not found'], 404);
-        }
-
-        $data = json_decode((string) $request->getBody(), true) ?? [];
-
-        // Validate parent change
-        if (isset($data['parent_id']) && $data['parent_id'] !== $item->parent_id) {
-            if ($data['parent_id'] !== null) {
-                $parent = $this->menus->getMenuItem($data['parent_id']);
-                if (!$parent || $parent->menu_id !== $item->menu_id) {
-                    return json(['errors' => ['parent_id' => 'Invalid parent']], 422);
-                }
-                if ($parent->id === $item->id) {
-                    return json(['errors' => ['parent_id' => 'Cannot be own parent']], 422);
-                }
-            }
-            $item->parent_id = $data['parent_id'];
-        }
-
-        if (isset($data['title'])) {
-            $item->title = $data['title'];
-        }
-        if (isset($data['url'])) {
-            $item->url = $data['url'];
-        }
-        if (isset($data['link_type'])) {
-            $item->link_type = $data['link_type'];
-        }
-        if (isset($data['entity_type'])) {
-            $item->entity_type = $data['entity_type'];
-        }
-        if (isset($data['entity_id'])) {
-            $item->entity_id = $data['entity_id'];
-        }
-        if (isset($data['icon'])) {
-            $item->icon = $data['icon'];
-        }
-        if (isset($data['css_class'])) {
-            $item->css_class = $data['css_class'];
-        }
-        if (isset($data['target'])) {
-            $item->target = $data['target'];
-        }
-        if (isset($data['weight'])) {
-            $item->weight = $data['weight'];
-        }
-        if (isset($data['expanded'])) {
-            $item->expanded = $data['expanded'];
-        }
-        if (isset($data['is_published'])) {
-            $item->is_published = $data['is_published'];
-        }
-        if (isset($data['attributes'])) {
-            $item->attributes = $data['attributes'];
-        }
-        if (isset($data['visibility'])) {
-            $item->visibility = $data['visibility'];
-        }
-
-        $this->menus->saveMenuItem($item);
-
-        return json([
-            'success' => true,
-            'message' => 'Menu item updated',
-            'item' => $item->toArray(),
-        ]);
-    }
-
-    /**
-     * Delete menu item
-     */
-    #[Route('DELETE', '/admin/menu-items/{id}')]
-    public function deleteItem(int $id, ServerRequestInterface $request): ResponseInterface
-    {
-        $item = $this->menus->getMenuItem($id);
-
-        if (!$item) {
-            return json(['error' => 'Menu item not found'], 404);
-        }
-
-        $deleteChildren = filter_var(
-            $request->getQueryParams()['delete_children'] ?? false,
-            FILTER_VALIDATE_BOOLEAN
-        );
-
-        $this->menus->deleteMenuItem($item, $deleteChildren);
-
-        return json([
-            'success' => true,
-            'message' => 'Menu item deleted',
-        ]);
-    }
-
-    /**
-     * Reorder menu items
-     */
-    #[Route('PUT', '/admin/menus/{menuId}/items/reorder')]
-    public function reorderItems(int $menuId, ServerRequestInterface $request): ResponseInterface
-    {
-        $menu = $this->menus->getMenu($menuId);
-
-        if (!$menu) {
-            return json(['error' => 'Menu not found'], 404);
-        }
-
-        $data = json_decode((string) $request->getBody(), true) ?? [];
-        $order = $data['order'] ?? [];
-
-        $this->menus->reorderItems($menuId, $order);
-
-        return json([
-            'success' => true,
-            'message' => 'Menu items reordered',
-        ]);
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Format tree for JSON response
-     */
-    private function formatTree(array $items): array
-    {
-        return array_map(function (MenuItem $item) {
-            $data = $item->toArray();
-            if (!empty($item->children)) {
-                $data['children'] = $this->formatTree($item->children);
-            }
-            return $data;
-        }, $items);
+        return new \Laminas\Diactoros\Response\RedirectResponse($url);
     }
 }

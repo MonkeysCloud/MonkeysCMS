@@ -47,7 +47,12 @@ class Kernel
         }
     }
 
-    private function bootstrap(): void
+    public function getContainer(): ?ContainerInterface
+    {
+        return $this->container;
+    }
+
+    public function bootstrap(): void
     {
         // 1. Load Environment Variables
         $dotenv = Dotenv::createImmutable($this->basePath);
@@ -55,13 +60,17 @@ class Kernel
 
         // 2. Load Configuration
         $loader = new Loader(new Parser(), $this->basePath . '/config');
-        $rawConfig = $loader->load(['app', 'database'])->all();
+        $rawConfig = $loader->load(['app', 'database', 'cache'])->all();
         $config = new \MonkeysLegion\Mlc\Config($this->resolveEnvVars($rawConfig));
 
         // 3. Build DI Container
         $builder = new ContainerBuilder();
         $this->registerServices($builder, $config);
         $this->container = $builder->build();
+        
+        // Boot CMS Services
+        $cmsProvider = new CmsServiceProvider($this->container);
+        $cmsProvider->boot();
     }
 
     private function handleRequest()
@@ -75,10 +84,11 @@ class Kernel
         }
 
         try {
-            // Boot CMS Services (requires DB)
-            $cmsProvider = new CmsServiceProvider($this->container);
-            $cmsProvider->boot();
-
+            // CMS Services are already booted in bootstrap() if it was called via run()
+            // However, run() calls bootstrap() which boots.
+            // If we want handleRequest to be safe to call on its own (e.g. tests), check if booted?
+            // For now, removing it here since run() controls the flow.
+            
             $handler = $this->container->get(CoreRequestHandler::class);
             return $handler->handle($request);
             
@@ -271,32 +281,6 @@ class Kernel
                 return new CoreRequestHandler($routerHandler, $c->get(ResponseFactoryInterface::class));
             },
 
-            \MonkeysLegion\Template\Parser::class => fn() => new \MonkeysLegion\Template\Parser(),
-            \MonkeysLegion\Template\Compiler::class => fn(ContainerInterface $c) => new \MonkeysLegion\Template\Compiler($c->get(\MonkeysLegion\Template\Parser::class)),
-            
-            \App\Cms\Theme\ThemeManager::class => function (ContainerInterface $c) {
-                try { $pdo = $c->get(PDO::class); } catch (\Throwable $e) { $pdo = null; }
-                return new \App\Cms\Theme\ThemeManager($pdo, $this->basePath);
-            },
-            
-            \MonkeysLegion\Template\Loader::class => function (ContainerInterface $c) {
-                $themeManager = $c->get(\App\Cms\Theme\ThemeManager::class);
-                $themePath = $themeManager->getThemeViewPath();
-                $paths = $themePath ? [$themePath] : [];
-                $paths[] = $this->basePath . '/app/Views';
-                return new \App\Cms\Theme\CascadingLoader($paths, $this->basePath . '/var/cache/views');
-            },
-            
-            \MonkeysLegion\Template\Renderer::class => function (ContainerInterface $c) {
-                return new \MonkeysLegion\Template\Renderer(
-                    $c->get(\MonkeysLegion\Template\Parser::class),
-                    $c->get(\MonkeysLegion\Template\Compiler::class),
-                    $c->get(\MonkeysLegion\Template\Loader::class),
-                    true,
-                    $this->basePath . '/var/cache/views'
-                );
-            },
-            
             // Logger Service
             MonkeysLoggerInterface::class => function (ContainerInterface $c) {
                 $config = [
