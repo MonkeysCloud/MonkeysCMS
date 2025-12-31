@@ -30,7 +30,7 @@ final class RoleController
     /**
      * List all roles
      */
-    #[Route('GET', '/admin/roles')]
+    #[Route('GET', '/api/admin/roles')]
     public function index(): ResponseInterface
     {
         $roles = $this->repository->findAll(Role::class, ['weight' => 'DESC', 'name' => 'ASC']);
@@ -51,7 +51,7 @@ final class RoleController
     /**
      * Get single role with permissions
      */
-    #[Route('GET', '/admin/roles/{id}')]
+    #[Route('GET', '/api/admin/roles/{id}')]
     public function show(int $id): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
@@ -70,7 +70,7 @@ final class RoleController
     /**
      * Create role
      */
-    #[Route('POST', '/admin/roles')]
+    #[Route('POST', '/api/admin/roles')]
     public function create(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
@@ -114,7 +114,7 @@ final class RoleController
     /**
      * Update role
      */
-    #[Route('PUT', '/admin/roles/{id}')]
+    #[Route('PUT', '/api/admin/roles/{id}')]
     public function update(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
@@ -169,7 +169,7 @@ final class RoleController
     /**
      * Delete role
      */
-    #[Route('DELETE', '/admin/roles/{id}')]
+    #[Route('DELETE', '/api/admin/roles/{id}')]
     public function delete(int $id): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
@@ -197,7 +197,7 @@ final class RoleController
     /**
      * Get role's permissions
      */
-    #[Route('GET', '/admin/roles/{id}/permissions')]
+    #[Route('GET', '/api/admin/roles/{id}/permissions')]
     public function getRolePermissions(int $id): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
@@ -218,7 +218,7 @@ final class RoleController
     /**
      * Set role's permissions
      */
-    #[Route('PUT', '/admin/roles/{id}/permissions')]
+    #[Route('PUT', '/api/admin/roles/{id}/permissions')]
     public function setRolePermissions(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $role = $this->repository->find(Role::class, $id);
@@ -245,7 +245,7 @@ final class RoleController
     /**
      * List all permissions
      */
-    #[Route('GET', '/admin/permissions')]
+    #[Route('GET', '/api/admin/permissions')]
     public function listPermissions(ServerRequestInterface $request): ResponseInterface
     {
         $group = $request->getQueryParams()['group'] ?? null;
@@ -273,7 +273,7 @@ final class RoleController
     /**
      * Get permissions grouped
      */
-    #[Route('GET', '/admin/permissions/grouped')]
+    #[Route('GET', '/api/admin/permissions/grouped')]
     public function listPermissionsGrouped(): ResponseInterface
     {
         $grouped = $this->permissions->getAllPermissionsGrouped();
@@ -291,7 +291,7 @@ final class RoleController
     /**
      * Get permissions for an entity type
      */
-    #[Route('GET', '/admin/permissions/entity/{entityType}')]
+    #[Route('GET', '/api/admin/permissions/entity/{entityType}')]
     public function getEntityPermissions(string $entityType): ResponseInterface
     {
         $permissions = $this->permissions->getEntityPermissions($entityType);
@@ -305,7 +305,7 @@ final class RoleController
     /**
      * Create permission
      */
-    #[Route('POST', '/admin/permissions')]
+    #[Route('POST', '/api/admin/permissions')]
     public function createPermission(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
@@ -346,7 +346,7 @@ final class RoleController
     /**
      * Delete permission
      */
-    #[Route('DELETE', '/admin/permissions/{id}')]
+    #[Route('DELETE', '/api/admin/permissions/{id}')]
     public function deletePermission(int $id): ResponseInterface
     {
         $permission = $this->repository->find(Permission::class, $id);
@@ -370,7 +370,7 @@ final class RoleController
     /**
      * Register permissions for an entity type
      */
-    #[Route('POST', '/admin/permissions/register-entity')]
+    #[Route('POST', '/api/admin/permissions/register-entity')]
     public function registerEntityPermissions(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
@@ -402,7 +402,7 @@ final class RoleController
      * Get permission matrix for UI
      * Returns all roles and permissions in a matrix format
      */
-    #[Route('GET', '/admin/permissions/matrix')]
+    #[Route('GET', '/api/admin/permissions/matrix')]
     public function getPermissionMatrix(): ResponseInterface
     {
         $roles = $this->repository->findAll(Role::class, ['weight' => 'DESC', 'name' => 'ASC']);
@@ -451,7 +451,7 @@ final class RoleController
     /**
      * Update permission matrix (batch update)
      */
-    #[Route('PUT', '/admin/permissions/matrix')]
+    #[Route('PUT', '/api/admin/permissions/matrix')]
     public function updatePermissionMatrix(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];

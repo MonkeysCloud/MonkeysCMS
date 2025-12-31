@@ -11,26 +11,30 @@ type = "admin"
 parent = null
 
 # Theme regions for block placement
-[regions]
-header = "Admin Header"
-sidebar = "Admin Sidebar"
-content = "Main Content"
-footer = "Admin Footer"
+regions {
+    header = "Admin Header"
+    sidebar = "Admin Sidebar"
+    content = "Main Content"
+    footer = "Admin Footer"
+}
 
 # Theme configuration options
-[config]
-sidebar_collapsed = false
-dark_mode = false
-accent_color = "#3b82f6"
+config {
+    sidebar_collapsed = false
+    dark_mode = false
+    accent_color = "#3b82f6"
+}
 
 # Screenshots for theme preview
 screenshots = []
 
 # Asset paths
-[assets]
-css = ["assets/css/admin.css"]
-js = ["assets/js/admin.js"]
+assets {
+    css = ["assets/css/admin.css"]
+    js = ["assets/js/admin.js"]
+}
 
 # Required permissions to use this theme
-[permissions]
-required = ["access_admin"]
+permissions {
+    required = ["access_admin"]
+}

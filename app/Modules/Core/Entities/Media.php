@@ -181,6 +181,24 @@ class Media extends BaseEntity
         return $this->url ?? '/uploads/' . $this->path;
     }
 
+    /**
+     * Get thumbnail URL for display in media library
+     */
+    public function getThumbnailUrl(): ?string
+    {
+        // First, try to get the 'thumbnail' variant
+        if (!empty($this->variants['thumbnail']['url'])) {
+            return $this->variants['thumbnail']['url'];
+        }
+        
+        // If no variant, return the original URL for images
+        if ($this->isImage()) {
+            return $this->getUrl();
+        }
+        
+        return null;
+    }
+
     public function getVariantUrl(string $variant): ?string
     {
         return $this->variants[$variant]['url'] ?? null;
@@ -189,6 +207,18 @@ class Media extends BaseEntity
     public function addVariant(string $name, array $data): void
     {
         $this->variants[$name] = $data;
+    }
+
+    /**
+     * Magic getter for computed properties like 'is_image' and 'extension'
+     */
+    public function __get(string $name): mixed
+    {
+        return match ($name) {
+            'is_image' => $this->isImage(),
+            'extension' => $this->getExtension(),
+            default => null,
+        };
     }
 
     public function getFormattedSize(): string
@@ -228,7 +258,7 @@ class Media extends BaseEntity
         $this->metadata[$key] = $value;
     }
 
-    public function toArray(bool $includeNulls = false): array
+    public function toApiArray(bool $includeNulls = false): array
     {
         $data = parent::toArray($includeNulls);
         $data['url'] = $this->getUrl();

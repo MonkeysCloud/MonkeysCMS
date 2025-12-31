@@ -4,28 +4,24 @@ declare(strict_types=1);
 
 namespace App\Cms\Auth;
 
-use App\Cms\User\User;
-use App\Cms\User\UserRepository;
-use App\Cms\Entity\EntityManager;
+use App\Modules\Core\Entities\User;
 use MonkeysLegion\Auth\Contract\UserProviderInterface;
 use MonkeysLegion\Auth\Contract\AuthenticatableInterface;
+use App\Cms\Entity\EntityManager; // Keep purely for constructor compatibility if registered that way
 
 /**
  * CmsUserProvider - Implements UserProviderInterface for MonkeysLegion-Auth
  *
  * Bridges the CMS User entity with the authentication library.
+ * Now uses App\Modules\Core\Entities\User directly to ensure compatibility with PermissionService.
  */
 class CmsUserProvider implements UserProviderInterface
 {
-    private EntityManager $em;
     private \PDO $db;
-    private UserRepository $repository;
 
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManager $em) // Keep signature for DI compatibility
     {
-        $this->em = $em;
         $this->db = $em->getConnection();
-        $this->repository = new UserRepository($em);
     }
 
     // =========================================================================
@@ -37,11 +33,17 @@ class CmsUserProvider implements UserProviderInterface
      */
     public function findById(int|string $id): ?AuthenticatableInterface
     {
-        $user = $this->repository->find((int) $id);
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = :id AND deleted_at IS NULL");
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($user) {
-            $this->loadRolesAndPermissions($user);
+        if (!$row) {
+            return null;
         }
+
+        $user = new User();
+        $user->hydrate($row);
+        $this->loadRolesAndPermissions($user);
 
         return $user;
     }
@@ -51,11 +53,17 @@ class CmsUserProvider implements UserProviderInterface
      */
     public function findByEmail(string $email): ?AuthenticatableInterface
     {
-        $user = $this->repository->findByEmail($email);
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email AND deleted_at IS NULL");
+        $stmt->execute(['email' => strtolower($email)]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($user) {
-            $this->loadRolesAndPermissions($user);
+        if (!$row) {
+            return null;
         }
+
+        $user = new User();
+        $user->hydrate($row);
+        $this->loadRolesAndPermissions($user);
 
         return $user;
     }
@@ -82,13 +90,7 @@ class CmsUserProvider implements UserProviderInterface
             return null;
         }
 
-        $user = $this->repository->findByEmailOrUsername($identifier);
-
-        if ($user) {
-            $this->loadRolesAndPermissions($user);
-        }
-
-        return $user;
+        return $this->findByEmailOrUsername($identifier);
     }
 
     /**
@@ -108,28 +110,35 @@ class CmsUserProvider implements UserProviderInterface
     public function create(array $attributes): AuthenticatableInterface
     {
         try {
-            $user = new User();
+            // Prepare basic fields
+            $username = trim($attributes['username'] ?? '');
+            $email = strtolower(trim($attributes['email'] ?? ''));
+            $passwordHash = isset($attributes['password']) 
+                ? password_hash($attributes['password'], PASSWORD_ARGON2ID) 
+                : ($attributes['password_hash'] ?? '');
             
-            // Map common attributes to setters
-            if (isset($attributes['username'])) $user->setUsername($attributes['username']);
-            if (isset($attributes['email'])) $user->setEmail($attributes['email']);
-            
-            // Handle password
-            if (isset($attributes['password'])) {
-                $user->setPassword($attributes['password']);
-            } elseif (isset($attributes['password_hash'])) {
-                $user->setPasswordHash($attributes['password_hash']);
-            }
-            
-            // Handle other attributes via magic setters convention or fill mechanism
-            // For now, we manually map common ones or assume a fill method exists if User extends BaseEntity
-            // But since I verified BaseEntity usage but not its content, I'll stick to manual mapping 
-            // of what we saw in getFillable + nice-to-haves
-            if (isset($attributes['display_name'])) $user->setDisplayName($attributes['display_name']);
-            if (isset($attributes['status'])) $user->setStatus($attributes['status']);
+            $displayName = $attributes['display_name'] ?? $username;
+            $status = $attributes['status'] ?? 'pending';
+            $now = date('Y-m-d H:i:s');
 
-            $this->save($user);
-            return $user;
+            $stmt = $this->db->prepare("
+                INSERT INTO users (username, email, password_hash, display_name, status, created_at, updated_at)
+                VALUES (:username, :email, :hash, :name, :status, :now, :now)
+            ");
+            
+            $stmt->execute([
+                'username' => $username,
+                'email' => $email,
+                'hash' => $passwordHash,
+                'name' => $displayName,
+                'status' => $status,
+                'now' => $now
+            ]);
+
+            $id = $this->db->lastInsertId();
+            
+            return $this->findById($id);
+
         } catch (\Throwable $e) {
             throw new \RuntimeException('User creation failed: ' . $e->getMessage(), 0, $e);
         }
@@ -140,12 +149,8 @@ class CmsUserProvider implements UserProviderInterface
      */
     public function updatePassword(int|string $userId, string $passwordHash): void
     {
-        $user = $this->findById($userId);
-        
-        if ($user instanceof User) {
-            $user->setPasswordHash($passwordHash);
-            $this->save($user);
-        }
+        $stmt = $this->db->prepare("UPDATE users SET password_hash = :hash, updated_at = NOW() WHERE id = :id");
+        $stmt->execute(['id' => $userId, 'hash' => $passwordHash]);
     }
 
     /**
@@ -180,11 +185,38 @@ class CmsUserProvider implements UserProviderInterface
      */
     public function findByUsername(string $username): ?User
     {
-        $user = $this->repository->findByUsername($username);
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE username = :username AND deleted_at IS NULL");
+        $stmt->execute(['username' => $username]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($user) {
-            $this->loadRolesAndPermissions($user);
+        if (!$row) {
+            return null;
         }
+
+        $user = new User();
+        $user->hydrate($row);
+        $this->loadRolesAndPermissions($user);
+
+        return $user;
+    }
+
+    public function findByEmailOrUsername(string $identifier): ?User
+    {
+        $stmt = $this->db->prepare("
+            SELECT * FROM users 
+            WHERE (email = :email OR username = :username) 
+            AND deleted_at IS NULL
+        ");
+        $stmt->execute(['email' => strtolower($identifier), 'username' => $identifier]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return null;
+        }
+
+        $user = new User();
+        $user->hydrate($row);
+        $this->loadRolesAndPermissions($user);
 
         return $user;
     }
@@ -194,11 +226,17 @@ class CmsUserProvider implements UserProviderInterface
      */
     public function findByRememberToken(string $token): ?User
     {
-        $user = $this->repository->findOneBy(['remember_token' => $token]);
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE remember_token = :token AND deleted_at IS NULL");
+        $stmt->execute(['token' => $token]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($user) {
-            $this->loadRolesAndPermissions($user);
+        if (!$row) {
+            return null;
         }
+
+        $user = new User();
+        $user->hydrate($row);
+        $this->loadRolesAndPermissions($user);
 
         return $user;
     }
@@ -208,7 +246,36 @@ class CmsUserProvider implements UserProviderInterface
      */
     public function save(User $user): void
     {
-        $this->em->save($user);
+        // Simple save for minimal fields we manage. 
+        // ideally should use CmsRepository if complex saving is needed, but we are breaking dependency.
+        // For Auth, we mostly care about password, remember_token, timestamps.
+        
+        $data = $user->toArray();
+        // Construct UPDATE query dynamically or explicit fields
+        // Since User extends BaseEntity, using a Repository is better for "save".
+        // But preventing circular dependency or legacy repo usage is key.
+        // We really only need to save specific fields updated by Auth logic (token, login time, etc.)
+        
+        // If we strictly only update auth fields:
+        $stmt = $this->db->prepare("
+            UPDATE users SET 
+                remember_token = :remember_token,
+                last_login_at = :last_login_at,
+                last_login_ip = :last_login_ip,
+                email_verified_at = :email_verified_at,
+                status = :status,
+                updated_at = NOW()
+            WHERE id = :id
+        ");
+        
+        $stmt->execute([
+            'remember_token' => $user->remember_token,
+            'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
+            'last_login_ip' => $user->last_login_ip,
+            'email_verified_at' => $user->email_verified_at?->format('Y-m-d H:i:s'),
+            'status' => $user->status,
+            'id' => $user->id
+        ]);
     }
 
     /**
@@ -216,7 +283,8 @@ class CmsUserProvider implements UserProviderInterface
      */
     public function delete(User $user): void
     {
-        $this->em->delete($user);
+        $stmt = $this->db->prepare("UPDATE users SET deleted_at = NOW() WHERE id = :id");
+        $stmt->execute(['id' => $user->getId()]);
     }
 
     // =========================================================================
@@ -230,23 +298,37 @@ class CmsUserProvider implements UserProviderInterface
     {
         // Load roles
         $stmt = $this->db->prepare("
-            SELECT r.machine_name FROM roles r
+            SELECT r.* FROM roles r
             INNER JOIN user_roles ur ON ur.role_id = r.id
             WHERE ur.user_id = :user_id
-            ORDER BY r.weight
+            ORDER BY r.weight DESC
         ");
         $stmt->execute(['user_id' => $user->getId()]);
-        $user->setRoles($stmt->fetchAll(\PDO::FETCH_COLUMN));
-
-        // Load permissions
-        $stmt = $this->db->prepare("
-            SELECT DISTINCT p.machine_name FROM permissions p
-            INNER JOIN role_permissions rp ON rp.permission_id = p.id
-            INNER JOIN user_roles ur ON ur.role_id = rp.role_id
-            WHERE ur.user_id = :user_id
-        ");
-        $stmt->execute(['user_id' => $user->getId()]);
-        $user->setPermissions($stmt->fetchAll(\PDO::FETCH_COLUMN));
+        
+        $roles = [];
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $role = new \App\Modules\Core\Entities\Role();
+            $role->hydrate($row);
+            
+            // Load permissions for this role
+            $stmtPerms = $this->db->prepare("
+                SELECT p.* FROM permissions p
+                INNER JOIN role_permissions rp ON p.id = rp.permission_id
+                WHERE rp.role_id = :role_id
+            ");
+            $stmtPerms->execute(['role_id' => $role->id]);
+            
+            while ($pRow = $stmtPerms->fetch(\PDO::FETCH_ASSOC)) {
+                $perm = new \App\Modules\Core\Entities\Permission();
+                $perm->hydrate($pRow);
+                $role->permissions[] = $perm;
+            }
+            
+            $roles[] = $role;
+        }
+        
+        $user->roles = $roles;
+        $user->directPermissions = [];
     }
 
     /**
@@ -256,7 +338,7 @@ class CmsUserProvider implements UserProviderInterface
     {
         $stmt = $this->db->prepare("
             INSERT IGNORE INTO user_roles (user_id, role_id)
-            SELECT :user_id, id FROM roles WHERE machine_name = :role
+            SELECT :user_id, id FROM roles WHERE slug = :role
         ");
         $stmt->execute(['user_id' => $user->getId(), 'role' => $roleName]);
 
@@ -271,7 +353,7 @@ class CmsUserProvider implements UserProviderInterface
         $stmt = $this->db->prepare("
             DELETE ur FROM user_roles ur
             INNER JOIN roles r ON r.id = ur.role_id
-            WHERE ur.user_id = :user_id AND r.machine_name = :role
+            WHERE ur.user_id = :user_id AND r.slug = :role
         ");
         $stmt->execute(['user_id' => $user->getId(), 'role' => $roleName]);
 
@@ -281,7 +363,7 @@ class CmsUserProvider implements UserProviderInterface
     /**
      * Sync user roles
      *
-     * @param string[] $roles Role machine names
+     * @param string[] $roles Role slugs
      */
     public function syncRoles(User $user, array $roles): void
     {
@@ -299,9 +381,6 @@ class CmsUserProvider implements UserProviderInterface
     // Password Reset
     // =========================================================================
 
-    /**
-     * Store password reset token
-     */
     public function storePasswordResetToken(int $userId, string $tokenHash, \DateTimeImmutable $expires): void
     {
         // Delete old tokens for this user
@@ -320,9 +399,6 @@ class CmsUserProvider implements UserProviderInterface
         ]);
     }
 
-    /**
-     * Find user by password reset token
-     */
     public function findUserByResetToken(string $tokenHash): ?int
     {
         $stmt = $this->db->prepare("
@@ -335,9 +411,6 @@ class CmsUserProvider implements UserProviderInterface
         return $row ? (int) $row['user_id'] : null;
     }
 
-    /**
-     * Delete password reset token
-     */
     public function deletePasswordResetToken(string $tokenHash): void
     {
         $stmt = $this->db->prepare("DELETE FROM password_resets WHERE token_hash = :token_hash");
@@ -348,9 +421,6 @@ class CmsUserProvider implements UserProviderInterface
     // Two-Factor Authentication
     // =========================================================================
 
-    /**
-     * Store 2FA secret for user
-     */
     public function store2FASecret(int $userId, ?string $secret): void
     {
         $stmt = $this->db->prepare("
@@ -359,9 +429,6 @@ class CmsUserProvider implements UserProviderInterface
         $stmt->execute(['id' => $userId, 'secret' => $secret]);
     }
 
-    /**
-     * Get 2FA secret for user
-     */
     public function get2FASecret(int $userId): ?string
     {
         $stmt = $this->db->prepare("SELECT two_factor_secret FROM users WHERE id = :id");
@@ -371,9 +438,6 @@ class CmsUserProvider implements UserProviderInterface
         return $row['two_factor_secret'] ?? null;
     }
 
-    /**
-     * Store 2FA recovery codes
-     */
     public function store2FARecoveryCodes(int $userId, array $codes): void
     {
         $stmt = $this->db->prepare("
@@ -385,9 +449,6 @@ class CmsUserProvider implements UserProviderInterface
         ]);
     }
 
-    /**
-     * Get 2FA recovery codes
-     */
     public function get2FARecoveryCodes(int $userId): array
     {
         $stmt = $this->db->prepare("SELECT two_factor_recovery_codes FROM users WHERE id = :id");
@@ -397,9 +458,6 @@ class CmsUserProvider implements UserProviderInterface
         return json_decode($row['two_factor_recovery_codes'] ?? '[]', true);
     }
 
-    /**
-     * Check if user has 2FA enabled
-     */
     public function has2FAEnabled(int $userId): bool
     {
         return $this->get2FASecret($userId) !== null;
@@ -409,9 +467,6 @@ class CmsUserProvider implements UserProviderInterface
     // Email Verification
     // =========================================================================
 
-    /**
-     * Mark email as verified
-     */
     public function markEmailVerified(int $userId): void
     {
         $stmt = $this->db->prepare("
@@ -421,9 +476,6 @@ class CmsUserProvider implements UserProviderInterface
         $stmt->execute(['id' => $userId]);
     }
 
-    /**
-     * Check if email is verified
-     */
     public function isEmailVerified(int $userId): bool
     {
         $stmt = $this->db->prepare("SELECT email_verified_at FROM users WHERE id = :id");
@@ -437,9 +489,6 @@ class CmsUserProvider implements UserProviderInterface
     // Sessions
     // =========================================================================
 
-    /**
-     * Store user session
-     */
     public function storeSession(string $sessionId, int $userId, array $data): void
     {
         $stmt = $this->db->prepare("
@@ -459,9 +508,6 @@ class CmsUserProvider implements UserProviderInterface
         ]);
     }
 
-    /**
-     * Get user sessions
-     */
     public function getUserSessions(int $userId): array
     {
         $stmt = $this->db->prepare("
@@ -474,18 +520,12 @@ class CmsUserProvider implements UserProviderInterface
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Delete user session
-     */
     public function deleteSession(string $sessionId): void
     {
         $stmt = $this->db->prepare("DELETE FROM user_sessions WHERE id = :id");
         $stmt->execute(['id' => $sessionId]);
     }
 
-    /**
-     * Delete all user sessions
-     */
     public function deleteAllSessions(int $userId): void
     {
         $stmt = $this->db->prepare("DELETE FROM user_sessions WHERE user_id = :user_id");
@@ -496,9 +536,6 @@ class CmsUserProvider implements UserProviderInterface
     // Statistics
     // =========================================================================
 
-    /**
-     * Get recent logins
-     */
     public function getRecentLogins(int $limit = 10): array
     {
         $stmt = $this->db->prepare("
@@ -514,9 +551,6 @@ class CmsUserProvider implements UserProviderInterface
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Get login count by date range
-     */
     public function getLoginStats(\DateTimeInterface $start, \DateTimeInterface $end): array
     {
         $stmt = $this->db->prepare("

@@ -205,10 +205,21 @@ abstract class BaseEntity implements EntityInterface, TimestampInterface
      *
      * @return array<string, mixed>
      */
+    public static function getTransient(): array
+    {
+        return [];
+    }
+
+    /**
+     * Convert entity to array for database storage
+     *
+     * @return array<string, mixed>
+     */
     public function toDatabase(): array
     {
         $data = [];
         $casts = static::getCasts();
+        $transient = static::getTransient();
 
         $reflection = new \ReflectionClass($this);
         foreach ($reflection->getProperties(\ReflectionProperty::IS_PUBLIC | \ReflectionProperty::IS_PROTECTED) as $property) {
@@ -216,6 +227,11 @@ abstract class BaseEntity implements EntityInterface, TimestampInterface
 
             // Skip internal properties
             if (in_array($name, ['original', 'exists'])) {
+                continue;
+            }
+
+            // Skip transient properties (not in database)
+            if (in_array($name, $transient)) {
                 continue;
             }
 

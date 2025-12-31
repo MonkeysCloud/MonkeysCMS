@@ -289,6 +289,10 @@ class EntityManager
 
         // Get only dirty fields for efficient update
         $dirty = $entity->getDirty();
+        
+        // Filter out transient properties by intersecting with database data
+        $dirty = array_intersect_key($dirty, $data);
+
         if (empty($dirty)) {
             return; // Nothing to update
         }

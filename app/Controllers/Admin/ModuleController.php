@@ -45,7 +45,7 @@ final class ModuleController
      *
      * @return ResponseInterface JSON list of modules with their status
      */
-    #[Route('GET', '/', name: 'index')]
+    #[Route('GET', '/', name: 'admin.modules.index')]
     public function index(): ResponseInterface
     {
         $modules = $this->moduleManager->getAvailableModules();
@@ -63,7 +63,7 @@ final class ModuleController
     /**
      * Get enabled modules only
      */
-    #[Route('GET', '/enabled', name: 'enabled')]
+    #[Route('GET', '/enabled', name: 'admin.modules.enabled')]
     public function enabled(): ResponseInterface
     {
         $enabled = $this->moduleManager->getEnabledModules();
@@ -77,7 +77,7 @@ final class ModuleController
     /**
      * Get details for a specific module
      */
-    #[Route('GET', '/{module:.+}/details', name: 'details')]
+    #[Route('GET', '/{module:.+}/details', name: 'admin.modules.details')]
     public function details(string $module): ResponseInterface
     {
         if (!$this->moduleManager->moduleExists($module)) {
@@ -121,7 +121,7 @@ final class ModuleController
      * 3. SQL is executed immediately against the database
      * 4. Module is marked as enabled in modules.json
      */
-    #[Route('POST', '/{module:.+}/enable', name: 'enable')]
+    #[Route('POST', '/{module:.+}/enable', name: 'admin.modules.enable')]
     public function enable(ServerRequestInterface $request, string $module): ResponseInterface
     {
         try {
@@ -160,7 +160,7 @@ final class ModuleController
      * By default, this does NOT remove database tables - data is preserved.
      * Pass {"remove_tables": true} in body to drop tables (dangerous!).
      */
-    #[Route('POST', '/{module:.+}/disable', name: 'disable')]
+    #[Route('POST', '/{module:.+}/disable', name: 'admin.modules.disable')]
     public function disable(ServerRequestInterface $request, string $module): ResponseInterface
     {
         try {
@@ -205,7 +205,7 @@ final class ModuleController
      * Useful after making changes to entity attributes.
      * This runs ALTER TABLE statements to sync schema changes.
      */
-    #[Route('POST', '/{module:.+}/sync', name: 'sync')]
+    #[Route('POST', '/{module:.+}/sync', name: 'admin.modules.sync')]
     public function sync(string $module): ResponseInterface
     {
         try {
@@ -245,7 +245,7 @@ final class ModuleController
      *
      * Useful for reviewing what tables/columns will be created.
      */
-    #[Route('GET', '/{module:.+}/schema-preview', name: 'schema.preview')]
+    #[Route('GET', '/{module:.+}/schema-preview', name: 'admin.modules.schema_preview')]
     public function schemaPreview(string $module): ResponseInterface
     {
         try {

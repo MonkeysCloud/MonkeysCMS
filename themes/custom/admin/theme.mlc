@@ -5,14 +5,17 @@ description = "Default Admin Theme"
 author = "MonkeysCloud"
 type = "admin"
 
-parent = null
+parent = "admin-default"
 
-[regions]
-content = "Main Content"
+regions {
+    content = "Main Content"
+}
 
-[config]
-primary_color = "#2d333b"
+config {
+    primary_color = "#2d333b"
+}
 
-[assets]
-css = ["assets/css/admin.css"]
-js = ["assets/js/admin.js"]
+assets {
+    css = ["assets/css/admin.css"]
+    js = ["assets/js/admin.js"]
+}

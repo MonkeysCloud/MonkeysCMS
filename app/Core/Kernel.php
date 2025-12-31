@@ -90,8 +90,21 @@ class Kernel
             return $handler->handle($request);
             
         } catch (\PDOException $e) {
-            // Database connection failed -> Show Installer
-            return $this->handleInstaller($request, $e);
+            // Only redirect to installer for CONNECTION failures
+            // SQLSTATE codes for connection issues: HY000 (general), 2002/2003/2006 (MySQL connect)
+            $code = $e->getCode();
+            $isConnectionError = in_array($code, [2002, 2003, 2006], true) 
+                || str_starts_with((string) $code, 'HY')
+                || str_contains($e->getMessage(), 'Connection refused')
+                || str_contains($e->getMessage(), 'Access denied')
+                || str_contains($e->getMessage(), "Can't connect");
+            
+            if ($isConnectionError) {
+                return $this->handleInstaller($request, $e);
+            }
+            
+            // For other PDO errors (missing tables, columns, etc.), let the error handler deal with it
+            throw $e;
         }
     }
 
@@ -270,12 +283,28 @@ class Kernel
 
             CoreRequestHandler::class => function (ContainerInterface $c) {
                 $router = $c->get(Router::class);
+                
+                // Terminal handler: Router
                 $routerHandler = new class($router) implements \Psr\Http\Server\RequestHandlerInterface {
                     private $router;
                     public function __construct($router) { $this->router = $router; }
                     public function handle(ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface { return $this->router->dispatch($request); }
                 };
-                return new CoreRequestHandler($routerHandler, $c->get(ResponseFactoryInterface::class));
+
+                // Middleware: MethodOverride
+                $methodOverride = new \App\Cms\Middleware\MethodOverrideMiddleware();
+
+                // Pipeline
+                $pipelineHandler = new class($methodOverride, $routerHandler) implements \Psr\Http\Server\RequestHandlerInterface {
+                    private \App\Cms\Middleware\MethodOverrideMiddleware $middleware;
+                    private \Psr\Http\Server\RequestHandlerInterface $next;
+                    public function __construct($middleware, $next) { $this->middleware = $middleware; $this->next = $next; }
+                    public function handle(ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface {
+                        return $this->middleware->process($request, $this->next);
+                    }
+                };
+
+                return new CoreRequestHandler($pipelineHandler, $c->get(ResponseFactoryInterface::class));
             },
 
             // Logger Service

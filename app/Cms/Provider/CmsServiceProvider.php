@@ -7,6 +7,8 @@ namespace App\Cms\Provider;
 use App\Cms\Auth\AuthServiceProvider;
 use Psr\Container\ContainerInterface;
 use MonkeysLegion\Router\Router;
+use MonkeysLegion\Files\FilesManager;
+use MonkeysLegion\Files\Storage\LocalStorage;
 use Psr\Http\Message\ServerRequestInterface;
 use PDO;
 
@@ -41,9 +43,18 @@ final class CmsServiceProvider
 
         $pdo = $this->container->get(PDO::class);
 
-        // Initialize AuthServiceProvider with database connection
-        // Config will be pulled from env vars by default
-        AuthServiceProvider::init($pdo);
+        // Get config to determine environment
+        $config = [];
+        if ($this->container->has('config')) {
+            $appConfig = $this->container->get('config');
+            $env = $appConfig->get('app.env', 'production');
+            
+            // Disable secure cookies in local environment
+            $config['session_secure'] = ($env !== 'local' && $env !== 'development');
+        }
+
+        // Initialize AuthServiceProvider with database connection and config
+        AuthServiceProvider::init($pdo, $config);
     }
 
     /**
@@ -56,6 +67,9 @@ final class CmsServiceProvider
         $definitions = array_merge(
             AuthServiceProvider::getDefinitions(),
             [
+                \MonkeysLegion\Mlc\Config::class => function (ContainerInterface $c) {
+                    return $c->get('config');
+                },
                 \MonkeysLegion\Database\Contracts\ConnectionInterface::class => function (ContainerInterface $c) {
                     return new \App\Cms\Database\PDOConnectionAdapter($c->get(PDO::class));
                 },
@@ -89,13 +103,16 @@ final class CmsServiceProvider
                     $basePath = defined('ML_BASE_PATH') ? ML_BASE_PATH : getcwd();
                     $themeManager = $c->get(\App\Cms\Themes\ThemeManager::class);
                     
-                    // Paths: 1. Active Theme (Frontend), 2. Admin Theme
-                    // This allows finding both 'home/index' (frontend) and 'admin/dashboard' (admin)
-                    $viewPaths = $themeManager->getViewPaths();
-                    $viewPaths[] = $themeManager->findThemePath('admin') . '/views';
+                    // View paths in priority order:
+                    // 1. Admin theme views (with parent fallback like admin-default)
+                    // 2. Frontend theme views (with parent fallback)
+                    $viewPaths = array_merge(
+                        $themeManager->getAdminViewPaths(),  // Admin theme + parent fallback
+                        $themeManager->getViewPaths()         // Frontend theme + parent fallback
+                    );
                     
                     return new \App\Cms\Theme\CascadingLoader(
-                        $viewPaths,
+                        array_unique($viewPaths),
                         $basePath . '/var/cache/views'
                     );
                 },
@@ -122,6 +139,98 @@ final class CmsServiceProvider
                         $c->get(\MonkeysLegion\Template\Compiler::class),
                         $c->get(\MonkeysLegion\Template\Renderer::class),
                         $basePath . '/var/cache/views'
+                    );
+                },
+                \App\Cms\Auth\Middleware\AuthenticationMiddlewareAdapter::class => function (ContainerInterface $c) {
+                    return new \App\Cms\Auth\Middleware\AuthenticationMiddlewareAdapter(
+                        $c->get(\MonkeysLegion\Auth\Middleware\AuthenticationMiddleware::class),
+                        $c->get(\App\Cms\Security\PermissionService::class)
+                    );
+                },
+                // File Storage
+                FilesManager::class => function (ContainerInterface $c) {
+                    $basePath = defined('ML_BASE_PATH') ? ML_BASE_PATH : dirname(__DIR__, 3);
+                    $config = $c->get('config');
+                    
+                    $filesRoot = $config->get('files.disks.local.root') ?? 'storage/files';
+                    $uploadsRoot = $config->get('files.disks.public.root') ?? 'storage/uploads';
+
+                    // Ensure absolute paths
+                    $localPath = str_starts_with($filesRoot, '/') ? $filesRoot : $basePath . '/' . $filesRoot;
+                    $publicPath = str_starts_with($uploadsRoot, '/') ? $uploadsRoot : $basePath . '/' . $uploadsRoot;
+
+                    // Create directories if not exist
+                    if (!is_dir($localPath)) {
+                         @mkdir($localPath, 0755, true);
+                    }
+                    if (!is_dir($publicPath)) {
+                         @mkdir($publicPath, 0755, true);
+                    }
+
+                    // Build full config with proper paths to override defaults
+                    $filesConfig = [
+                        'default' => $config->get('files.default') ?? 'local',
+                        'disks' => [
+                            'local' => [
+                                'driver' => 'local',
+                                'path' => $localPath,
+                                'url' => $config->get('files.disks.local.url') ?? '/files',
+                                'visibility' => $config->get('files.disks.local.visibility') ?? 'private',
+                                'permissions' => [
+                                    'dir' => 0755,
+                                    'file' => 0644,
+                                ],
+                            ],
+                            'public' => [
+                                'driver' => 'local',
+                                'path' => $publicPath,
+                                'url' => $config->get('files.disks.public.url') ?? '/uploads',
+                                'visibility' => $config->get('files.disks.public.visibility') ?? 'public',
+                                'permissions' => [
+                                    'dir' => 0755,
+                                    'file' => 0644,
+                                ],
+                            ],
+                        ],
+                    ];
+                    
+                    return new FilesManager($filesConfig);
+                },
+                \MonkeysLegion\Files\Upload\ChunkedUploadManager::class => function (ContainerInterface $c) {
+                    $basePath = defined('ML_BASE_PATH') ? ML_BASE_PATH : dirname(__DIR__, 3);
+                    $config = $c->get('config');
+
+                    /** @var \MonkeysLegion\Files\FilesManager $filesManager */
+                    $filesManager = $c->get(FilesManager::class);
+
+                    /** @var \MonkeysLegion\Cache\CacheManager $cacheManager */
+                    $cacheManager = $c->get(\MonkeysLegion\Cache\CacheManager::class);
+
+                    // Use public disk for final storage
+                    $publicDisk = $config->get('files.public_disk') ?? 'public';
+                    $storage = $filesManager->disk($publicDisk);
+
+                    // Temp directory configuration
+                    $tempDirConfig = $config->get('files.upload.temp_dir') ?? 'storage/tmp/uploads';
+                    $tempDir = str_starts_with($tempDirConfig, '/') ? $tempDirConfig : $basePath . '/' . $tempDirConfig;
+                    
+                    if (!is_dir($tempDir)) {
+                         @mkdir($tempDir, 0755, true);
+                    }
+
+                    return new \MonkeysLegion\Files\Upload\ChunkedUploadManager(
+                        $storage,
+                        $tempDir,
+                        $cacheManager->store(),
+                        (int) ($config->get('files.upload.chunk_size') ?? 5 * 1024 * 1024),
+                        (int) ($config->get('files.upload.chunk_expiry') ?? 86400)
+                    );
+                },
+                \MonkeysLegion\Files\Image\ImageProcessor::class => function (ContainerInterface $c) {
+                    $config = $c->get('config');
+                    return new \MonkeysLegion\Files\Image\ImageProcessor(
+                        $config->get('files.image.driver') ?? 'gd',
+                        (int) ($config->get('files.image.quality') ?? 85)
                     );
                 },
             ]
@@ -183,6 +292,22 @@ final class CmsServiceProvider
         }
 
         $router = $this->container->get(Router::class);
+        
+        // Pre-register middleware instances to support DI
+        if ($this->container->has(\App\Cms\Auth\Middleware\AdminAccessMiddleware::class)) {
+            $router->registerMiddleware(
+                \App\Cms\Auth\Middleware\AdminAccessMiddleware::class,
+                $this->container->get(\App\Cms\Auth\Middleware\AdminAccessMiddleware::class)
+            );
+        }
+        
+        if ($this->container->has(\App\Cms\Auth\Middleware\AuthenticationMiddlewareAdapter::class)) {
+            $router->registerMiddleware(
+                \App\Cms\Auth\Middleware\AuthenticationMiddlewareAdapter::class,
+                $this->container->get(\App\Cms\Auth\Middleware\AuthenticationMiddlewareAdapter::class)
+            );
+        }
+
         $routes = AuthServiceProvider::getAllRoutes();
 
         foreach ($routes as $route) {
@@ -203,11 +328,8 @@ final class CmsServiceProvider
         $router->add('GET', '/', $homeHandler);
 
         // Register Metadata/Attribute Routes
-        $this->registerControllerRoutes($router, [
-            \App\Controllers\Admin\DashboardController::class,
-            \App\Controllers\Admin\MenuController::class,
-            \App\Controllers\Admin\MenuItemController::class,
-        ]);
+        $controllers = $this->discoverControllers();
+        $this->registerControllerRoutes($router, $controllers);
     }
 
     /**
@@ -222,28 +344,68 @@ final class CmsServiceProvider
 
             $reflection = new \ReflectionClass($controllerClass);
             
-            // distinct route prefixes?
-            $classRouteAttr = $reflection->getAttributes(\MonkeysLegion\Router\Attributes\Route::class)[0] ?? null;
+            // 1. Controller Attributes
             $prefix = '';
-            if ($classRouteAttr) {
-                // Route attribute uses public properties, not getters
-                $prefix = $classRouteAttr->newInstance()->path; 
+            $controllerMiddleware = [];
+
+            // RoutePrefix
+            $prefixAttr = $reflection->getAttributes(\MonkeysLegion\Router\Attributes\RoutePrefix::class)[0] ?? null;
+            if ($prefixAttr) {
+                $prefix = $prefixAttr->newInstance()->prefix;
+            } else {
+                // Fallback: check "Route" attribute used as prefix container (legacy behavior check)
+                $routeAttr = $reflection->getAttributes(\MonkeysLegion\Router\Attributes\Route::class)[0] ?? null;
+                if ($routeAttr) {
+                     $prefix = $routeAttr->newInstance()->path; 
+                }
             }
 
+            // Middleware (Class Level - including parents)
+            $class = $reflection;
+            while ($class) {
+                foreach ($class->getAttributes(\MonkeysLegion\Router\Attributes\Middleware::class) as $mwAttr) {
+                    // Prepend parent middleware so it runs first? Or merge? 
+                    // Usually parent middleware (like 'admin') should effectively be present. Order might matter.
+                    // array_merge appends. If we want parents first, we should prepend.
+                    // But typically attribute order on same class matters. Across inheritance, parent is usually "base" scope.
+                    $controllerMiddleware = array_merge($mwAttr->newInstance()->middleware, $controllerMiddleware);
+                }
+                $class = $class->getParentClass();
+            }
+
+            // 2. Methods
             foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-                $attributes = $method->getAttributes(\MonkeysLegion\Router\Attributes\Route::class);
+                // Route Attributes
+                $routeAttributes = $method->getAttributes(\MonkeysLegion\Router\Attributes\Route::class);
                 
-                foreach ($attributes as $attribute) {
+                // Method Middleware
+                $methodMiddleware = $controllerMiddleware;
+                foreach ($method->getAttributes(\MonkeysLegion\Router\Attributes\Middleware::class) as $mwAttr) {
+                    $methodMiddleware = array_merge($methodMiddleware, $mwAttr->newInstance()->middleware);
+                }
+
+                foreach ($routeAttributes as $attribute) {
                     $route = $attribute->newInstance();
                     $path = $prefix . $route->path;
+                    
+                    // Normalize path
                     if ($path !== '/' && str_ends_with($path, '/')) {
                         $path = rtrim($path, '/');
                     }
+                    
                     $handler = $this->resolveHandler([$controllerClass, $method->getName()]);
                     
-                    // Route attribute 'methods' is an array of strings
+                    // Merge middleware from attributes with route definition
+                    $finalMiddleware = array_merge($methodMiddleware, $route->middleware ?? []);
+
                     foreach ($route->methods as $httpMethod) {
-                         $router->add($httpMethod, $path, $handler);
+                         $router->add(
+                             $httpMethod, 
+                             $path, 
+                             $handler,
+                             $route->name,
+                             $finalMiddleware // Pass middleware to router
+                         );
                     }
                 }
             }
@@ -306,4 +468,64 @@ final class CmsServiceProvider
         
         return $handler;
     }
+        /**
+     * Automatically discover controllers in app/Controllers and app/Modules
+     * @return array<string>
+     */
+    private function discoverControllers(): array
+    {
+        $baseDir = defined('ML_BASE_PATH') ? ML_BASE_PATH : getcwd();
+        $directories = [
+            $baseDir . '/app/Controllers',
+            $baseDir . '/app/Modules'
+        ];
+        
+        $controllers = [];
+        
+        foreach ($directories as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+
+            foreach ($iterator as $file) {
+                if ($file->getExtension() !== 'php') {
+                    continue;
+                }
+                
+                // Only process files ending in Controller.php
+                if (!str_ends_with($file->getFilename(), 'Controller.php')) {
+                    continue;
+                }
+
+                $className = $this->getClassFromPath($file->getPathname(), $baseDir);
+                
+                if ($className && class_exists($className)) {
+                    $reflection = new \ReflectionClass($className);
+                    // Must be instantiable and not abstract
+                    if (!$reflection->isAbstract()) {
+                        $controllers[] = $className;
+                    }
+                }
+            }
+        }
+        
+        return array_unique($controllers);
+    }
+
+    /**
+     * Convert file path to class name based on PSR-4 App\ -> app/ mapping
+     */
+    private function getClassFromPath(string $path, string $basePath): ?string
+    {
+        // Convert /path/to/app/Controllers/Foo.php -> App\Controllers\Foo
+        $rel = str_replace($basePath . '/app/', '', $path);
+        $rel = str_replace('.php', '', $rel);
+        $class = 'App\\' . str_replace('/', '\\', $rel);
+        return $class;
+    }
 }
+

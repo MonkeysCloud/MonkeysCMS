@@ -52,7 +52,7 @@ routes {
             "/admin/users",
             "/admin/roles",
             "/admin/permissions",
-            "/admin/vocabularies",
+            "/admin/taxonomies",
             "/admin/terms",
             "/admin/menus",
             "/admin/menu-items",

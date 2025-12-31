@@ -339,14 +339,14 @@ php cms cms:module:enable Custom/YourModule
 
 | Method | Endpoint                                | Description                 |
 | ------ | --------------------------------------- | --------------------------- |
-| GET    | /admin/vocabularies                     | List all vocabularies       |
-| GET    | /admin/vocabularies/{id}                | Get vocabulary with terms   |
-| POST   | /admin/vocabularies                     | Create vocabulary           |
-| PUT    | /admin/vocabularies/{id}                | Update vocabulary           |
-| DELETE | /admin/vocabularies/{id}                | Delete vocabulary           |
-| GET    | /admin/vocabularies/{id}/terms          | Get terms (flat or tree)    |
-| GET    | /admin/vocabularies/{id}/options        | Get terms for select widget |
-| POST   | /admin/vocabularies/{id}/terms          | Create term                 |
+| GET    | /admin/taxonomies                       | List all taxonomies         |
+| GET    | /admin/taxonomies/{id}                  | Get taxonomy with terms     |
+| POST   | /admin/taxonomies                       | Create taxonomy             |
+| PUT    | /admin/taxonomies/{id}                  | Update taxonomy             |
+| DELETE | /admin/taxonomies/{id}                  | Delete taxonomy             |
+| GET    | /admin/taxonomies/{id}/terms            | Get terms (flat or tree)    |
+| GET    | /admin/taxonomies/{id}/options          | Get terms for select widget |
+| POST   | /admin/taxonomies/{id}/terms            | Create term                 |
 | PUT    | /admin/terms/{id}                       | Update term                 |
 | DELETE | /admin/terms/{id}                       | Delete term                 |
 | GET    | /admin/entity-terms/{type}/{id}         | Get entity's terms          |

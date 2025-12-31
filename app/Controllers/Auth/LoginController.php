@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers\Auth;
 
-use App\Cms\Auth\CmsAuthService;
+use MonkeysLegion\Auth\Service\AuthService;
 use App\Cms\Auth\SessionManager;
 use App\Cms\Auth\LoginAttempt;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,13 +17,13 @@ use MonkeysLegion\Router\Attributes\Route;
  */
 class LoginController
 {
-    private CmsAuthService $auth;
+    private AuthService $auth;
     private SessionManager $session;
     private LoginAttempt $loginAttempt;
     private Renderer $renderer;
 
     public function __construct(
-        CmsAuthService $auth,
+        AuthService $auth,
         SessionManager $session,
         LoginAttempt $loginAttempt,
         Renderer $renderer
@@ -40,15 +40,16 @@ class LoginController
     #[Route('GET', '/login', name: 'login')]
     public function show(ServerRequestInterface $request): ResponseInterface
     {
-        // If already authenticated, redirect to dashboard
-        if ($this->auth->check()) {
-            return redirect('/admin');
+        // If already authenticated (via cookie middleware), redirect to dashboard
+        if ($request->getAttribute('user')) {
+             return redirect('/admin');
         }
 
         return $this->view('auth/login', [
             'csrf_token' => $this->session->getCsrfToken(),
             'error' => $this->session->getFlash('error'),
             'success' => $this->session->getFlash('success'),
+            'old' => $this->session->getFlash('old', []),
         ]);
     }
 
@@ -63,7 +64,10 @@ class LoginController
 
         $email = $data['email'] ?? '';
         $password = $data['password'] ?? '';
-        $remember = isset($data['remember']);
+        // $remember = isset($data['remember']); // JWT is stateless, remember me controls token TTL usually, or refresh token persistence. ignoring for now.
+
+        // Flash old input
+        $this->session->flash('old', ['email' => $email]);
 
         // Validate input
         if (empty($email) || empty($password)) {
@@ -79,40 +83,50 @@ class LoginController
             return redirect('/login');
         }
 
-        // Attempt login
-        $result = $this->auth->attempt($email, $password, $remember, $ip);
+        try {
+            // Attempt login via MonkeysLegion Auth
+            $result = $this->auth->login($email, $password, $ip);
+            
+            if ($result->success) {
+                // Clear login attempts
+                $this->loginAttempt->recordSuccess($email, $ip);
 
-        if ($result->success) {
-            // Clear login attempts
-            $this->loginAttempt->recordSuccess($email, $ip);
-
-            // Regenerate session
-            $this->session->regenerate();
-
-            // Redirect to intended URL or dashboard
-            $intended = $this->session->pullIntendedUrl('/admin');
-            return redirect($intended);
+                // Intended URL
+                $intended = $this->session->pullIntendedUrl('/admin');
+                
+                // Get Tokens
+                $tokens = $result->tokens;
+                
+                // Get secure setting
+                $isSecure = \App\Cms\Auth\AuthServiceProvider::getConfig('session_secure', true);
+                $secureFlag = $isSecure ? "; Secure" : "";
+                $cookieParams = "Path=/; HttpOnly; SameSite=Lax" . $secureFlag;
+                
+                return redirect($intended)
+                    ->withAddedHeader('Set-Cookie', "auth_token=" . $tokens->accessToken . "; " . $cookieParams)
+                    // Refresh token might have longer TTL, but simplified here
+                    ->withAddedHeader('Set-Cookie', "refresh_token=" . $tokens->refreshToken . "; " . $cookieParams);
+            }
+            
+            // Handle 2FA (if implemented in result)
+            if ($result->requires2FA) {
+                $this->session->set('2fa_challenge', $result->challengeToken);
+                $this->session->set('2fa_email', $email);
+                 // We don't have tokens yet, so just redirect to 2FA form
+                return redirect('/login/2fa');
+            }
+        
+        } catch (\MonkeysLegion\Auth\Exception\InvalidCredentialsException $e) {
+             $this->loginAttempt->recordFailure($email, $ip);
+             $this->session->flash('error', 'Invalid email or password');
+        } catch (\MonkeysLegion\Auth\Exception\AccountLockedException $e) {
+             $this->session->flash('error', 'Account is locked. Please try again later.');
+        } catch (\Exception $e) {
+             // Generic error
+             $this->session->flash('error', 'An error occurred during login.');
+             file_put_contents('debug_trace.log', "Login Error: " . $e->getMessage() . "\n", FILE_APPEND);
         }
 
-        // Handle 2FA requirement
-        if ($result->requires2FA) {
-            $this->session->set('2fa_challenge', $result->challengeToken);
-            $this->session->set('2fa_email', $email);
-            return redirect('/login/2fa');
-        }
-
-        // Record failed attempt
-        $this->loginAttempt->recordFailure($email, $ip);
-
-        // Show remaining attempts
-        $remaining = $this->loginAttempt->getRemainingAttempts($email, $ip);
-        $message = $result->error ?? 'Invalid email or password';
-
-        if ($remaining > 0 && $remaining <= 3) {
-            $message .= ". {$remaining} attempts remaining.";
-        }
-
-        $this->session->flash('error', $message);
         return redirect('/login');
     }
 
@@ -153,19 +167,36 @@ class LoginController
             return redirect('/login/2fa');
         }
 
-        $result = $this->auth->verify2FA($challengeToken, $code, $ip);
+        try {
+            // Verify 2FA
+             // NOTE: AuthService might not have verify2FA method exposed exactly same way, checking...
+             // It does: verify2FA(string $challengeToken, string $code, ?string $ip = null): AuthResult
+             $result = $this->auth->verify2FA($challengeToken, $code, $ip);
 
-        if ($result->success) {
-            // Clear 2FA session data
-            $this->session->forget('2fa_challenge');
-            $this->session->forget('2fa_email');
-            $this->session->regenerate();
+            if ($result->success) {
+                // Clear 2FA session data
+                $this->session->forget('2fa_challenge');
+                $this->session->forget('2fa_email');
+                
+                $intended = $this->session->pullIntendedUrl('/admin');
+                $tokens = $result->tokens;
 
-            $intended = $this->session->pullIntendedUrl('/admin');
-            return redirect($intended);
+                // Get secure setting
+                $isSecure = \App\Cms\Auth\AuthServiceProvider::getConfig('session_secure', true);
+                $secureFlag = $isSecure ? "; Secure" : "";
+                $cookieParams = "Path=/; HttpOnly; SameSite=Lax" . $secureFlag;
+
+                return redirect($intended)
+                     ->withAddedHeader('Set-Cookie', "auth_token=" . $tokens->accessToken . "; " . $cookieParams)
+                     ->withAddedHeader('Set-Cookie', "refresh_token=" . $tokens->refreshToken . "; " . $cookieParams);
+            }
+            
+            $this->session->flash('error', 'Invalid verification code');
+
+        } catch (\Exception $e) {
+            $this->session->flash('error', 'Invalid verification code or error.');
         }
 
-        $this->session->flash('error', 'Invalid verification code');
         return redirect('/login/2fa');
     }
 
@@ -183,8 +214,6 @@ class LoginController
     // =========================================================================
     // Helpers
     // =========================================================================
-
-
 
     private function view(string $template, array $data = []): ResponseInterface
     {

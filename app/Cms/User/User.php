@@ -64,6 +64,11 @@ class User extends BaseEntity implements SoftDeleteInterface, AuthenticatableInt
         ];
     }
 
+    public static function getTransient(): array
+    {
+        return ['roles', 'permissions', 'has2FAEnabled'];
+    }
+
     public static function getHidden(): array
     {
         return ['password_hash', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'deleted_at'];

@@ -29,7 +29,7 @@ final class CacheController
     /**
      * Get cache statistics
      */
-    #[Route('GET', '/stats', name: 'stats')]
+    #[Route('GET', '/stats', name: 'admin.cache.stats')]
     public function stats(ServerRequestInterface $request): ResponseInterface
     {
         $params = $request->getQueryParams();
@@ -77,7 +77,7 @@ final class CacheController
     /**
      * Clear all cache
      */
-    #[Route('POST', '/clear', name: 'clear')]
+    #[Route('POST', '/clear', name: 'admin.cache.clear')]
     public function clear(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true);
@@ -126,7 +126,7 @@ final class CacheController
     /**
      * Get a cache value
      */
-    #[Route('GET', '/get/{key}', name: 'get')]
+    #[Route('GET', '/get/{key}', name: 'admin.cache.get')]
     public function get(ServerRequestInterface $request, string $key): ResponseInterface
     {
         $params = $request->getQueryParams();
@@ -156,7 +156,7 @@ final class CacheController
     /**
      * Set a cache value
      */
-    #[Route('POST', '/set', name: 'set')]
+    #[Route('POST', '/set', name: 'admin.cache.set')]
     public function set(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true);
@@ -197,7 +197,7 @@ final class CacheController
     /**
      * Delete a cache key
      */
-    #[Route('DELETE', '/delete/{key}', name: 'delete')]
+    #[Route('DELETE', '/delete/{key}', name: 'admin.cache.delete')]
     public function delete(ServerRequestInterface $request, string $key): ResponseInterface
     {
         $params = $request->getQueryParams();
@@ -223,7 +223,7 @@ final class CacheController
     /**
      * Check if a key exists
      */
-    #[Route('GET', '/has/{key}', name: 'has')]
+    #[Route('GET', '/has/{key}', name: 'admin.cache.has')]
     public function has(ServerRequestInterface $request, string $key): ResponseInterface
     {
         $params = $request->getQueryParams();
@@ -243,7 +243,7 @@ final class CacheController
     /**
      * Increment a numeric value
      */
-    #[Route('POST', '/increment/{key}', name: 'increment')]
+    #[Route('POST', '/increment/{key}', name: 'admin.cache.increment')]
     public function increment(ServerRequestInterface $request, string $key): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true);
@@ -280,7 +280,7 @@ final class CacheController
     /**
      * Decrement a numeric value
      */
-    #[Route('POST', '/decrement/{key}', name: 'decrement')]
+    #[Route('POST', '/decrement/{key}', name: 'admin.cache.decrement')]
     public function decrement(ServerRequestInterface $request, string $key): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true);
@@ -317,7 +317,7 @@ final class CacheController
     /**
      * Flush cache by tag
      */
-    #[Route('POST', '/flush-tags', name: 'flushTags')]
+    #[Route('POST', '/flush-tags', name: 'admin.cache.flush_tags')]
     public function flushTags(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true);
@@ -352,7 +352,7 @@ final class CacheController
     /**
      * Remember pattern - get or compute
      */
-    #[Route('POST', '/remember', name: 'remember')]
+    #[Route('POST', '/remember', name: 'admin.cache.remember')]
     public function remember(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true);
