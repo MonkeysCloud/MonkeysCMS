@@ -7,6 +7,7 @@ namespace App\Cms\Core;
 use App\Cms\Attributes\ContentType;
 use App\Cms\Attributes\Field;
 use App\Cms\Attributes\Id;
+use App\Cms\Attributes\Ignore;
 use DateTimeImmutable;
 use ReflectionClass;
 use ReflectionProperty;
@@ -89,6 +90,12 @@ abstract class BaseEntity
             $actualPropertyName = $reflection->hasProperty($propertyName) ? $propertyName : $column;
             $property = $reflection->getProperty($actualPropertyName);
 
+            // Skip ignored properties
+            if (!empty($property->getAttributes(Ignore::class))) {
+                continue;
+            }
+
+
             // Get the property type for proper casting
             $type = $property->getType();
             $typeName = $type?->getName();
@@ -138,6 +145,11 @@ abstract class BaseEntity
         $data = [];
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            // Skip ignored properties
+            if (!empty($property->getAttributes(Ignore::class))) {
+                continue;
+            }
+
             $name = $property->getName();
             $value = $property->getValue($this);
 
@@ -174,6 +186,11 @@ abstract class BaseEntity
         $dirty = [];
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            // Skip ignored properties
+            if (!empty($property->getAttributes(Ignore::class))) {
+                continue;
+            }
+
             $name = $property->getName();
             $currentValue = $property->getValue($this);
             $originalValue = $this->originalValues[$name] ?? null;
@@ -220,6 +237,10 @@ abstract class BaseEntity
         // Update original values to current state
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            // Skip ignored properties
+            if (!empty($property->getAttributes(Ignore::class))) {
+                continue;
+            }
             $this->originalValues[$property->getName()] = $property->getValue($this);
         }
     }

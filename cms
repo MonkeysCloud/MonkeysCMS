@@ -46,7 +46,17 @@ if ($vendorDirs) {
     }
 }
 
-// Find all Command subclasses currently declared (that are likely from vendors)
+// 3. Discover App Commands
+// Scan app/Cli/Command/*.php
+$appCommandDir = $rootDir . '/app/Cli/Command';
+if (is_dir($appCommandDir)) {
+    $files = glob($appCommandDir . '/*Command.php');
+    foreach ($files as $file) {
+        require_once $file;
+    }
+}
+
+// Find all Command subclasses currently declared (MonkeysLegion vendors)
 foreach (get_declared_classes() as $class) {
     if (str_starts_with($class, 'MonkeysLegion\\') && 
         str_contains($class, '\\Commands\\') && 
@@ -57,7 +67,21 @@ foreach (get_declared_classes() as $class) {
     }
 }
 
-// 3. Run CLI Kernel
+// Find App\Cli\Command classes (use attribute-based discovery)
+foreach (get_declared_classes() as $class) {
+    if (str_starts_with($class, 'App\\Cli\\Command\\') &&
+        !(new ReflectionClass($class))->isAbstract()
+    ) {
+        // Check if it has the Command attribute
+        $ref = new ReflectionClass($class);
+        $attrs = $ref->getAttributes(\MonkeysLegion\Cli\Attribute\Command::class);
+        if (!empty($attrs)) {
+            $vendorCommands[] = $class;
+        }
+    }
+}
+
+// 4. Run CLI Kernel
 try {
     $cli = new CliKernel($container, $vendorCommands);
     exit($cli->run($argv));
@@ -65,3 +89,4 @@ try {
     fwrite(STDERR, "Fatal Error: " . $e->getMessage() . "\n");
     exit(1);
 }
+

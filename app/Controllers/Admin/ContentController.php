@@ -57,7 +57,7 @@ final class ContentController
     /**
      * List content items with pagination
      */
-    #[Route('GET', '/{type}', name: 'index')]
+    #[Route('GET', '/{type}', name: 'admin.content.index')]
     public function index(ServerRequestInterface $request, string $type): ResponseInterface
     {
         $entityClass = $this->resolveEntityClass($type);
@@ -118,7 +118,7 @@ final class ContentController
     /**
      * Get a single content item by ID
      */
-    #[Route('GET', '/{type}/{id:\d+}', name: 'show')]
+    #[Route('GET', '/{type}/{id:\d+}', name: 'admin.content.show')]
     public function show(string $type, int $id): ResponseInterface
     {
         $entityClass = $this->resolveEntityClass($type);
@@ -165,7 +165,7 @@ final class ContentController
     /**
      * Create a new content item
      */
-    #[Route('POST', '/{type}', name: 'store')]
+    #[Route('POST', '/{type}', name: 'admin.content.store')]
     public function store(ServerRequestInterface $request, string $type): ResponseInterface
     {
         $entityClass = $this->resolveEntityClass($type);
@@ -200,8 +200,7 @@ final class ContentController
             // Set author if entity supports it
             $currentUser = $this->permissions->getCurrentUser();
             if ($currentUser && property_exists($entity, 'author_id')) {
-                /** @phpstan-ignore-next-line */
-                $entity->author_id = $currentUser->id;
+                $entity->{'author_id'} = $currentUser->id;
             }
 
             $saved = $this->repository->save($entity);
@@ -229,7 +228,7 @@ final class ContentController
     /**
      * Update an existing content item
      */
-    #[Route('PUT', '/{type}/{id:\d+}', name: 'update')]
+    #[Route('PUT', '/{type}/{id:\d+}', name: 'admin.content.update')]
     public function update(ServerRequestInterface $request, string $type, int $id): ResponseInterface
     {
         $entityClass = $this->resolveEntityClass($type);
@@ -294,7 +293,7 @@ final class ContentController
     /**
      * Delete a content item
      */
-    #[Route('DELETE', '/{type}/{id:\d+}', name: 'destroy')]
+    #[Route('DELETE', '/{type}/{id:\d+}', name: 'admin.content.destroy')]
     public function destroy(string $type, int $id): ResponseInterface
     {
         $entityClass = $this->resolveEntityClass($type);
@@ -344,7 +343,7 @@ final class ContentController
     /**
      * Search content items
      */
-    #[Route('GET', '/{type}/search', name: 'search')]
+    #[Route('GET', '/{type}/search', name: 'admin.content.search')]
     public function search(ServerRequestInterface $request, string $type): ResponseInterface
     {
         $entityClass = $this->resolveEntityClass($type);
@@ -382,7 +381,7 @@ final class ContentController
     /**
      * Get available content types
      */
-    #[Route('GET', '/types', name: 'types')]
+    #[Route('GET', '/types', name: 'admin.content.types')]
     public function types(): ResponseInterface
     {
         $types = [];

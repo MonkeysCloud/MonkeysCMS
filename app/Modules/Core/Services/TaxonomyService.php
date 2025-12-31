@@ -8,7 +8,7 @@ use App\Modules\Core\Entities\Vocabulary;
 use App\Modules\Core\Entities\Term;
 use App\Modules\Core\Entities\EntityTerm;
 use App\Cms\Core\BaseEntity;
-use MonkeysLegion\Database\Connection;
+use PDO;
 use MonkeysLegion\Cache\CacheManager;
 
 /**
@@ -22,7 +22,7 @@ final class TaxonomyService
     private const CACHE_TAG = 'taxonomy';
 
     public function __construct(
-        private readonly Connection $connection,
+        private readonly PDO $connection,
         private readonly ?CacheManager $cache = null,
     ) {
     }
@@ -188,7 +188,7 @@ final class TaxonomyService
 
         // Delete all terms
         $stmt = $this->connection->prepare(
-            "DELETE FROM terms WHERE vocabulary_id = :vocabulary_id"
+            "DELETE FROM taxonomy_terms WHERE vocabulary_id = :vocabulary_id"
         );
         $stmt->execute(['vocabulary_id' => $vocabulary->id]);
 
@@ -209,7 +209,7 @@ final class TaxonomyService
     public function getTerm(int $id): ?Term
     {
         $stmt = $this->connection->prepare(
-            "SELECT * FROM terms WHERE id = :id"
+            "SELECT * FROM taxonomy_terms WHERE id = :id"
         );
         $stmt->execute(['id' => $id]);
 
@@ -229,7 +229,7 @@ final class TaxonomyService
     public function getTermBySlug(int $vocabularyId, string $slug): ?Term
     {
         $stmt = $this->connection->prepare(
-            "SELECT * FROM terms WHERE vocabulary_id = :vocabulary_id AND slug = :slug"
+            "SELECT * FROM taxonomy_terms WHERE vocabulary_id = :vocabulary_id AND slug = :slug"
         );
         $stmt->execute([
             'vocabulary_id' => $vocabularyId,
@@ -253,7 +253,7 @@ final class TaxonomyService
      */
     public function getTerms(int $vocabularyId, bool $publishedOnly = false): array
     {
-        $sql = "SELECT * FROM terms WHERE vocabulary_id = :vocabulary_id";
+        $sql = "SELECT * FROM taxonomy_terms WHERE vocabulary_id = :vocabulary_id";
         if ($publishedOnly) {
             $sql .= " AND is_published = 1";
         }
@@ -320,7 +320,7 @@ final class TaxonomyService
     public function getChildTerms(int $parentId): array
     {
         $stmt = $this->connection->prepare(
-            "SELECT * FROM terms WHERE parent_id = :parent_id ORDER BY weight, name"
+            "SELECT * FROM taxonomy_terms WHERE parent_id = :parent_id ORDER BY weight, name"
         );
         $stmt->execute(['parent_id' => $parentId]);
 
@@ -354,7 +354,7 @@ final class TaxonomyService
 
         if ($term->isNew()) {
             $stmt = $this->connection->prepare("
-                INSERT INTO terms (vocabulary_id, parent_id, name, slug, description, color, icon, image, weight, depth, path, is_published, metadata, meta_title, meta_description, created_at, updated_at)
+                INSERT INTO taxonomy_terms (vocabulary_id, parent_id, name, slug, description, color, icon, image, weight, depth, path, is_published, metadata, meta_title, meta_description, created_at, updated_at)
                 VALUES (:vocabulary_id, :parent_id, :name, :slug, :description, :color, :icon, :image, :weight, :depth, :path, :is_published, :metadata, :meta_title, :meta_description, :created_at, :updated_at)
             ");
             $stmt->execute([
@@ -381,12 +381,12 @@ final class TaxonomyService
             // Update path with actual ID
             $term->updatePath();
             $stmt = $this->connection->prepare(
-                "UPDATE terms SET path = :path WHERE id = :id"
+                "UPDATE taxonomy_terms SET path = :path WHERE id = :id"
             );
             $stmt->execute(['path' => $term->path, 'id' => $term->id]);
         } else {
             $stmt = $this->connection->prepare("
-                UPDATE terms SET
+                UPDATE taxonomy_terms SET
                     vocabulary_id = :vocabulary_id,
                     parent_id = :parent_id,
                     name = :name,
@@ -437,18 +437,18 @@ final class TaxonomyService
         if ($deleteChildren) {
             // Delete all descendants
             $stmt = $this->connection->prepare(
-                "DELETE FROM entity_terms WHERE term_id IN (SELECT id FROM terms WHERE path LIKE :path)"
+                "DELETE FROM entity_terms WHERE term_id IN (SELECT id FROM taxonomy_terms WHERE path LIKE :path)"
             );
             $stmt->execute(['path' => $term->path . '/%']);
 
             $stmt = $this->connection->prepare(
-                "DELETE FROM terms WHERE path LIKE :path"
+                "DELETE FROM taxonomy_terms WHERE path LIKE :path"
             );
             $stmt->execute(['path' => $term->path . '/%']);
         } else {
             // Move children to parent
             $stmt = $this->connection->prepare(
-                "UPDATE terms SET parent_id = :parent_id WHERE parent_id = :term_id"
+                "UPDATE taxonomy_terms SET parent_id = :parent_id WHERE parent_id = :term_id"
             );
             $stmt->execute([
                 'parent_id' => $term->parent_id,
@@ -464,7 +464,7 @@ final class TaxonomyService
 
         // Delete term
         $stmt = $this->connection->prepare(
-            "DELETE FROM terms WHERE id = :id"
+            "DELETE FROM taxonomy_terms WHERE id = :id"
         );
         $stmt->execute(['id' => $term->id]);
 
@@ -497,7 +497,7 @@ final class TaxonomyService
             }
 
             $stmt = $this->connection->prepare(
-                "UPDATE terms SET path = :path, depth = :depth WHERE id = :id"
+                "UPDATE taxonomy_terms SET path = :path, depth = :depth WHERE id = :id"
             );
             $stmt->execute([
                 'path' => $term->path,
@@ -519,7 +519,7 @@ final class TaxonomyService
     public function getEntityTerms(string $entityType, int $entityId, ?int $vocabularyId = null): array
     {
         $sql = "
-            SELECT t.*, et.weight as link_weight FROM terms t
+            SELECT t.*, et.weight as link_weight FROM taxonomy_terms t
             INNER JOIN entity_terms et ON t.id = et.term_id
             WHERE et.entity_type = :entity_type AND et.entity_id = :entity_id
         ";
@@ -723,7 +723,7 @@ final class TaxonomyService
      */
     public function searchTerms(string $query, ?int $vocabularyId = null, int $limit = 20): array
     {
-        $sql = "SELECT * FROM terms WHERE name LIKE :query";
+        $sql = "SELECT * FROM taxonomy_terms WHERE name LIKE :query";
         $params = ['query' => '%' . $query . '%'];
 
         if ($vocabularyId !== null) {
@@ -750,6 +750,7 @@ final class TaxonomyService
 
         return $terms;
     }
+
 
     /**
      * Get or create term by name

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controllers\Admin;
 
+use App\Cms\Auth\SessionManager;
 use App\Modules\Core\Services\MediaService;
 use App\Cms\Security\PermissionService;
+use App\Modules\Core\Services\MenuService;
+use MonkeysLegion\Template\MLView;
 use MonkeysLegion\Router\Attributes\Route;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Laminas\Diactoros\Response\RedirectResponse;
 
 /**
  * MediaController - Media library management API
@@ -33,12 +37,33 @@ use Psr\Http\Message\ServerRequestInterface;
  * - GET    /admin/media/stats              - Usage statistics
  */
 #[Route('/admin/media', name: 'admin.media', middleware: ['admin'])]
-final class MediaController
+final class MediaController extends BaseAdminController
 {
     public function __construct(
         private readonly MediaService $mediaService,
         private readonly PermissionService $permissions,
+        MLView $view,
+        MenuService $menuService,
+        SessionManager $session,
     ) {
+        parent::__construct($view, $menuService, $session);
+    }
+
+
+    private function denyAccess(ServerRequestInterface $request, string $message = 'You do not have permission to view media'): ResponseInterface
+    {
+        $accept = $request->getHeaderLine('Accept');
+        if (str_contains($accept, 'application/json')) {
+            return json([
+                'success' => false,
+                'error' => $message,
+            ], 403);
+        }
+
+        return $this->render('errors.403', [
+            'message' => $message,
+            'title' => 'Access Denied',
+        ])->withStatus(403);
     }
 
     // =========================================================================
@@ -48,14 +73,47 @@ final class MediaController
     /**
      * List media with filters and pagination
      */
-    #[Route('GET', '', name: 'index')]
+    #[Route('GET', '', name: 'admin.media.index')]
     public function index(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('view_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to view media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to view media');
+        }
+
+        $params = $request->getQueryParams();
+        
+        $filters = [];
+        if (isset($params['type'])) {
+            $filters['media_type'] = $params['type'];
+        }
+        if (isset($params['folder'])) {
+            $filters['folder'] = $params['folder'];
+        }
+
+        $page = max(1, (int) ($params['page'] ?? 1));
+        $perPage = min(100, max(1, (int) ($params['per_page'] ?? 24)));
+
+        // Fetch media data
+        $result = $this->mediaService->list($filters, $page, $perPage);
+
+        // Content Negotiation: Render View if HTML requested and not strictly JSON
+        $accept = $request->getHeaderLine('Accept');
+        if (str_contains($accept, 'text/html') && !str_contains($accept, 'application/json')) {
+            return $this->render('admin.media.index', [
+                'title' => 'Media Library',
+                'media' => $result['data'],
+                'pagination' => [
+                    'page' => $result['page'],
+                    'per_page' => $result['per_page'],
+                    'total' => $result['total'],
+                    'total_pages' => $result['total_pages'],
+                ],
+                'permissions' => [
+                    'can_upload' => $this->permissions->can('create_media'),
+                    'can_delete' => $this->permissions->can('delete_media'),
+                    'can_edit' => $this->permissions->can('edit_media'),
+                ],
+            ]);
         }
 
         $params = $request->getQueryParams();
@@ -79,7 +137,7 @@ final class MediaController
             $items = $this->mediaService->search($params['q'], $perPage);
             return json([
                 'success' => true,
-                'data' => array_map(fn($m) => $m->toArray(), $items),
+                'data' => array_map(fn($m) => $m->toApiArray(), $items),
                 'meta' => [
                     'query' => $params['q'],
                     'count' => count($items),
@@ -91,7 +149,7 @@ final class MediaController
 
         return json([
             'success' => true,
-            'data' => array_map(fn($m) => $m->toArray(), $result['data']),
+            'data' => array_map(fn($m) => $m->toApiArray(), $result['data']),
             'meta' => [
                 'page' => $result['page'],
                 'per_page' => $result['per_page'],
@@ -108,28 +166,46 @@ final class MediaController
     /**
      * Get single media item
      */
-    #[Route('GET', '/{id:\d+}', name: 'show')]
-    public function show(int $id): ResponseInterface
+    #[Route('GET', '/{id:\d+}', name: 'admin.media.show')]
+    public function show(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->permissions->can('view_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to view media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to view media');
         }
 
         $media = $this->mediaService->find($id);
 
         if ($media === null) {
+            $accept = $request->getHeaderLine('Accept');
+            if (str_contains($accept, 'text/html') && !str_contains($accept, 'application/json')) {
+                return $this->render('errors.404', [
+                    'message' => 'Media not found',
+                    'title' => 'Page Not Found',
+                ])->withStatus(404);
+            }
+
             return json([
                 'success' => false,
                 'error' => 'Media not found',
             ], 404);
         }
 
+        // Content Negotiation: Render View if HTML requested and not strictly JSON
+        $accept = $request->getHeaderLine('Accept');
+        if (str_contains($accept, 'text/html') && !str_contains($accept, 'application/json')) {
+            return $this->render('admin.media.show', [
+                'title' => $media->title,
+                'media' => $media,
+                'permissions' => [
+                    'can_edit' => $this->permissions->can('edit_media'),
+                    'can_delete' => $this->permissions->can('delete_media'),
+                ],
+            ]);
+        }
+
         return json([
             'success' => true,
-            'data' => $media->toArray(),
+            'data' => $media->toApiArray(),
             'permissions' => [
                 'can_edit' => $this->permissions->can('edit_media'),
                 'can_delete' => $this->permissions->can('delete_media'),
@@ -140,14 +216,11 @@ final class MediaController
     /**
      * Get media by UUID
      */
-    #[Route('GET', '/uuid/{uuid}', name: 'showByUuid')]
-    public function showByUuid(string $uuid): ResponseInterface
+    #[Route('GET', '/uuid/{uuid}', name: 'admin.media.show_by_uuid')]
+    public function showByUuid(ServerRequestInterface $request, string $uuid): ResponseInterface
     {
         if (!$this->permissions->can('view_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to view media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to view media');
         }
 
         $media = $this->mediaService->findByUuid($uuid);
@@ -161,7 +234,7 @@ final class MediaController
 
         return json([
             'success' => true,
-            'data' => $media->toArray(),
+            'data' => $media->toApiArray(),
         ]);
     }
 
@@ -170,16 +243,28 @@ final class MediaController
     // =========================================================================
 
     /**
+     * Show upload form
+     */
+    #[Route('GET', '/upload', name: 'admin.media.create')]
+    public function create(ServerRequestInterface $request): ResponseInterface
+    {
+        if (!$this->permissions->can('create_media')) {
+            return $this->denyAccess($request, 'You do not have permission to upload media');
+        }
+
+        return $this->render('admin.media.upload_new', [
+            'title' => 'Upload Media',
+        ]);
+    }
+
+    /**
      * Upload a single file
      */
-    #[Route('POST', '/upload', name: 'upload')]
+    #[Route('POST', '/upload', name: 'admin.media.upload')]
     public function upload(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('create_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to upload media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to upload media');
         }
 
         $files = $request->getUploadedFiles();
@@ -208,7 +293,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $media->toArray(),
+                'data' => $media->toApiArray(),
                 'message' => 'File uploaded successfully',
             ], 201);
         } catch (\Exception $e) {
@@ -222,14 +307,11 @@ final class MediaController
     /**
      * Upload multiple files
      */
-    #[Route('POST', '/upload-multiple', name: 'uploadMultiple')]
+    #[Route('POST', '/upload-multiple', name: 'admin.media.upload_multiple')]
     public function uploadMultiple(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('create_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to upload media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to upload media');
         }
 
         $files = $request->getUploadedFiles();
@@ -256,7 +338,7 @@ final class MediaController
                     'generate_variants' => ($params['generate_variants'] ?? 'true') !== 'false',
                 ]);
 
-                $results['uploaded'][] = $media->toArray();
+                $results['uploaded'][] = $media->toApiArray();
             } catch (\Exception $e) {
                 $results['failed'][] = [
                     'index' => $index,
@@ -280,14 +362,11 @@ final class MediaController
     /**
      * Upload from URL
      */
-    #[Route('POST', '/upload-url', name: 'uploadUrl')]
+    #[Route('POST', '/upload-url', name: 'admin.media.upload_url')]
     public function uploadUrl(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('create_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to upload media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to upload media');
         }
 
         $data = json_decode((string) $request->getBody(), true);
@@ -312,7 +391,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $media->toArray(),
+                'data' => $media->toApiArray(),
                 'message' => 'File downloaded and uploaded successfully',
             ], 201);
         } catch (\Exception $e) {
@@ -330,14 +409,11 @@ final class MediaController
     /**
      * Initialize chunked upload
      */
-    #[Route('POST', '/chunked/init', name: 'chunkedInit')]
+    #[Route('POST', '/chunked/init', name: 'admin.media.chunked_init')]
     public function chunkedInit(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('create_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to upload media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to upload media');
         }
 
         $data = json_decode((string) $request->getBody(), true);
@@ -379,14 +455,11 @@ final class MediaController
     /**
      * Upload a chunk
      */
-    #[Route('POST', '/chunked/upload', name: 'chunkedUpload')]
+    #[Route('POST', '/chunked/upload', name: 'admin.media.chunked_upload')]
     public function chunkedUpload(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('create_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to upload media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to upload media');
         }
 
         $params = $request->getParsedBody() ?? [];
@@ -433,14 +506,11 @@ final class MediaController
     /**
      * Complete chunked upload
      */
-    #[Route('POST', '/chunked/complete', name: 'chunkedComplete')]
+    #[Route('POST', '/chunked/complete', name: 'admin.media.chunked_complete')]
     public function chunkedComplete(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('create_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to upload media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to upload media');
         }
 
         $data = json_decode((string) $request->getBody(), true);
@@ -467,7 +537,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $media->toArray(),
+                'data' => $media->toApiArray(),
                 'message' => 'File uploaded successfully',
             ], 201);
         } catch (\Exception $e) {
@@ -481,14 +551,11 @@ final class MediaController
     /**
      * Abort chunked upload
      */
-    #[Route('DELETE', '/chunked/{uploadId}', name: 'chunkedAbort')]
-    public function chunkedAbort(string $uploadId): ResponseInterface
+    #[Route('DELETE', '/chunked/{uploadId}', name: 'admin.media.chunked_abort')]
+    public function chunkedAbort(ServerRequestInterface $request, string $uploadId): ResponseInterface
     {
         if (!$this->permissions->can('create_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to manage uploads',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to manage uploads');
         }
 
         try {
@@ -513,14 +580,11 @@ final class MediaController
     /**
      * Update media metadata
      */
-    #[Route('PUT', '/{id:\d+}', name: 'update')]
+    #[Route('PUT', '/{id:\d+}', name: 'admin.media.update')]
     public function update(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->permissions->can('edit_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to edit media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to edit media');
         }
 
         $media = $this->mediaService->find($id);
@@ -539,7 +603,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $media->toArray(),
+                'data' => $media->toApiArray(),
                 'message' => 'Media updated successfully',
             ]);
         } catch (\Exception $e) {
@@ -553,14 +617,11 @@ final class MediaController
     /**
      * Delete media
      */
-    #[Route('DELETE', '/{id:\d+}', name: 'destroy')]
-    public function destroy(int $id): ResponseInterface
+    #[Route('DELETE', '/{id:\d+}', name: 'admin.media.destroy')]
+    public function destroy(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->permissions->can('delete_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to delete media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to delete media');
         }
 
         $media = $this->mediaService->find($id);
@@ -574,6 +635,12 @@ final class MediaController
 
         try {
             $this->mediaService->delete($media);
+
+            // Check if HTML request
+            $accept = $request->getHeaderLine('Accept');
+            if (str_contains($accept, 'text/html') && !str_contains($accept, 'application/json')) {
+                return new RedirectResponse('/admin/media');
+            }
 
             return json([
                 'success' => true,
@@ -590,14 +657,11 @@ final class MediaController
     /**
      * Bulk delete media
      */
-    #[Route('POST', '/bulk-delete', name: 'bulkDelete')]
+    #[Route('POST', '/bulk-delete', name: 'admin.media.bulk_delete')]
     public function bulkDelete(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('delete_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to delete media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to delete media');
         }
 
         $data = json_decode((string) $request->getBody(), true);
@@ -642,14 +706,11 @@ final class MediaController
     /**
      * Generate image variants
      */
-    #[Route('POST', '/{id:\d+}/variants', name: 'generateVariants')]
+    #[Route('POST', '/{id:\d+}/variants', name: 'admin.media.generate_variants')]
     public function generateVariants(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->permissions->can('edit_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to edit media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to edit media');
         }
 
         $media = $this->mediaService->find($id);
@@ -679,7 +740,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $media->toArray(),
+                'data' => $media->toApiArray(),
                 'message' => 'Variants generated successfully',
             ]);
         } catch (\Exception $e) {
@@ -693,14 +754,11 @@ final class MediaController
     /**
      * Crop image
      */
-    #[Route('POST', '/{id:\d+}/crop', name: 'crop')]
+    #[Route('POST', '/{id:\d+}/crop', name: 'admin.media.crop')]
     public function crop(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->permissions->can('edit_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to edit media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to edit media');
         }
 
         $media = $this->mediaService->find($id);
@@ -738,7 +796,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $media->toArray(),
+                'data' => $media->toApiArray(),
                 'message' => $createNew ? 'Cropped copy created' : 'Image cropped successfully',
             ]);
         } catch (\Exception $e) {
@@ -752,14 +810,11 @@ final class MediaController
     /**
      * Rotate image
      */
-    #[Route('POST', '/{id:\d+}/rotate', name: 'rotate')]
+    #[Route('POST', '/{id:\d+}/rotate', name: 'admin.media.rotate')]
     public function rotate(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->permissions->can('edit_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to edit media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to edit media');
         }
 
         $media = $this->mediaService->find($id);
@@ -779,7 +834,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $media->toArray(),
+                'data' => $media->toApiArray(),
                 'message' => "Image rotated {$degrees} degrees",
             ]);
         } catch (\Exception $e) {
@@ -797,14 +852,11 @@ final class MediaController
     /**
      * Copy media
      */
-    #[Route('POST', '/{id:\d+}/copy', name: 'copy')]
+    #[Route('POST', '/{id:\d+}/copy', name: 'admin.media.copy')]
     public function copy(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->permissions->can('create_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to copy media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to copy media');
         }
 
         $media = $this->mediaService->find($id);
@@ -823,7 +875,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $newMedia->toArray(),
+                'data' => $newMedia->toApiArray(),
                 'message' => 'Media copied successfully',
             ], 201);
         } catch (\Exception $e) {
@@ -841,10 +893,7 @@ final class MediaController
     public function move(ServerRequestInterface $request, int $id): ResponseInterface
     {
         if (!$this->permissions->can('edit_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to move media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to move media');
         }
 
         $media = $this->mediaService->find($id);
@@ -870,7 +919,7 @@ final class MediaController
 
             return json([
                 'success' => true,
-                'data' => $media->toArray(),
+                'data' => $media->toApiArray(),
                 'message' => 'Media moved successfully',
             ]);
         } catch (\Exception $e) {
@@ -888,14 +937,11 @@ final class MediaController
     /**
      * Get folders
      */
-    #[Route('GET', '/folders', name: 'folders')]
-    public function folders(): ResponseInterface
+    #[Route('GET', '/folders', name: 'admin.media.folders')]
+    public function folders(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('view_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to view media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to view media');
         }
 
         $folders = $this->mediaService->getFolders();
@@ -909,14 +955,11 @@ final class MediaController
     /**
      * Get usage statistics
      */
-    #[Route('GET', '/stats', name: 'stats')]
-    public function stats(): ResponseInterface
+    #[Route('GET', '/stats', name: 'admin.media.stats')]
+    public function stats(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->permissions->can('view_media')) {
-            return json([
-                'success' => false,
-                'error' => 'You do not have permission to view media',
-            ], 403);
+            return $this->denyAccess($request, 'You do not have permission to view media');
         }
 
         $stats = $this->mediaService->getUsageStats();
@@ -930,7 +973,7 @@ final class MediaController
     /**
      * Get URL for media
      */
-    #[Route('GET', '/{id:\d+}/url', name: 'url')]
+    #[Route('GET', '/{id:\d+}/url', name: 'admin.media.url')]
     public function url(ServerRequestInterface $request, int $id): ResponseInterface
     {
         $media = $this->mediaService->find($id);
@@ -956,7 +999,7 @@ final class MediaController
     /**
      * Get temporary URL (for private files)
      */
-    #[Route('GET', '/{id:\d+}/temporary-url', name: 'temporaryUrl')]
+    #[Route('GET', '/{id:\d+}/temporary-url', name: 'admin.media.temporary_url')]
     public function temporaryUrl(ServerRequestInterface $request, int $id): ResponseInterface
     {
         $media = $this->mediaService->find($id);

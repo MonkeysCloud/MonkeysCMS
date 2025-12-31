@@ -165,6 +165,40 @@ final class ThemeManager
     }
 
     /**
+     * Get view paths for the admin theme (for admin routes)
+     *
+     * Returns paths in priority order:
+     * 1. Custom admin theme views
+     * 2. Parent theme views (e.g., admin-default from contrib)
+     *
+     * @return string[]
+     */
+    public function getAdminViewPaths(): array
+    {
+        $paths = [];
+        $theme = $this->getAdminTheme();
+
+        // Admin theme views
+        $paths[] = $theme->path . '/views';
+
+        // Admin theme layouts
+        if (is_dir($theme->path . '/layouts')) {
+            $paths[] = $theme->path . '/layouts';
+        }
+
+        // Parent theme fallback (e.g., admin-default)
+        if ($theme->parent !== null) {
+            $parentTheme = $this->loadTheme($theme->parent);
+            $paths[] = $parentTheme->path . '/views';
+            if (is_dir($parentTheme->path . '/layouts')) {
+                $paths[] = $parentTheme->path . '/layouts';
+            }
+        }
+
+        return $paths;
+    }
+
+    /**
      * Get component paths for the active theme
      *
      * @return string[]

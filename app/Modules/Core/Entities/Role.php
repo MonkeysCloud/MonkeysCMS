@@ -7,6 +7,7 @@ namespace App\Modules\Core\Entities;
 use App\Cms\Attributes\ContentType;
 use App\Cms\Attributes\Field;
 use App\Cms\Attributes\Id;
+use App\Cms\Attributes\Ignore;
 use App\Cms\Core\BaseEntity;
 
 /**
@@ -93,6 +94,7 @@ class Role extends BaseEntity
      * Permissions assigned to this role (loaded separately)
      * @var Permission[]
      */
+    #[Ignore]
     public array $permissions = [];
 
     // ─────────────────────────────────────────────────────────────

@@ -310,30 +310,4 @@ class CsrfMiddleware implements MiddlewareInterface
     }
 }
 
-/**
- * AdminMiddleware - Restricts access to admin area
- */
-class AdminMiddleware implements MiddlewareInterface
-{
-    private CmsAuthService $auth;
 
-    public function __construct(CmsAuthService $auth)
-    {
-        $this->auth = $auth;
-    }
-
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
-        $user = $this->auth->user();
-
-        if (!$user) {
-            return new \Nyholm\Psr7\Response(302, ['Location' => '/login']);
-        }
-
-        if (!$user->hasPermission('access_admin')) {
-            return new \Nyholm\Psr7\Response(403, [], 'Access denied');
-        }
-
-        return $handler->handle($request);
-    }
-}

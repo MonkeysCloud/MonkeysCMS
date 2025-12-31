@@ -10,6 +10,8 @@ use App\Cms\Attributes\Id;
 use App\Cms\Attributes\Relation;
 use App\Cms\Core\BaseEntity;
 
+use MonkeysLegion\Auth\Contract\AuthenticatableInterface;
+
 /**
  * User Entity - Core user account for authentication and authorization
  */
@@ -21,7 +23,7 @@ use App\Cms\Core\BaseEntity;
     revisionable: false,
     publishable: false
 )]
-class User extends BaseEntity
+class User extends BaseEntity implements AuthenticatableInterface
 {
     #[Id(strategy: 'auto')]
     public ?int $id = null;
@@ -165,6 +167,20 @@ class User extends BaseEntity
 
     #[Field(type: 'datetime', label: 'Updated At')]
     public ?\DateTimeImmutable $updated_at = null;
+    
+    // Auth Fields
+    
+    #[Field(type: 'string', label: 'Remember Token', length: 100, required: false)]
+    public ?string $remember_token = null;
+
+    #[Field(type: 'int', label: 'Token Version', default: 1)]
+    public int $token_version = 1;
+
+    #[Field(type: 'string', label: '2FA Secret', length: 255, required: false)]
+    public ?string $two_factor_secret = null;
+
+    #[Field(type: 'json', label: '2FA Recovery Codes', default: [])]
+    public array $two_factor_recovery_codes = [];
 
     /**
      * Roles assigned to this user (loaded separately)
@@ -177,6 +193,61 @@ class User extends BaseEntity
      * @var Permission[]
      */
     public array $directPermissions = [];
+
+    // ─────────────────────────────────────────────────────────────
+    // AuthenticatableInterface Implementation
+    // ─────────────────────────────────────────────────────────────
+
+    public function getAuthIdentifierName(): string
+    {
+        return 'id';
+    }
+
+    public function getAuthIdentifier(): int|string
+    {
+        return $this->id;
+    }
+
+    public function getAuthPassword(): string
+    {
+        return $this->password_hash;
+    }
+
+    public function getTokenVersion(): int
+    {
+        return $this->token_version;
+    }
+
+    public function incrementTokenVersion(): static
+    {
+        $this->token_version++;
+        return $this;
+    }
+
+    public function getRememberToken(): ?string
+    {
+        return $this->remember_token;
+    }
+
+    public function setRememberToken(string $value): void
+    {
+        $this->remember_token = $value;
+    }
+
+    public function getRememberTokenName(): string
+    {
+        return 'remember_token';
+    }
+
+    public function getTwoFactorSecret(): ?string
+    {
+        return $this->two_factor_secret;
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_secret !== null;
+    }
 
     // ─────────────────────────────────────────────────────────────
     // Business Logic

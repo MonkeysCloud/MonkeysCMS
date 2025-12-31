@@ -84,6 +84,9 @@ final class CmsRepository
     {
         $tableName = $this->getTableName($entityClass);
 
+        // Reset query builder state to prevent accumulation from previous queries
+        $this->qb->reset();
+
         $row = $this->qb
             ->from($tableName)
             ->where('id', '=', $id)
@@ -118,6 +121,9 @@ final class CmsRepository
     ): array {
         $tableName = $this->getTableName($entityClass);
 
+        // Reset query builder state to prevent accumulation from previous queries
+        $this->qb->reset();
+
         $query = $this->qb->from($tableName);
 
         foreach ($criteria as $column => $value) {
@@ -142,7 +148,7 @@ final class CmsRepository
             $query->offset($offset);
         }
 
-        $rows = $query->get();
+        $rows = $query->fetchAllAssoc();
 
         return array_map(
             fn(array $row) => (new $entityClass())->hydrate($row),
@@ -194,7 +200,8 @@ final class CmsRepository
         $affected = $this->qb
             ->from($tableName)
             ->where('id', '=', $entity->getId())
-            ->delete();
+            ->delete($tableName)
+            ->execute();
 
         return $affected > 0;
     }
@@ -222,7 +229,7 @@ final class CmsRepository
             }
         }
 
-        return $query->delete();
+        return $query->delete($tableName)->execute();
     }
 
     /**
@@ -328,7 +335,7 @@ final class CmsRepository
 
         $qb->limit($limit);
 
-        $rows = $qb->get();
+        $rows = $qb->fetchAllAssoc();
 
         return array_map(
             fn(array $row) => (new $entityClass())->hydrate($row),

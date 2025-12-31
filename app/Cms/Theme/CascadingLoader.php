@@ -52,9 +52,21 @@ class CascadingLoader extends Loader
             }
         }
 
-        // If not found, throw exception (or let parent handle it which might throw)
-        // Parent implementation likely just returns path/view, so we can defer or throw
+        // If not found, throw exception
         throw new \RuntimeException("Template not found: {$view} (searched in: " . implode(', ', $this->paths) . ")");
+    }
+
+    /**
+     * Check if a template exists.
+     */
+    public function exists(string $view): bool
+    {
+        try {
+            $this->getSourcePath($view);
+            return true;
+        } catch (\RuntimeException $e) {
+            return false;
+        }
     }
 
     /**
@@ -62,12 +74,6 @@ class CascadingLoader extends Loader
      */
     private function getTemplateExtension(): string
     {
-        // Try accessing via reflection if no getter method exists on parent
-        // Based on previous check, parent has no public getter for extension
-        // So we store it locally or assume default if not passed
-        // However, we passed it to parent ctor.
-        
-        // Let's rely on the property if protected, or just hardcode/store our own
         return 'ml.php'; 
     }
 }

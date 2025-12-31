@@ -106,6 +106,17 @@ class SessionManager
     }
 
     /**
+     * Save the session data to storage
+     */
+    public function save(): void
+    {
+        if ($this->started && session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+            $this->started = false;
+        }
+    }
+
+    /**
      * Get a session value
      */
     public function get(string $key, mixed $default = null): mixed

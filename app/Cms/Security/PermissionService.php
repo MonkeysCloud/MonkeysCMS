@@ -8,7 +8,7 @@ use App\Modules\Core\Entities\User;
 use App\Modules\Core\Entities\Role;
 use App\Modules\Core\Entities\Permission;
 use App\Cms\Core\BaseEntity;
-use MonkeysLegion\Database\Connection;
+use MonkeysLegion\Database\Contracts\ConnectionInterface;
 
 /**
  * PermissionService - Handles all authorization logic
@@ -23,7 +23,8 @@ final class PermissionService
     private array $roleCache = [];
 
     public function __construct(
-        private readonly Connection $connection,
+        private readonly ConnectionInterface $connection,
+        private readonly \App\Cms\Modules\ModuleManager $moduleManager,
     ) {
     }
 
@@ -203,16 +204,21 @@ final class PermissionService
      */
     public function userOwnsEntity(User $user, BaseEntity $entity): bool
     {
+        // Users own their own profile
+        if ($entity instanceof User && $entity->id === $user->id) {
+            return true;
+        }
+
         // Check for author_id or user_id property
-        if (property_exists($entity, 'author_id') && $entity->author_id === $user->id) {
+        if (isset($entity->author_id) && $entity->author_id === $user->id) {
             return true;
         }
 
-        if (property_exists($entity, 'user_id') && $entity->user_id === $user->id) {
+        if (isset($entity->user_id) && $entity->user_id === $user->id) {
             return true;
         }
 
-        if (property_exists($entity, 'created_by') && $entity->created_by === $user->id) {
+        if (isset($entity->created_by) && $entity->created_by === $user->id) {
             return true;
         }
 
@@ -226,7 +232,7 @@ final class PermissionService
      */
     public function getEntityPermissions(string $entityType): array
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT * FROM permissions WHERE entity_type = :entity_type ORDER BY weight, name"
         );
         $stmt->execute(['entity_type' => $entityType]);
@@ -248,7 +254,7 @@ final class PermissionService
      */
     public function getAllPermissionsGrouped(): array
     {
-        $stmt = $this->connection->query(
+        $stmt = $this->connection->pdo()->query(
             "SELECT * FROM permissions ORDER BY `group`, weight, name"
         );
 
@@ -269,7 +275,7 @@ final class PermissionService
      */
     public function getRolePermissions(Role $role): array
     {
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             SELECT p.* FROM permissions p
             INNER JOIN role_permissions rp ON p.id = rp.permission_id
             WHERE rp.role_id = :role_id
@@ -293,7 +299,7 @@ final class PermissionService
     public function assignPermissionToRole(Role $role, Permission $permission): void
     {
         // Check if already assigned
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT id FROM role_permissions WHERE role_id = :role_id AND permission_id = :permission_id"
         );
         $stmt->execute([
@@ -305,7 +311,7 @@ final class PermissionService
             return; // Already assigned
         }
 
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "INSERT INTO role_permissions (role_id, permission_id, created_at) VALUES (:role_id, :permission_id, :created_at)"
         );
         $stmt->execute([
@@ -324,7 +330,7 @@ final class PermissionService
      */
     public function removePermissionFromRole(Role $role, Permission $permission): void
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM role_permissions WHERE role_id = :role_id AND permission_id = :permission_id"
         );
         $stmt->execute([
@@ -345,7 +351,7 @@ final class PermissionService
     public function setRolePermissions(Role $role, array $permissionIds): void
     {
         // Remove all existing permissions
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM role_permissions WHERE role_id = :role_id"
         );
         $stmt->execute(['role_id' => $role->id]);
@@ -353,7 +359,7 @@ final class PermissionService
         // Add new permissions
         if (!empty($permissionIds)) {
             $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
-            $stmt = $this->connection->prepare(
+            $stmt = $this->connection->pdo()->prepare(
                 "INSERT INTO role_permissions (role_id, permission_id, created_at) VALUES (:role_id, :permission_id, :created_at)"
             );
 
@@ -377,7 +383,7 @@ final class PermissionService
     public function assignRoleToUser(User $user, Role $role): void
     {
         // Check if already assigned
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT id FROM user_roles WHERE user_id = :user_id AND role_id = :role_id"
         );
         $stmt->execute([
@@ -389,7 +395,7 @@ final class PermissionService
             return; // Already assigned
         }
 
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "INSERT INTO user_roles (user_id, role_id, created_at) VALUES (:user_id, :role_id, :created_at)"
         );
         $stmt->execute([
@@ -408,7 +414,7 @@ final class PermissionService
      */
     public function removeRoleFromUser(User $user, Role $role): void
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM user_roles WHERE user_id = :user_id AND role_id = :role_id"
         );
         $stmt->execute([
@@ -429,7 +435,7 @@ final class PermissionService
     public function setUserRoles(User $user, array $roleIds): void
     {
         // Remove all existing roles
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM user_roles WHERE user_id = :user_id"
         );
         $stmt->execute(['user_id' => $user->id]);
@@ -437,7 +443,7 @@ final class PermissionService
         // Add new roles
         if (!empty($roleIds)) {
             $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
-            $stmt = $this->connection->prepare(
+            $stmt = $this->connection->pdo()->prepare(
                 "INSERT INTO user_roles (user_id, role_id, created_at) VALUES (:user_id, :role_id, :created_at)"
             );
 
@@ -461,7 +467,7 @@ final class PermissionService
     public function loadUserRoles(User $user): void
     {
         // Load roles
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             SELECT r.* FROM roles r
             INNER JOIN user_roles ur ON r.id = ur.role_id
             WHERE ur.user_id = :user_id
@@ -495,18 +501,106 @@ final class PermissionService
         $permissions = Permission::generateForEntity($entityType, $entityLabel, $module, $actions);
 
         foreach ($permissions as $data) {
-            // Check if permission exists
-            $stmt = $this->connection->prepare(
-                "SELECT id FROM permissions WHERE slug = :slug"
-            );
-            $stmt->execute(['slug' => $data['slug']]);
+            $this->upsertPermission($data);
+        }
+    }
 
-            if ($stmt->fetch()) {
-                continue; // Already exists
+    /**
+     * Sync all permissions from code to database
+     *
+     * @return array{created: int, updated: int, total: int}
+     */
+    public function syncPermissions(): array
+    {
+        $stats = ['created' => 0, 'updated' => 0, 'total' => 0];
+
+        // 1. Sync System Permissions
+        $systemPermissions = Permission::getSystemPermissions();
+        foreach ($systemPermissions as $data) {
+            $this->upsertPermission($data, $stats);
+        }
+
+        // 2. Sync Entity Permissions from Modules
+        $enabledModules = $this->moduleManager->getEnabledModules();
+        foreach ($enabledModules as $module) {
+            try {
+                $entities = $this->moduleManager->discoverEntities($module);
+                foreach ($entities as $entityClass) {
+                    if (!class_exists($entityClass)) {
+                        continue;
+                    }
+
+                    // Get Entity Metadata
+                    $reflection = new \ReflectionClass($entityClass);
+                    $attributes = $reflection->getAttributes(\App\Cms\Attributes\ContentType::class);
+                    if (empty($attributes)) {
+                        continue;
+                    }
+
+                    $contentType = $attributes[0]->newInstance();
+                    $entityType = $contentType->tableName;
+                    $entityLabel = $contentType->label;
+
+                    // Generate standard permissions
+                    $permissions = Permission::generateForEntity($entityType, $entityLabel, $module);
+                    foreach ($permissions as $data) {
+                        $this->upsertPermission($data, $stats);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Skip invalid modules
+                continue;
             }
+        }
 
+        return $stats;
+    }
+
+    /**
+     * Insert or update a permission
+     */
+    private function upsertPermission(array $data, array &$stats = []): void
+    {
+        // Check if permission exists
+        $stmt = $this->connection->pdo()->prepare(
+            "SELECT id FROM permissions WHERE slug = :slug"
+        );
+        $stmt->execute(['slug' => $data['slug']]);
+        $existing = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($existing) {
+            // Update mode (optional: prevent overwriting user customizations if needed)
+            // For now, we sync description, group, etc to keep code as source of truth
+            $stmt = $this->connection->pdo()->prepare("
+                UPDATE permissions SET 
+                    name = :name,
+                    description = :description,
+                    `group` = :group,
+                    entity_type = :entity_type,
+                    action = :action,
+                    module = :module,
+                    is_system = :is_system,
+                    weight = :weight,
+                    updated_at = :now
+                WHERE id = :id
+            ");
+            $stmt->execute([
+                'id' => $existing['id'],
+                'name' => $data['name'],
+                'description' => $data['description'],
+                'group' => $data['group'],
+                'entity_type' => $data['entity_type'] ?? null,
+                'action' => $data['action'] ?? 'custom',
+                'module' => $data['module'] ?? null,
+                'is_system' => $data['is_system'] ? 1 : 0,
+                'weight' => $data['weight'] ?? 0,
+                'now' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            ]);
+            
+            if (isset($stats['updated'])) $stats['updated']++;
+        } else {
             // Insert new permission
-            $stmt = $this->connection->prepare("
+            $stmt = $this->connection->pdo()->prepare("
                 INSERT INTO permissions (name, slug, description, `group`, entity_type, action, module, is_system, weight, created_at)
                 VALUES (:name, :slug, :description, :group, :entity_type, :action, :module, :is_system, :weight, :created_at)
             ");
@@ -515,14 +609,18 @@ final class PermissionService
                 'slug' => $data['slug'],
                 'description' => $data['description'],
                 'group' => $data['group'],
-                'entity_type' => $data['entity_type'],
-                'action' => $data['action'],
-                'module' => $data['module'],
+                'entity_type' => $data['entity_type'] ?? null,
+                'action' => $data['action'] ?? 'custom',
+                'module' => $data['module'] ?? null,
                 'is_system' => $data['is_system'] ? 1 : 0,
                 'weight' => $data['weight'] ?? 0,
                 'created_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
             ]);
+            
+            if (isset($stats['created'])) $stats['created']++;
         }
+        
+        if (isset($stats['total'])) $stats['total']++;
     }
 
     /**

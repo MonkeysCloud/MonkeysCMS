@@ -1,86 +1,127 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div style="margin-bottom: 20px;">
-        <a href="/admin/menus" style="color: #0969da; text-decoration: none;">&larr; Back to Menus</a>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <div class="flex items-center gap-4">
+                <a href="/admin/menus" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                </a>
+                <h2 class="text-2xl font-bold text-gray-900">{{ $isNew ? 'Create Menu' : 'Edit Menu' }}</h2>
+            </div>
+        </div>
     </div>
 
-    <div class="card" style="max-width: 600px;">
-        <h2 style="margin-top: 0;">{{ $isNew ? 'Create Menu' : 'Edit Menu' }}</h2>
+    <!-- Main Menu Form -->
+    <x-ui.card class="max-w-3xl mb-8">
+        @php
+            $menuName = $menu->name;
+            $menuMachineName = $menu->machine_name;
+            $menuDescription = $menu->description;
+            $formAction = $isNew ? '/admin/menus' : '/admin/menus/' . $menu->id;
+        @endphp
+        <form method="post" action="{{ $formAction }}">
+            
+            <x-form.input 
+                name="name" 
+                label="Name" 
+                :value="$menuName" 
+                required 
+            />
 
-        <form method="post" action="{{ $isNew ? '/admin/menus' : '/admin/menus/' . $menu->id }}">
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Name</label>
-                <input type="text" name="name" value="{{ $menu->name }}" required style="width: 100%; padding: 8px; border: 1px solid #d0d7de; border-radius: 4px;">
-            </div>
+            <x-form.input 
+                name="machine_name" 
+                label="Machine Name" 
+                :value="$menuMachineName" 
+                placeholder="Auto-generated if empty"
+                help="Unique identifier for this menu (e.g. 'main', 'footer')."
+            />
 
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Machine Name</label>
-                <input type="text" name="machine_name" value="{{ $menu->machine_name }}" placeholder="Auto-generated if empty" style="width: 100%; padding: 8px; border: 1px solid #d0d7de; border-radius: 4px; font-family: monospace;">
-                <div style="font-size: 0.85em; color: #6e7781; margin-top: 4px;">Unique identifier for this menu (e.g. 'main', 'footer').</div>
-            </div>
+            <x-form.textarea 
+                name="description" 
+                label="Description" 
+                rows="3"
+            >{{ $menu->description }}</x-form.textarea>
 
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description</label>
-                <textarea name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d0d7de; border-radius: 4px;">{{ $menu->description }}</textarea>
-            </div>
-
-            <!-- Location field, hidden/default for now as user likely wants custom menus -->
             <input type="hidden" name="location" value="{{ $menu->location ?? 'custom' }}">
 
-            <div style="margin-top: 20px;">
-                <button type="submit" class="button button-primary" style="background: #2ea44f; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+            <div class="pt-4 border-t border-gray-100 flex justify-end">
+                <x-ui.button type="submit">
                     {{ $isNew ? 'Create Menu' : 'Save Changes' }}
-                </button>
+                </x-ui.button>
             </div>
         </form>
-    </div>
+    </x-ui.card>
 
+    <!-- Menu Items Section -->
     @if(!$isNew)
-    <div class="card" style="margin-top: 20px; max-width: 800px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">Menu Items</h3>
-            <a href="/admin/menus/{{ $menu->id }}/items/create" class="button" style="background: #f6f8fa; border: 1px solid #d0d7de; padding: 5px 10px; border-radius: 6px; text-decoration: none; color: #24292f; font-size: 14px;">
+        @php $menuId = $menu->id; @endphp
+        <div class="flex items-center justify-between mb-4 mt-8 max-w-4xl">
+            <h3 class="text-lg font-bold text-gray-900">Menu Items</h3>
+            <x-ui.button :href="'/admin/menus/' . $menuId . '/items/create'" color="secondary" size="sm">
                 + Add Item
-            </a>
+            </x-ui.button>
         </div>
 
-        @if(empty($menu->items))
-            <p style="color: #6e7781; font-style: italic;">No items found. Add one to get started.</p>
-        @else
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="text-align: left; background: #f6f8fa; border-bottom: 1px solid #d0d7de;">
-                        <th style="padding: 10px;">Item</th>
-                        <th style="padding: 10px;">URL</th>
-                        <th style="padding: 10px; width: 150px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($menu->items as $item)
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 10px;">
-                            <span style="color: #999;">{{ str_repeat('— ', $item->depth) }}</span>
-                            @if($item->icon)
-                                {{ $item->icon }}
-                            @endif
-                            <strong>{{ $item->title }}</strong>
-                            @if(!$item->is_published)
-                                <span style="font-size: 0.8em; background: #eee; padding: 2px 5px; border-radius: 4px;">Draft</span>
-                            @endif
-                        </td>
-                        <td style="padding: 10px; font-family: monospace; font-size: 0.9em; color: #57606a;">
-                            {{ $item->url ?? '-' }}
-                        </td>
-                        <td style="padding: 10px;">
-                            <a href="/admin/menus/{{ $menu->id }}/items/{{ $item->id }}/edit" style="margin-right: 10px; color: #0969da; text-decoration: none;">Edit</a>
-                            <a href="/admin/menus/{{ $menu->id }}/items/{{ $item->id }}/delete" onclick="return confirm('Are you sure?')" style="color: #cf222e; text-decoration: none;">Delete</a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
-    </div>
+        <x-ui.card class="max-w-4xl overflow-hidden p-0">
+            @if(empty($menu->items))
+                <div class="text-center py-12 text-gray-500">
+                    <p>No items found. Add one to get started.</p>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Item Structure</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Destination</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-50">
+                            @foreach($menu->items as $item)
+                            @php $itemId = $item->id; @endphp
+                            <tr class="hover:bg-blue-50/50 transition-colors group">
+                                <td class="px-6 py-3">
+                                    <div class="flex items-center">
+                                        <!-- Indentation visual guide -->
+                                        @if($item->depth > 0)
+                                            <div class="flex mr-2">
+                                                @for($i = 0; $i < $item->depth; $i++)
+                                                    <div class="w-4 border-r border-gray-200 h-full mr-2"></div>
+                                                @endfor
+                                            </div>
+                                        @endif
+                                        
+                                        <div class="flex items-center">
+                                            @if($item->icon)
+                                                <span class="mr-2 text-gray-400 opacity-70">{{ $item->icon }}</span>
+                                            @endif
+                                            <span class="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{{ $item->title }}</span>
+                                            
+                                            @if(!$item->is_published)
+                                                <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200">Draft</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-3 text-sm text-gray-500 font-mono text-xs">
+                                    {{ $item->url ?? '-' }}
+                                </td>
+                                <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                    <x-ui.button :href="'/admin/menus/' . $menuId . '/items/' . $itemId . '/edit'" color="ghost" class="!p-1">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    </x-ui.button>
+                                    <x-ui.button :href="'/admin/menus/' . $menuId . '/items/' . $itemId . '/delete'" color="ghost" class="!p-1 text-red-500 hover:text-red-700" onclick="return confirm('Are you sure?')">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </x-ui.button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </x-ui.card>
     @endif
 @endsection

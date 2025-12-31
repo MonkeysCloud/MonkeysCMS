@@ -11,22 +11,24 @@ type = "frontend"
 parent = null
 
 # Theme regions for block placement
-[regions]
-header = "Header"
-navigation = "Main Navigation"
-hero = "Hero Section"
-content = "Main Content"
-sidebar = "Sidebar"
-footer_widgets = "Footer Widgets"
-footer = "Footer"
+regions {
+    header = "Header"
+    navigation = "Main Navigation"
+    hero = "Hero Section"
+    content = "Main Content"
+    sidebar = "Sidebar"
+    footer_widgets = "Footer Widgets"
+    footer = "Footer"
+}
 
 # Theme configuration options
-[config]
-primary_color = "#3b82f6"
-secondary_color = "#64748b"
-font_family = "system-ui, -apple-system, sans-serif"
-container_width = "1200px"
-show_sidebar = true
+config {
+    primary_color = "#3b82f6"
+    secondary_color = "#64748b"
+    font_family = "system-ui, -apple-system, sans-serif"
+    container_width = "1200px"
+    show_sidebar = true
+}
 
 # Screenshots for theme preview
 screenshots = [
@@ -42,12 +44,14 @@ supports = [
 ]
 
 # Asset paths
-[assets]
-css = ["assets/css/theme.css"]
-js = ["assets/js/theme.js"]
+assets {
+    css = ["assets/css/theme.css"]
+    js = ["assets/js/theme.js"]
+}
 
 # Menu locations
-[menus]
-main = "Main Navigation"
-footer = "Footer Menu"
-social = "Social Links"
+menus {
+    main = "Main Navigation"
+    footer = "Footer Menu"
+    social = "Social Links"
+}
