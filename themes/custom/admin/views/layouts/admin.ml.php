@@ -11,34 +11,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (compiled) -->
+    <link rel="stylesheet" href="/css/app.css">
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     @stack('styles')
 </head>
 <body class="h-full bg-gray-50 text-gray-900 font-sans antialiased">
@@ -72,7 +47,14 @@
                             $path = parse_url($url, PHP_URL_PATH);
                             $path = trim($path, '/');
                             $current = trim($currentUri, '/');
-                            return $path !== '' && str_starts_with($current, $path);
+                            
+                            // If the link is just the admin root, require exact match to avoid highlighting on all subpages
+                            if ($path === 'admin') {
+                                return $current === 'admin';
+                            }
+
+                            // For other links, allow exact match or sub-path match (e.g. /admin/media matches /admin/media/create)
+                            return $path !== '' && ($current === $path || str_starts_with($current, $path . '/'));
                         };
                     @endphp
 
@@ -172,19 +154,10 @@
         </div>
     </div>
     
-    @stack('scripts')
+    <!-- Dynamic Assets (HTMX, Alpine, CKEditor, etc) -->
+    <?= $assets ? $assets->renderJs() : '' ?>
 
-    <!-- MonkeysCMS Global Scripts -->
-    <script src="/js/htmx.min.js"></script>
-    <script src="/js/sortable.min.js"></script>
-    <script src="/js/monkeyscms.js"></script>
-    
-    <!-- AlpineJS Components (must load before Alpine.js CDN) -->
-    <script src="/js/confirmation-modal.js"></script>
-    <script src="/js/media-edit.js"></script>
-    
-    <!-- AlpineJS -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    @stack('scripts')
     
     <script>
         function toggleMobileMenu() {

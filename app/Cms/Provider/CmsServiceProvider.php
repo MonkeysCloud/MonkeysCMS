@@ -233,6 +233,28 @@ final class CmsServiceProvider
                         (int) ($config->get('files.image.quality') ?? 85)
                     );
                 },
+
+                // Asset Manager
+                \App\Cms\Assets\AssetManager::class => function (ContainerInterface $c) {
+                    $config = $c->get('config');
+                    $assetsConfig = $config->get('assets', []);
+                    $collection = new \App\Cms\Fields\Rendering\AssetCollection();
+                    $manager = new \App\Cms\Assets\AssetManager($assetsConfig, $collection);
+                    return $manager;
+                },
+                
+                // Block Manager
+                \App\Cms\Blocks\BlockManager::class => function (ContainerInterface $c) {
+                    $manager = new \App\Cms\Blocks\BlockManager(
+                        $c->get(\MonkeysLegion\Database\Contracts\ConnectionInterface::class),
+                        $c->get(\MonkeysLegion\Cache\CacheManager::class)
+                    );
+                    
+                    // Register Code Types
+                    $manager->registerType(new \App\Cms\Blocks\Types\HtmlBlock());
+                    
+                    return $manager;
+                },
             ]
         );
 
@@ -421,6 +443,12 @@ final class CmsServiceProvider
             [$controllerClass, $method] = $handler;
             return function (ServerRequestInterface $request, ...$args) use ($controllerClass, $method) {
                 $controller = $this->container->get($controllerClass);
+                
+                // Inject AssetManager (Property Injection for BaseAdminController)
+                if (method_exists($controller, 'setAssetManager') && $this->container->has(\App\Cms\Assets\AssetManager::class)) {
+                    $controller->setAssetManager($this->container->get(\App\Cms\Assets\AssetManager::class));
+                }
+
                 $reflection = (new \ReflectionClass($controller))->getMethod($method);
                 
                 $pass = [];
@@ -468,7 +496,8 @@ final class CmsServiceProvider
         
         return $handler;
     }
-        /**
+    
+    /**
      * Automatically discover controllers in app/Controllers and app/Modules
      * @return array<string>
      */

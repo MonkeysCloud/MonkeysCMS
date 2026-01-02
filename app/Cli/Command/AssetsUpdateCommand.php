@@ -79,6 +79,13 @@ final class AssetsUpdateCommand extends Command
                 continue;
             }
 
+            // Skip if no URL defined (likely local asset)
+            if (!isset($lib['url'])) {
+                $this->comment("  ○ {$name} (local managed)");
+                $skipped++;
+                continue;
+            }
+
             $version = $lib['version'];
             $url = str_replace('{version}', $version, $lib['url']);
             $filename = $lib['filename'];

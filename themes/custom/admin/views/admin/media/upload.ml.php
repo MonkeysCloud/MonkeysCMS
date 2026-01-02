@@ -1,5 +1,9 @@
 @extends('layouts.admin')
 
+@php
+    $assets->addFile('/js/media-upload.js');
+@endphp
+
 @section('content')
 <div class="page-header mb-6">
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">

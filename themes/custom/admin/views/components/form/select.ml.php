@@ -1,4 +1,4 @@
-@props(['disabled' => false, 'label' => null, 'name', 'options' => [], 'selected' => null, 'help' => null])
+@props(['disabled' => false, 'label' => null, 'name', 'options' => [], 'selected' => null, 'help' => null, 'placeholder' => null, 'id' => null])
 
 <div class="mb-4">
     @if($label)
@@ -9,11 +9,15 @@
     
     <select @disabled($disabled) 
             name="{{ $name }}" 
-            id="{{ $name }}"
-            {{ $attributes->merge(['class' => 'block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 disabled:bg-gray-100']) }}>
+            id="{{ $id ?? $name }}"
+            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 disabled:bg-gray-100">
         
-        @foreach($options as $value => $label)
-             <option value="{{ $value }}" @selected((string)$value === (string)$selected)>{{ $label }}</option>
+        @if($placeholder)
+             <option value="">{{ $placeholder }}</option>
+        @endif
+        
+        @foreach($options as $value => $optLabel)
+             <option value="{{ $value }}" <?= ((string)$value === (string)$selected) ? 'selected' : '' ?>>{{ $optLabel }}</option>
         @endforeach
         
         {{ $slot }}

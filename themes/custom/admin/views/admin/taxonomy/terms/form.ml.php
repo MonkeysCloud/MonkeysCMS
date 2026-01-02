@@ -65,7 +65,7 @@
                         label="Parent Term" 
                         :options="$termOptions"
                         :selected="$termParentId"
-                        placeholder="<Root>"
+                        placeholder="-- Root --"
                         help="Select a parent term for hierarchy."
                     />
                 </div>
@@ -96,7 +96,8 @@
                 <div class="sm:col-span-6 pt-2">
                      <div class="flex items-start">
                         <div class="flex items-center h-5">
-                            <input id="is_published" name="is_published" type="checkbox" value="1" {{ ($isNew || $term->is_published) ? 'checked' : '' }} class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                            @php $isChecked = $isNew || $term->is_published; @endphp
+                            <input id="is_published" name="is_published" type="checkbox" value="1" {{ $isChecked ? 'checked' : '' }} class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
                         </div>
                         <div class="ml-3 text-sm">
                             <label for="is_published" class="font-medium text-gray-700">Published</label>

@@ -184,11 +184,10 @@ final class TaxonomyController extends BaseAdminController
         }
 
         $tree = $this->taxonomy->getTermTree($vocabularyId);
-        $flatTerms = $this->flattenTree($tree);
 
         return $this->render('admin.taxonomy.terms.index', [
             'vocabulary' => $vocabulary,
-            'terms' => $flatTerms,
+            'terms' => $tree, // Pass tree directly
         ]);
     }
 
@@ -235,7 +234,7 @@ final class TaxonomyController extends BaseAdminController
         $term = new Term();
         $term->vocabulary_id = $vocabularyId;
         $term->name = $data['name'];
-        $term->slug = !empty($data['slug']) ? $data['slug'] : strtolower(preg_replace('/[^a-z0-9]+/', '-', $data['name']));
+        $term->slug = !empty($data['slug']) ? $data['slug'] : strtolower(preg_replace('/[^a-z0-9]+/i', '-', $data['name']));
         $term->description = $data['description'] ?? '';
         $term->parent_id = !empty($data['parent_id']) ? (int) $data['parent_id'] : null;
         $term->weight = (int) ($data['weight'] ?? 0);
@@ -352,14 +351,27 @@ final class TaxonomyController extends BaseAdminController
         }
 
         $data = json_decode((string) $request->getBody(), true);
-        $orderedIds = $data['terms'] ?? [];
+        $items = $data['terms'] ?? [];
 
-        if (!empty($orderedIds)) {
-            foreach ($orderedIds as $index => $id) {
-                $term = $this->taxonomy->getTerm((int)$id);
-                if ($term && $term->vocabulary_id === $vocabularyId) {
-                    $term->weight = $index;
-                    $this->taxonomy->saveTerm($term);
+        if (!empty($items)) {
+            foreach ($items as $item) {
+                $id = (int) ($item['id'] ?? 0);
+                $parentId = !empty($item['parent_id']) ? (int) $item['parent_id'] : null;
+                $weight = (int) ($item['weight'] ?? 0);
+
+                if ($id > 0) {
+                    $term = $this->taxonomy->getTerm($id);
+                    if ($term && $term->vocabulary_id === $vocabularyId) {
+                        $term->weight = $weight;
+                        $term->parent_id = $parentId;
+                        
+                        // Prevent circular reference
+                        if ($term->parent_id === $term->id) {
+                            $term->parent_id = null;
+                        }
+                        
+                        $this->taxonomy->saveTerm($term);
+                    }
                 }
             }
         }
@@ -367,4 +379,3 @@ final class TaxonomyController extends BaseAdminController
         return new \Laminas\Diactoros\Response\JsonResponse(['status' => 'ok']);
     }
 }
-

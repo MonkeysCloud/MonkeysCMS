@@ -1,0 +1,21 @@
+{
+  "name": "monkeyscms",
+  "version": "1.0.0",
+  "description": "MonkeysCMS - A modern PHP CMS",
+  "private": true,
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --minify",
+    "build:js": "node scripts/copy-assets.js",
+    "build": "npm run build:css && npm run build:js",
+    "watch:css": "npx tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --watch",
+    "dev": "npm run watch:css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.5"
+  },
+  "dependencies": {
+    "alpinejs": "^3.14.3",
+    "htmx.org": "^1.9.10",
+    "sortablejs": "^1.15.2"
+  }
+}

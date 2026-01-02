@@ -116,7 +116,7 @@ class BlockTypeEntity extends BaseEntity
     /**
      * Convert to array for API responses
      */
-    public function toArray(): array
+    public function toArray(bool $includeNulls = false): array
     {
         return [
             'id' => $this->id,

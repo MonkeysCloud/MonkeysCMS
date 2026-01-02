@@ -7,7 +7,7 @@ namespace App\Cms\Blocks;
 use App\Cms\Blocks\Types\BlockTypeInterface;
 use App\Cms\Fields\FieldDefinition;
 use App\Modules\Core\Entities\Block;
-use MonkeysLegion\Database\Connection;
+use MonkeysLegion\Database\Contracts\ConnectionInterface;
 use MonkeysLegion\Cache\CacheManager;
 
 /**
@@ -50,7 +50,7 @@ final class BlockManager
     private bool $initialized = false;
 
     public function __construct(
-        private readonly Connection $connection,
+        private readonly ConnectionInterface $connection,
         private readonly ?CacheManager $cache = null,
     ) {
     }
@@ -242,7 +242,7 @@ final class BlockManager
         // Save the entity
         $entity->prePersist();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             INSERT INTO block_types (
                 type_id, label, description, icon, category, template,
                 is_system, enabled, default_settings, allowed_regions,
@@ -273,7 +273,7 @@ final class BlockManager
             'updated_at' => $entity->updated_at->format('Y-m-d H:i:s'),
         ]);
 
-        $entity->id = (int) $this->connection->lastInsertId();
+        $entity->id = (int) $this->connection->pdo()->lastInsertId();
 
         // Add fields if provided
         if (!empty($data['fields'])) {
@@ -335,7 +335,7 @@ final class BlockManager
 
         $entity->updated_at = new \DateTimeImmutable();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             UPDATE block_types SET
                 label = :label, description = :description, icon = :icon,
                 category = :category, template = :template, enabled = :enabled,
@@ -378,13 +378,13 @@ final class BlockManager
         }
 
         // Delete field instances
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM block_type_fields WHERE block_type_id = :type_id"
         );
         $stmt->execute(['type_id' => $id]);
 
         // Delete the type
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM block_types WHERE id = :id AND is_system = 0"
         );
         $stmt->execute(['id' => $id]);
@@ -407,20 +407,20 @@ final class BlockManager
         $field->description = $fieldData['description'] ?? null;
         $field->help_text = $fieldData['help_text'] ?? null;
         $field->widget = $fieldData['widget'] ?? null;
-        $field->required = $fieldData['required'] ?? false;
-        $field->multiple = $fieldData['multiple'] ?? false;
+        $field->required = (bool) ($fieldData['required'] ?? false);
+        $field->multiple = (bool) ($fieldData['multiple'] ?? false);
         $field->cardinality = $fieldData['cardinality'] ?? 1;
         $field->default_value = $fieldData['default'] ?? null;
         $field->settings = $fieldData['settings'] ?? [];
         $field->validation = $fieldData['validation'] ?? [];
         $field->widget_settings = $fieldData['widget_settings'] ?? [];
         $field->weight = $fieldData['weight'] ?? 0;
-        $field->searchable = $fieldData['searchable'] ?? false;
-        $field->translatable = $fieldData['translatable'] ?? false;
+        $field->searchable = (bool) ($fieldData['searchable'] ?? false);
+        $field->translatable = (bool) ($fieldData['translatable'] ?? false);
 
         $field->prePersist();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             INSERT INTO block_type_fields (
                 block_type_id, name, machine_name, field_type, description, help_text,
                 widget, required, multiple, cardinality, default_value, settings,
@@ -456,7 +456,7 @@ final class BlockManager
             'updated_at' => $field->updated_at->format('Y-m-d H:i:s'),
         ]);
 
-        $field->id = (int) $this->connection->lastInsertId();
+        $field->id = (int) $this->connection->pdo()->lastInsertId();
 
         $this->invalidateCache();
 
@@ -468,7 +468,7 @@ final class BlockManager
      */
     public function removeFieldFromType(int $typeId, string $machineName): bool
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM block_type_fields WHERE block_type_id = :type_id AND machine_name = :machine_name"
         );
         $stmt->execute(['type_id' => $typeId, 'machine_name' => $machineName]);
@@ -586,7 +586,7 @@ final class BlockManager
             }
         }
 
-        $stmt = $this->connection->query(
+        $stmt = $this->connection->pdo()->query(
             "SELECT * FROM block_types WHERE enabled = 1 ORDER BY weight, label"
         );
 
@@ -608,7 +608,7 @@ final class BlockManager
 
     private function loadTypeFields(int $typeId): array
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT * FROM block_type_fields WHERE block_type_id = :type_id ORDER BY weight, name"
         );
         $stmt->execute(['type_id' => $typeId]);
@@ -625,7 +625,7 @@ final class BlockManager
 
     private function getTypeEntityById(int $id): ?BlockTypeEntity
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT * FROM block_types WHERE id = :id"
         );
         $stmt->execute(['id' => $id]);
