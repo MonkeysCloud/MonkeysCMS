@@ -257,6 +257,14 @@ final class AssetCollection
     }
 
     /**
+     * Check if a specific library/script is loaded
+     */
+    public function hasLibrary(string $path): bool
+    {
+        return isset($this->jsFiles[$path]);
+    }
+
+    /**
      * Check if collection is empty
      */
     public function isEmpty(): bool

@@ -266,7 +266,7 @@ class FieldDefinition extends BaseEntity
     /**
      * Populate from array data (hydrate)
      */
-    public function hydrate(array $data): self
+    public function hydrate(array $data): static
     {
         $this->id = $data['id'] ?? $this->id;
         $this->name = $data['name'] ?? $this->name;
@@ -279,9 +279,18 @@ class FieldDefinition extends BaseEntity
         $this->multiple = (bool) ($data['multiple'] ?? $this->multiple);
         $this->cardinality = (int) ($data['cardinality'] ?? $this->cardinality);
         $this->default_value = $data['default_value'] ?? $this->default_value;
-        $this->settings = $data['settings'] ?? $this->settings;
-        $this->validation = $data['validation'] ?? $this->validation;
-        $this->widget_settings = $data['widget_settings'] ?? $this->widget_settings;
+        
+        $this->settings = isset($data['settings']) 
+            ? (is_string($data['settings']) ? json_decode($data['settings'], true) ?? [] : $data['settings']) 
+            : $this->settings;
+
+        $this->validation = isset($data['validation']) 
+            ? (is_string($data['validation']) ? json_decode($data['validation'], true) ?? [] : $data['validation']) 
+            : $this->validation;
+
+        $this->widget_settings = isset($data['widget_settings']) 
+            ? (is_string($data['widget_settings']) ? json_decode($data['widget_settings'], true) ?? [] : $data['widget_settings']) 
+            : $this->widget_settings;
         $this->weight = (int) ($data['weight'] ?? $this->weight);
         $this->searchable = (bool) ($data['searchable'] ?? $this->searchable);
         $this->translatable = (bool) ($data['translatable'] ?? $this->translatable);

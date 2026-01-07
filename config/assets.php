@@ -11,6 +11,9 @@ return [
     // Target directory for downloaded assets
     'public_path' => 'public/js',
     
+    // Toggle between CDN (true) and Local (false)
+    'use_cdn' => env('ASSETS_USE_CDN', true),
+    
     // Libraries to manage
     'libraries' => [
         'htmx' => [
@@ -35,13 +38,46 @@ return [
             'filename' => 'alpine.min.js',
             'description' => 'Lightweight JavaScript framework',
             'homepage' => 'https://alpinejs.dev',
-            'enabled' => false, // Set to true to include
+            'enabled' => true, 
         ],
-    ],
-    
-    // MonkeysCMS own JS version
-    'monkeyscms' => [
-        'version' => '1.0.0',
-        'filename' => 'monkeyscms.js',
+
+        'ckeditor' => [
+            'version' => '41.2.0',
+            'url' => 'https://cdn.ckeditor.com/ckeditor5/{version}/classic/ckeditor.js',
+            'filename' => 'ckeditor.js',
+            'description' => 'WYSIWYG Editor',
+            'homepage' => 'https://ckeditor.com',
+        ],
+
+        'tinymce' => [
+            'version' => '7.6.0',
+            'url' => 'https://cdn.tiny.cloud/1/no-api-key/tinymce/{version}/tinymce.min.js',
+            'filename' => 'vendor/tinymce/tinymce.min.js',
+            'description' => 'TinyMCE WYSIWYG Editor (requires license)',
+            'homepage' => 'https://www.tiny.cloud',
+        ],
+
+        'quill' => [
+            'version' => '2.0.2',
+            'url' => 'https://cdn.quilljs.com/2.0.2/quill.min.js',
+            'filename' => 'vendor/quill/quill.js',
+            'description' => 'Quill WYSIWYG Editor (free, open-source)',
+            'homepage' => 'https://quilljs.com',
+        ],
+
+        'tailwind' => [
+            'version' => '3.4.5',
+            'url' => 'https://cdn.tailwindcss.com/{version}',
+            'filename' => 'tailwind.js',
+            'description' => 'Utility-first CSS framework',
+            'homepage' => 'https://tailwindcss.com',
+        ],
+
+        // MonkeysCMS own JS version
+        'monkeyscms' => [
+            'version' => '1.0.0',
+            'filename' => 'monkeyscms.js',
+            'dependencies' => ['htmx'], // HTMX is required core
+        ],
     ],
 ];

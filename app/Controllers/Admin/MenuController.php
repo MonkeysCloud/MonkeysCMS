@@ -100,16 +100,18 @@ final class MenuController extends BaseAdminController
     #[Route('GET', '/admin/menus/{id}/edit')]
     public function edit(int $id): ResponseInterface
     {
-        $menu = $this->menus->getMenuWithItems($id);
+        $menu = $this->menus->getMenu($id);
 
         if (!$menu) {
             return $this->redirect('/admin/menus');
         }
+        
+        // Pass the hierarchical tree for the view
+        $menu->items = $this->menus->getMenuTree($id);
 
         return $this->render('admin.menus.form', [
             'menu' => $menu,
             'isNew' => false,
-            // 'items' => $menu->getItemTree(), // Pass if we want to manage items in same form
         ]);
     }
 
@@ -146,6 +148,20 @@ final class MenuController extends BaseAdminController
         $this->menus->saveMenu($menu);
 
         return $this->redirect('/admin/menus');
+    }
+
+    /**
+     * Reorder Menu Items
+     */
+    #[Route('POST', '/admin/menus/{id}/items/reorder')]
+    public function reorderItems(int $id, ServerRequestInterface $request): ResponseInterface
+    {
+        $data = (array) $request->getParsedBody();
+        if (empty($data)) { $data = json_decode((string)$request->getBody(), true) ?? []; }
+        
+        $this->menus->reorderItems($id, $data['items'] ?? []);
+        
+        return new \Laminas\Diactoros\Response\JsonResponse(['status' => 'success']);
     }
 
     /**

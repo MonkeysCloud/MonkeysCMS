@@ -1,5 +1,10 @@
 @extends('layouts.admin')
 
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script src="/js/menu-tree.js"></script>
+@endpush
+
 @section('content')
     <div class="mb-6 flex items-center justify-between">
         <div>
@@ -57,7 +62,10 @@
     @if(!$isNew)
         @php $menuId = $menu->id; @endphp
         <div class="flex items-center justify-between mb-4 mt-8 max-w-4xl">
-            <h3 class="text-lg font-bold text-gray-900">Menu Items</h3>
+            <div class="flex items-center gap-4">
+                <h3 class="text-lg font-bold text-gray-900">Menu Items</h3>
+                <span class="sortable-status text-sm font-medium transition-colors duration-300"></span>
+            </div>
             <x-ui.button :href="'/admin/menus/' . $menuId . '/items/create'" color="secondary" size="sm">
                 + Add Item
             </x-ui.button>
@@ -69,59 +77,21 @@
                     <p>No items found. Add one to get started.</p>
                 </div>
             @else
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-100">
-                        <thead class="bg-gray-50/50">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Item Structure</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Destination</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-50">
-                            @foreach($menu->items as $item)
-                            @php $itemId = $item->id; @endphp
-                            <tr class="hover:bg-blue-50/50 transition-colors group">
-                                <td class="px-6 py-3">
-                                    <div class="flex items-center">
-                                        <!-- Indentation visual guide -->
-                                        @if($item->depth > 0)
-                                            <div class="flex mr-2">
-                                                @for($i = 0; $i < $item->depth; $i++)
-                                                    <div class="w-4 border-r border-gray-200 h-full mr-2"></div>
-                                                @endfor
-                                            </div>
-                                        @endif
-                                        
-                                        <div class="flex items-center">
-                                            @if($item->icon)
-                                                <span class="mr-2 text-gray-400 opacity-70">{{ $item->icon }}</span>
-                                            @endif
-                                            <span class="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{{ $item->title }}</span>
-                                            
-                                            @if(!$item->is_published)
-                                                <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200">Draft</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-3 text-sm text-gray-500 font-mono text-xs">
-                                    {{ $item->url ?? '-' }}
-                                </td>
-                                <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    <x-ui.button :href="'/admin/menus/' . $menuId . '/items/' . $itemId . '/edit'" color="ghost" class="!p-1">
-                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                                    </x-ui.button>
-                                    <x-ui.button :href="'/admin/menus/' . $menuId . '/items/' . $itemId . '/delete'" color="ghost" class="!p-1 text-red-500 hover:text-red-700" onclick="return confirm('Are you sure?')">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </x-ui.button>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div id="menu-tree-container" 
+                     data-reorder-url="/admin/menus/{{ $menu->id }}/items/reorder">
+                    
+                    <ul class="nested-sortable space-y-2 root-list">
+                        @foreach($menu->items as $item)
+                            @include('admin.menus._menu_item', ['item' => $item, 'menu' => $menu])
+                        @endforeach
+                    </ul>
                 </div>
             @endif
         </x-ui.card>
     @endif
+
+    @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="/themes/custom/admin/assets/js/menu-tree.js"></script>
+    @endpush
 @endsection

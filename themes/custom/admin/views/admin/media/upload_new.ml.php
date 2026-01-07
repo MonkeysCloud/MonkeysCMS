@@ -1,6 +1,5 @@
 @extends('layouts.admin')
 
-@section('content')
 @php
     // Define AlpineJS bindings as strings to bypass Template Engine parsing
     $dropZoneBind = "x-bind:class=\"isDragging ? 'border-blue-500 bg-blue-50 ring-4 ring-blue-100' : 'border-gray-300 hover:border-gray-400 bg-white'\"";
@@ -8,6 +7,8 @@
     $statusTextBind = "x-bind:class=\"file.status === 'uploading' ? 'text-blue-600' : (file.status === 'success' ? 'text-green-600' : (file.status === 'error' ? 'text-red-600' : 'text-gray-500'))\"";
     $descColSpanBind = "x-bind:class=\"!file.isImage ? 'sm:col-span-2' : ''\"";
 @endphp
+
+@section('content')
 
 <div class="page-header mb-6">
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">

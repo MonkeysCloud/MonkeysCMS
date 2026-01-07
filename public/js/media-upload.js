@@ -1,4 +1,7 @@
 function mediaUpload() {
+    // Store XHRs locally to avoid Alpine proxying issues with native objects
+    const activeXhrs = {};
+
     return {
         isDragging: false,
         uploads: [],
@@ -49,17 +52,14 @@ function mediaUpload() {
                     progress: 0,
                     status: 'pending', 
                     statusText: 'Pending',
-                    xhr: null,
                     // Metadata fields
-                    title: file.name.split('.').slice(0, -1).join('.'), // Default title from filename
+                    title: file.name.split('.').slice(0, -1).join('.'),
                     alt: '',
                     description: '',
                     isImage: file.type.startsWith('image/')
                 };
                 
                 this.uploads.unshift(upload);
-                // Do NOT auto-start upload
-                // this.processUpload(upload);
             });
             
             // Reset input
@@ -83,7 +83,8 @@ function mediaUpload() {
 
         processUpload(upload) {
             upload.status = 'uploading';
-            upload.statusText = 'Uploading...';
+            upload.statusText = 'Uploading... 0%';
+            upload.progress = 0;
             
             const formData = new FormData();
             formData.append('file', upload.file);
@@ -92,30 +93,37 @@ function mediaUpload() {
             formData.append('description', upload.description);
             
             const xhr = new XMLHttpRequest();
-            upload.xhr = xhr;
+            // Store raw xhr in closure map
+            activeXhrs[upload.id] = xhr;
             
-            // Store the upload ID for later lookup
             const id = upload.id;
             
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
-                    // Find the reactive upload object in the array
                     const u = this.uploads.find(item => item.id === id);
                     if (u) {
-                        u.progress = Math.round((e.loaded * 100) / e.total);
+                        const percent = Math.round((e.loaded * 100) / e.total);
+                        u.progress = percent;
+                        u.statusText = `Uploading... ${percent}%`;
                     }
                 }
             });
             
             xhr.addEventListener('load', () => {
-                // Find the reactive upload object in the array
                 const u = this.uploads.find(item => item.id === id);
+                delete activeXhrs[id]; // Cleanup
+
                 if (!u) return;
                 
                 if (xhr.status >= 200 && xhr.status < 300) {
                     u.status = 'success';
                     u.statusText = 'Upload complete';
                     u.progress = 100;
+                    
+                    // Optional: Remove from list after delay?
+                    // setTimeout(() => {
+                    //     this.uploads = this.uploads.filter(item => item.id !== id);
+                    // }, 3000);
                 } else {
                     u.status = 'error';
                     try {
@@ -128,6 +136,7 @@ function mediaUpload() {
             });
             
             xhr.addEventListener('error', () => {
+                delete activeXhrs[id];
                 const u = this.uploads.find(item => item.id === id);
                 if (u) {
                     u.status = 'error';
@@ -136,6 +145,7 @@ function mediaUpload() {
             });
             
             xhr.addEventListener('abort', () => {
+                delete activeXhrs[id];
                 const u = this.uploads.find(item => item.id === id);
                 if (u) {
                     u.status = 'error';
@@ -150,24 +160,29 @@ function mediaUpload() {
             if (csrfToken) {
                 xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
             }
+            // Fallback for input field
+            const csrfInput = document.querySelector('input[name="csrf_token"]')?.value;
+             if (!csrfToken && csrfInput) {
+                xhr.setRequestHeader('X-CSRF-TOKEN', csrfInput);
+            }
             
             xhr.send(formData);
         },
         
         cancelUpload(id) {
-            const upload = this.uploads.find(u => u.id === id);
-            if (upload && upload.xhr) {
-                upload.xhr.abort();
-            } else if (upload) {
-                // If pending, just remove? Or mark cancelled?
-                // For now just remove from list if pending
-                if (upload.status === 'pending') {
-                    this.uploads = this.uploads.filter(u => u.id !== id);
-                }
+            const xhr = activeXhrs[id];
+            if (xhr) {
+                xhr.abort();
+            } else {
+                // If just pending
+                this.uploads = this.uploads.filter(u => u.id !== id);
             }
         },
 
         removeUpload(id) {
+             // Abort if running
+             this.cancelUpload(id); 
+             // Remove
              this.uploads = this.uploads.filter(u => u.id !== id);
         },
 
@@ -178,5 +193,5 @@ function mediaUpload() {
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
-    }
+    };
 }

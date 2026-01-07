@@ -2,9 +2,63 @@
  * Media Field Widgets - Image, File, Gallery, Video
  * MonkeysCMS Field Widget System
  */
-
 (function() {
     'use strict';
+
+    // Global CmsMedia object
+    window.CmsMedia = {
+        initImage: function(fieldId) {
+            const wrapper = document.querySelector(`[data-field-id="${fieldId}"]`);
+            if (!wrapper) return;
+
+            const browseBtn = wrapper.querySelector('.field-image__browse');
+            const removeBtn = wrapper.querySelector('.field-image__remove');
+            const fileInput = wrapper.querySelector('.field-image__file');
+
+            if (browseBtn) {
+                browseBtn.addEventListener('click', function() {
+                    window.openMediaBrowser(fieldId, 'image');
+                });
+            }
+
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    window.clearMediaField(fieldId);
+                });
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        window.uploadMediaField(fieldId, this.files[0]);
+                    }
+                });
+            }
+        },
+
+        initGallery: function(fieldId) {
+            const wrapper = document.querySelector(`[data-field-id="${fieldId}"]`);
+            if (!wrapper) return;
+
+            const addBtn = wrapper.querySelector('.field-gallery__add');
+            
+            if (addBtn) {
+                addBtn.addEventListener('click', function() {
+                    // For gallery, pass the specific callback context or handle multiple
+                    window.openMediaBrowser(fieldId, 'image');
+                });
+            }
+
+            // Delegate remove clicks
+            wrapper.addEventListener('click', function(e) {
+                if (e.target.closest('.field-gallery__remove')) {
+                    const item = e.target.closest('.field-gallery__item');
+                    if (item) item.remove();
+                    window.updateGalleryValue(fieldId);
+                }
+            });
+        }
+    };
 
     // Media Browser Modal State
     let mediaModal = null;
@@ -18,15 +72,12 @@
         currentFieldId = fieldId;
         currentMediaType = type;
 
-        // Create modal if not exists
         if (!mediaModal) {
             createMediaModal();
         }
 
-        // Load media items
         loadMediaItems(type);
 
-        // Show modal
         mediaModal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     };
@@ -39,8 +90,9 @@
             mediaModal.style.display = 'none';
             document.body.style.overflow = '';
         }
-        currentFieldId = null;
-        currentMediaType = null;
+        // Don't nullify currentFieldId immediately if we need it for callbacks, 
+        // but typically we do it after selection. 
+        // currentFieldId = null; 
     };
 
     /**
@@ -73,7 +125,6 @@
         `;
         document.body.appendChild(mediaModal);
 
-        // Close on backdrop click
         mediaModal.addEventListener('click', function(e) {
             if (e.target === mediaModal) {
                 window.closeMediaBrowser();
@@ -90,7 +141,6 @@
 
         grid.innerHTML = '<div class="media-browser__loading">Loading...</div>';
 
-        // API endpoint based on type
         const endpoint = type === 'image' 
             ? '/admin/media?type=image' 
             : '/admin/media';
@@ -122,9 +172,9 @@
         }
 
         grid.innerHTML = items.map(item => `
-            <div class="media-browser__item" data-id="${item.id}" onclick="window.toggleMediaSelection(this)">
-                ${item.mime_type && item.mime_type.startsWith('image/') 
-                    ? `<img src="/media/${item.id}/thumbnail" alt="${item.filename || ''}">`
+            <div class="media-browser__item" data-id="${item.id}" data-url="${item.url || ''}" onclick="window.toggleMediaSelection(this)">
+                ${item.is_image 
+                    ? `<img src="${item.url}" alt="${item.filename || ''}">`
                     : `<div class="media-browser__file-icon">📄</div>`}
                 <div class="media-browser__item-name">${item.filename || 'Untitled'}</div>
             </div>
@@ -135,15 +185,11 @@
      * Toggle Media Selection
      */
     window.toggleMediaSelection = function(element) {
-        // Remove selection from others
         document.querySelectorAll('.media-browser__item--selected').forEach(el => {
             el.classList.remove('media-browser__item--selected');
         });
-
-        // Select this item
         element.classList.add('media-browser__item--selected');
 
-        // Enable select button
         const selectBtn = document.getElementById('media-browser-select');
         if (selectBtn) selectBtn.disabled = false;
     };
@@ -156,7 +202,17 @@
         if (!selected || !currentFieldId) return;
 
         const mediaId = selected.dataset.id;
-        setFieldValue(currentFieldId, mediaId);
+        const mediaUrl = selected.dataset.url; // Use data-url for preview
+
+        // Check widget type by wrapper class
+        const wrapper = document.querySelector(`[data-field-id="${currentFieldId}"]`);
+        
+        if (wrapper && wrapper.classList.contains('field-gallery')) {
+            window.addGalleryItem(currentFieldId, mediaId, mediaUrl);
+        } else {
+            setFieldValue(currentFieldId, mediaId, mediaUrl);
+        }
+        
         window.closeMediaBrowser();
     };
 
@@ -164,7 +220,6 @@
      * Search Media
      */
     window.searchMedia = function(query) {
-        // Debounced search
         clearTimeout(window.mediaSearchTimeout);
         window.mediaSearchTimeout = setTimeout(() => {
             const endpoint = currentMediaType === 'image'
@@ -189,13 +244,18 @@
         if (!files.length) return;
 
         const formData = new FormData();
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        
         for (let i = 0; i < files.length; i++) {
             formData.append('files[]', files[i]);
         }
 
         fetch('/admin/media/upload', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': token || ''
+            }
         })
         .then(response => response.json())
         .then(data => {
@@ -218,22 +278,25 @@
         if (!file) return;
 
         const formData = new FormData();
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
         formData.append('file', file);
 
-        // Show loading state
-        const wrapper = document.getElementById(fieldId + '_wrapper');
+        const wrapper = document.querySelector(`[data-field-id="${fieldId}"]`);
         if (wrapper) {
             wrapper.classList.add('field-media--uploading');
         }
 
         fetch('/admin/media/upload', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': token || ''
+            }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success && data.data) {
-                setFieldValue(fieldId, data.data.id);
+                setFieldValue(fieldId, data.data.id, data.data.url);
             } else {
                 alert('Upload failed: ' + (data.error || 'Unknown error'));
             }
@@ -257,66 +320,87 @@
     };
 
     /**
-     * Set Field Value and Update UI
+     * Set Field Value and Update UI (Single Image)
      */
-    function setFieldValue(fieldId, mediaId) {
+    function setFieldValue(fieldId, mediaId, mediaUrl) {
         const hidden = document.getElementById(fieldId);
-        const preview = document.getElementById(fieldId + '_preview');
-        const img = document.getElementById(fieldId + '_img');
-        const removeBtn = document.querySelector(`#${fieldId}_wrapper .field-image__remove, #${fieldId}_wrapper .field-file__remove`);
-        const info = document.getElementById(fieldId + '_info');
+        const wrapper = document.querySelector(`[data-field-id="${fieldId}"]`);
+        if (!wrapper) return;
 
-        if (hidden) {
-            hidden.value = mediaId;
-        }
+        const preview = wrapper.querySelector('.field-image__preview');
+        const img = wrapper.querySelector('.field-image__img');
+        const placeholder = wrapper.querySelector('.field-image__placeholder');
+        const removeBtn = wrapper.querySelector('.field-image__remove');
 
-        if (mediaId) {
-            // Show preview for images
+        if (hidden) hidden.value = mediaId;
+
+        if (mediaId && mediaUrl) {
             if (img) {
-                img.src = `/media/${mediaId}/thumbnail`;
+                img.src = mediaUrl;
                 img.style.display = '';
+            } else if (preview) {
+                 // Create img if missing
+                 const newImg = document.createElement('img');
+                 newImg.className = 'field-image__img';
+                 newImg.src = mediaUrl;
+                 // Insert before placeholder
+                 preview.insertBefore(newImg, placeholder);
             }
-            if (preview) {
-                preview.classList.remove('field-image__preview--empty');
-                const placeholder = preview.querySelector('.field-image__placeholder');
-                if (placeholder) placeholder.style.display = 'none';
-            }
-            if (removeBtn) {
-                removeBtn.style.display = '';
-            }
-            // Update file info if exists
-            if (info) {
-                info.innerHTML = `
-                    <span class="field-file__icon">📄</span>
-                    <span class="field-file__name">File #${mediaId}</span>
-                    <a href="/media/${mediaId}/download" class="field-file__download" target="_blank">Download</a>
-                `;
-            }
+
+            if (placeholder) placeholder.style.display = 'none';
+            if (removeBtn) removeBtn.style.display = '';
+            if (preview) preview.classList.remove('field-image__preview--empty');
         } else {
-            // Clear preview
-            if (img) {
-                img.src = '';
-                img.style.display = 'none';
-            }
-            if (preview) {
-                preview.classList.add('field-image__preview--empty');
-                const placeholder = preview.querySelector('.field-image__placeholder');
-                if (placeholder) placeholder.style.display = '';
-            }
-            if (removeBtn) {
-                removeBtn.style.display = 'none';
-            }
-            if (info) {
-                info.innerHTML = '';
-            }
+            if (img) img.style.display = 'none';
+            if (placeholder) placeholder.style.display = '';
+            if (removeBtn) removeBtn.style.display = 'none';
+            if (preview) preview.classList.add('field-image__preview--empty');
         }
     }
 
     /**
-     * Select Image (for repeater subfields)
+     * Add Item to Gallery
      */
-    window.selectImage = function(inputId) {
-        window.openMediaBrowser(inputId, 'image');
+    window.addGalleryItem = function(fieldId, mediaId, mediaUrl) {
+        const wrapper = document.querySelector(`[data-field-id="${fieldId}"]`);
+        if (!wrapper) return;
+
+        const grid = wrapper.querySelector('.field-gallery__grid');
+        const index = grid.children.length;
+
+        const item = document.createElement('div');
+        item.className = 'field-gallery__item';
+        item.dataset.index = index;
+        item.draggable = true;
+        item.innerHTML = `
+            <img src="${mediaUrl || `/media/${mediaId}/thumbnail`}" alt="">
+            <button type="button" class="field-gallery__remove" data-action="remove">×</button>
+        `;
+
+        grid.appendChild(item);
+        window.updateGalleryValue(fieldId);
+    };
+
+    /**
+     * Update Gallery JSON Value
+     */
+    window.updateGalleryValue = function(fieldId) {
+        const wrapper = document.querySelector(`[data-field-id="${fieldId}"]`);
+        if (!wrapper) return;
+
+        const hidden = document.getElementById(fieldId);
+        const grid = wrapper.querySelector('.field-gallery__grid');
+        const items = grid.querySelectorAll('.field-gallery__item img');
+        
+        const urls = Array.from(items).map(img => img.src);
+        
+        // Gallery usually stores URLs or specific structures. Adjust as needed.
+        // If your backend expects IDs, we need to store IDs in data attributes.
+        // Based on GalleryWidget.php, it seems to store URLs in JSON.
+        
+        if (hidden) {
+            hidden.value = JSON.stringify(urls);
+        }
     };
 
 })();

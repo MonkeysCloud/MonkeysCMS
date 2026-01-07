@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Cms\Fields\Widget;
 
 use App\Cms\Fields\Definition\Field;
+use App\Cms\Fields\FieldDefinition;
 use App\Cms\Fields\Rendering\RenderContext;
+use App\Cms\Fields\Rendering\RenderResult;
+use App\Cms\Fields\Validation\ValidationResult;
 use App\Cms\Fields\Value\FieldValue;
 
 /**
@@ -26,12 +29,27 @@ interface WidgetInterface
     public function supportsMultiple(): bool;
 
     /**
-     * Render the widget for editing
+     * Render the widget for editing (new Field-based API)
      */
     public function render(Field $field, FieldValue $value, RenderContext $context): WidgetOutput;
 
     /**
-     * Render the widget for display (non-editable)
+     * Render the widget for display (new Field-based API)
      */
     public function display(Field $field, FieldValue $value, RenderContext $context): WidgetOutput;
+
+    /**
+     * Render the widget for editing (legacy FieldDefinition-based API)
+     */
+    public function renderField(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult;
+
+    /**
+     * Render the widget for display (legacy FieldDefinition-based API)
+     */
+    public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult;
+
+    /**
+     * Validate a field value
+     */
+    public function validate(FieldDefinition $field, mixed $value): ValidationResult;
 }

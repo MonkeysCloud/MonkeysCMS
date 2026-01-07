@@ -180,7 +180,7 @@ final class WidgetRegistry
         RenderContext $context
     ): RenderResult {
         $widget = $this->resolve($field);
-        $result = $widget->render($field, $value, $context);
+        $result = $widget->renderField($field, $value, $context);
 
         // Collect assets
         $this->collectedAssets->merge($result->getAssets());
