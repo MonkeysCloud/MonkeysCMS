@@ -118,6 +118,15 @@ class AssetManager
         return $this;
     }
 
+    /**
+     * Merge an external asset collection
+     */
+    public function mergeCollection(AssetCollection $collection): self
+    {
+        $this->collection->merge($collection);
+        return $this;
+    }
+
     public function renderCss(): string
     {
         return $this->collection->renderCssTags() . $this->collection->renderInlineStyles();

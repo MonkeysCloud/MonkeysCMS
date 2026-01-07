@@ -7,7 +7,7 @@
                 <a href="{{ $cancel_url }}" class="text-gray-500 hover:text-gray-700">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 </a>
-                <h2 class="text-2xl font-bold text-gray-900">Add Field: {{ $type['label'] }}</h2>
+                <h2 class="text-2xl font-bold text-gray-900">Edit Field: {{ $field['label'] }}</h2>
             </div>
         </div>
     </div>
@@ -35,39 +35,41 @@
             
             <div class="mb-4">
                 <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Label</label>
-                <input type="text" name="name" id="name" required
+                <input type="text" name="name" id="name" required value="{{ $field['label'] }}"
                     class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
             </div>
 
             <div class="mb-4">
                 <label for="machine_name" class="block text-sm font-medium text-gray-700 mb-1">Machine Name</label>
-                <input type="text" name="machine_name" id="machine_name" placeholder="field_example"
-                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
-                <p class="mt-1 text-sm text-gray-500">Optional. Only lowercase letters, numbers, and underscores.</p>
+                <input type="text" name="machine_name" id="machine_name" value="{{ $machine_name }}" disabled
+                    class="block w-full rounded-lg border-gray-300 bg-gray-50 text-gray-500 shadow-sm sm:text-sm px-3 py-2 cursor-not-allowed">
+                <p class="mt-1 text-sm text-gray-500">Machine name cannot be changed.</p>
             </div>
 
             <div class="mb-4">
                 <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Field Type</label>
-                <select name="type" id="type" required
-                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
+                <select name="type" id="type" disabled
+                    class="block w-full rounded-lg border-gray-300 bg-gray-50 text-gray-500 shadow-sm sm:text-sm px-3 py-2 cursor-not-allowed">
                     <option value="">Select a field type...</option>
                     @foreach($grouped_types as $category => $types)
                         <optgroup label="{{ $category }}">
                             @foreach($types as $type_enum)
-                                <option value="{{ $type_enum->value }}">
+                                <option value="{{ $type_enum->value }}" {{ $type_enum->value === ($field['type']->value ?? $field['type']) ? 'selected' : '' }}>
                                     {{ $type_enum->getLabel() }}
                                 </option>
                             @endforeach
                         </optgroup>
                     @endforeach
                 </select>
+                <!-- Hidden input to submit the type value if needed, but usually we don't update type -->
+                <p class="mt-1 text-sm text-gray-500">Field type cannot be changed.</p>
             </div>
 
             <div class="mb-4">
                 <div class="relative flex items-start">
                     <div class="flex h-5 items-center">
                         <input type="hidden" name="required" value="0">
-                        <input id="required" name="required" type="checkbox" value="1"
+                        <input id="required" name="required" type="checkbox" value="1" {{ !empty($field['required']) ? 'checked' : '' }}
                             class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600">
                     </div>
                     <div class="ml-3 text-sm">
@@ -80,7 +82,7 @@
                 <div class="relative flex items-start">
                     <div class="flex h-5 items-center">
                         <input type="hidden" name="multiple" value="0">
-                        <input id="multiple" name="multiple" type="checkbox" value="1"
+                        <input id="multiple" name="multiple" type="checkbox" value="1" {{ !empty($field['multiple']) ? 'checked' : '' }}
                             class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600">
                     </div>
                     <div class="ml-3 text-sm">
@@ -92,12 +94,12 @@
             <div class="mb-4">
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Help Text</label>
                 <textarea name="description" id="description" rows="2"
-                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></textarea>
+                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">{{ $field['description'] ?? '' }}</textarea>
             </div>
 
             <div class="pt-4 border-t border-gray-100 flex justify-end">
                 <x-ui.button type="submit">
-                    Save Field
+                    Save Changes
                 </x-ui.button>
             </div>
         </form>

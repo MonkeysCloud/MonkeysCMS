@@ -14,6 +14,7 @@ use MonkeysLegion\Router\Attributes\Route;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Laminas\Diactoros\Response\RedirectResponse;
+use Laminas\Diactoros\Response\JsonResponse;
 
 /**
  * BlockTypeController - Admin UI for managing block types
@@ -99,6 +100,10 @@ class BlockTypeController extends BaseAdminController
             'label' => $type['label'],
             'id' => $type['id'],
             'description' => $type['description'] ?? '',
+            'icon' => $type['icon'] ?? '🧱',
+            'category' => $type['category'] ?? 'Custom',
+            'cache_ttl' => $type['cache_ttl'] ?? 3600,
+            'enabled' => $type['enabled'] ?? true,
         ];
 
         return $this->render('admin/structure/block_types/form', [
@@ -171,6 +176,175 @@ class BlockTypeController extends BaseAdminController
     }
 
     /**
+     * Manage form display settings (field ordering)
+     */
+    #[Route('GET', '/admin/structure/block-types/{id}/form-display')]
+    public function formDisplay(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        $type = $this->blockManager->getType($id);
+        if (!$type) {
+             return new RedirectResponse('/admin/structure/block-types');
+        }
+
+        // Get fields and inject system fields
+        $fields = $type['fields'];
+        $weights = $type['entity']->default_settings['form_weights'] ?? [];
+
+        // Add 'content' (Body)
+        $fields['content'] = [
+            'label' => 'Block Content',
+            'widget' => 'wysiwyg', // or whatever is configured
+            'weight' => $weights['content'] ?? -5, // Default to top
+            'machine_name' => 'content'
+        ];
+
+        // Prepare fields for sorting by ensuring machine_name is set
+        foreach ($fields as $key => &$field) {
+            $field['machine_name'] = $field['machine_name'] ?? $key;
+            // Use saved weight if available, otherwise fallback to existing or default
+            $field['weight'] = $weights[$field['machine_name']] ?? $field['weight'] ?? 0;
+        }
+        unset($field);
+        
+        // DEBUG: Log weights before sort
+        file_put_contents(__DIR__ . '/../../../../var/logs/debug_weights.log', "BlockTypeController formDisplay DEBUG:\nWeights loaded: " . json_encode($weights) . "\nFields before sort: " . json_encode(array_column($fields, 'weight', 'machine_name')) . "\n", FILE_APPEND);
+
+        // Sort by weight
+        uasort($fields, function ($a, $b) {
+            $wa = $a['weight'];
+            $wb = $b['weight'];
+            
+            if ($wa === $wb) return 0;
+            return ($wa < $wb) ? -1 : 1;
+        });
+
+        return $this->render('admin/structure/block_types/form_display', [
+            'type' => $type,
+            'fields' => $fields,
+            'base_url' => '/admin/structure/block-types/' . $id,
+        ]);
+    }
+
+    /**
+     * Save form display settings
+     */
+    /**
+     * Save form display settings
+     */
+    #[Route('POST', '/admin/structure/block-types/{id}/form-display')]
+    public function saveFormDisplay(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        $type = $this->blockManager->getType($id);
+        $params = $request->getParsedBody();
+
+        if ($type && $type['source'] === 'database' && !empty($params['weights'])) {
+            try {
+                $this->blockManager->saveFieldWeights($type['entity']->id, $params['weights'], 'form');
+                
+                // Return JSON if AJAX request
+                if ($this->isAjax($request)) {
+                    return new JsonResponse(['status' => 'success', 'message' => 'Weights saved']);
+                }
+            } catch (\Exception $e) {
+                if ($this->isAjax($request)) {
+                    return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
+                }
+            }
+        }
+        
+        return new RedirectResponse('/admin/structure/block-types/' . $id . '/form-display');
+    }
+
+    private function isAjax(ServerRequestInterface $request): bool
+    {
+        return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest' 
+            || str_contains($request->getHeaderLine('Content-Type'), 'application/json');
+    }
+
+    /**
+     * Manage content display settings
+     */
+    #[Route('GET', '/admin/structure/block-types/{id}/display')]
+    public function display(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        $type = $this->blockManager->getType($id);
+        if (!$type) {
+             return new RedirectResponse('/admin/structure/block-types');
+        }
+
+        // Get fields and inject system fields
+        $fields = $type['fields'];
+        $weights = $type['entity']->default_settings['display_weights'] ?? [];
+
+        // Add 'title'
+        $fields['title'] = [
+            'label' => 'Display Title',
+            'widget' => 'string',
+            'weight' => $weights['title'] ?? -10,
+            'machine_name' => 'title'
+        ];
+
+        // Add 'content'
+        $fields['content'] = [
+            'label' => 'Block Content',
+            'widget' => 'html',
+            'weight' => $weights['content'] ?? -5,
+            'machine_name' => 'content'
+        ];
+
+        // Prepare fields for sorting by ensuring machine_name is set
+        foreach ($fields as $key => &$field) {
+            $field['machine_name'] = $field['machine_name'] ?? $key;
+            // Use saved weight if available
+            $field['weight'] = $weights[$field['machine_name']] ?? $field['weight'] ?? 0;
+        }
+        unset($field);
+
+        // Sort by weight
+        uasort($fields, function ($a, $b) {
+            $wa = $a['weight'];
+            $wb = $b['weight'];
+            if ($wa === $wb) return 0;
+            return ($wa < $wb) ? -1 : 1;
+        });
+
+        return $this->render('admin/structure/block_types/display', [
+            'type' => $type,
+            'fields' => $fields,
+            'base_url' => '/admin/structure/block-types/' . $id,
+        ]);
+    }
+
+    /**
+     * Save content display settings
+     */
+    /**
+     * Save content display settings
+     */
+    #[Route('POST', '/admin/structure/block-types/{id}/display')]
+    public function saveDisplay(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        $type = $this->blockManager->getType($id);
+        $params = $request->getParsedBody();
+
+        if ($type && $type['source'] === 'database' && !empty($params['weights'])) {
+            try {
+                $this->blockManager->saveFieldWeights($type['entity']->id, $params['weights'], 'display');
+                
+                if ($this->isAjax($request)) {
+                    return new JsonResponse(['status' => 'success', 'message' => 'Weights saved']);
+                }
+            } catch (\Exception $e) {
+                if ($this->isAjax($request)) {
+                    return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
+                }
+            }
+        }
+
+        return new RedirectResponse('/admin/structure/block-types/' . $id . '/display');
+    }
+    
+    /**
      * Add field form
      */
     #[Route('GET', '/admin/structure/block-types/{id}/fields/add')]
@@ -229,5 +403,68 @@ class BlockTypeController extends BaseAdminController
         }
         
         return new RedirectResponse('/admin/structure/block-types/' . $id . '/fields');
+    }
+
+    /**
+     * Edit field form
+     */
+    #[Route('GET', '/admin/structure/block-types/{id}/fields/{fieldName}/edit')]
+    public function editField(ServerRequestInterface $request, string $id, string $fieldName): ResponseInterface
+    {
+        $type = $this->blockManager->getType($id);
+        if (!$type) {
+            return new RedirectResponse('/admin/structure/block-types');
+        }
+
+        $fields = $type['fields'];
+        if (!isset($fields[$fieldName])) {
+             return new RedirectResponse('/admin/structure/block-types/' . $id . '/fields');
+        }
+
+        return $this->render('admin/structure/block_types/edit_field', [
+            'type' => $type,
+            'field' => $fields[$fieldName],
+            'machine_name' => $fieldName,
+            'grouped_types' => FieldType::getGrouped(),
+            'action' => '/admin/structure/block-types/' . $id . '/fields/' . $fieldName . '/update',
+            'cancel_url' => '/admin/structure/block-types/' . $id . '/fields',
+        ]);
+    }
+
+    /**
+     * Update field
+     */
+    #[Route('POST', '/admin/structure/block-types/{id}/fields/{fieldName}/update')]
+    public function updateField(ServerRequestInterface $request, string $id, string $fieldName): ResponseInterface
+    {
+        $data = (array) $request->getParsedBody();
+        file_put_contents(
+            dirname(__DIR__, 4) . '/var/logs/debug_form.log', 
+            date('Y-m-d H:i:s') . " - UpdateField (POST /update) hit\n" . 
+            "ID: $id, Field: $fieldName\n" . 
+            "Data: " . print_r($data, true) . "\n\n", 
+            FILE_APPEND
+        );
+        $type = $this->blockManager->getType($id);
+
+        if (!$type || $type['source'] !== 'database') {
+             return new RedirectResponse('/admin/structure/block-types');
+        }
+
+        try {
+            $this->blockManager->updateFieldOnType($type['entity']->id, $fieldName, $data);
+            return new RedirectResponse('/admin/structure/block-types/' . $id . '/fields');
+        } catch (\Exception $e) {
+            $fields = $type['fields'];
+            return $this->render('admin/structure/block_types/edit_field', [
+                'type' => $type,
+                'field' => $fields[$fieldName] ?? [], // Fallback if somehow missing
+                'machine_name' => $fieldName,
+                'grouped_types' => FieldType::getGrouped(),
+                'error' => $e->getMessage(),
+                'action' => '/admin/structure/block-types/' . $id . '/fields/' . $fieldName . '/edit',
+                'cancel_url' => '/admin/structure/block-types/' . $id . '/fields',
+            ]);
+        }
     }
 }

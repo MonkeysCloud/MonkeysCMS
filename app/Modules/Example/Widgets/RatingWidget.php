@@ -5,122 +5,150 @@ declare(strict_types=1);
 namespace App\Modules\Example\Widgets;
 
 use App\Cms\Fields\FieldDefinition;
-use App\Cms\Fields\Widgets\AbstractFieldWidget;
+use App\Cms\Fields\Widget\AbstractWidget;
+use App\Cms\Fields\Rendering\RenderContext;
+use App\Cms\Fields\Rendering\RenderResult;
+use App\Cms\Fields\Rendering\HtmlBuilder;
+use App\Cms\Fields\Rendering\Html;
+use App\Cms\Fields\Validation\ValidationResult;
 
 /**
  * RatingWidget - Star rating selector
  *
- * Example custom widget that can be added to any module.
- * This demonstrates how to create custom field widgets.
- *
- * @example
- * ```php
- * // In module's service registration or module.php
- * $widgetManager->register(new RatingWidget());
- * ```
+ * Example custom widget that demonstrates how to create module widgets.
  */
-class RatingWidget extends AbstractFieldWidget
+class RatingWidget extends AbstractWidget
 {
-    protected const ID = 'rating';
-    protected const LABEL = 'Star Rating';
-    protected const CATEGORY = 'Custom';
-    protected const ICON = '⭐';
-    protected const PRIORITY = 100;
+    public function getId(): string
+    {
+        return 'rating';
+    }
 
-    public static function getSupportedTypes(): array
+    public function getLabel(): string
+    {
+        return 'Star Rating';
+    }
+
+    public function getCategory(): string
+    {
+        return 'Custom';
+    }
+
+    public function getIcon(): string
+    {
+        return '⭐';
+    }
+
+    public function getPriority(): int
+    {
+        return 100;
+    }
+
+    public function getSupportedTypes(): array
     {
         return ['integer', 'float', 'decimal'];
     }
 
-    public function render(FieldDefinition $field, mixed $value, array $context = []): string
+    protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
 
-        $maxStars = $field->getSetting('max_stars', 5);
-        $allowHalf = $field->getSetting('allow_half', false);
+        $maxStars = (int) $field->getSetting('max_stars', 5);
+        $allowHalf = (bool) $field->getSetting('allow_half', false);
         $size = $field->getSetting('size', 'medium');
         $currentValue = $value ?? 0;
 
         $step = $allowHalf ? 0.5 : 1;
         $sizeClass = 'field-rating--' . $size;
 
-        $inputHtml = '<div class="field-rating ' . $sizeClass . '" id="' . $this->escape($fieldId) . '_wrapper">';
+        $wrapper = Html::div()
+            ->class('field-rating', $sizeClass)
+            ->id($fieldId . '_wrapper');
 
-        // Hidden input for form submission
-        $inputHtml .= '<input type="hidden" name="' . $this->escape($fieldName) . '" id="' . $this->escape($fieldId) . '" value="' . $this->escape((string) $currentValue) . '">';
+        // Hidden input
+        $wrapper->child(
+            Html::input('hidden')
+                ->name($fieldName)
+                ->id($fieldId)
+                ->value((string) $currentValue)
+        );
 
-        // Star display
-        $inputHtml .= '<div class="field-rating__stars" data-max="' . $maxStars . '" data-step="' . $step . '">';
+        // Stars container
+        $starsContainer = Html::div()
+            ->class('field-rating__stars')
+            ->data('max', (string) $maxStars)
+            ->data('step', (string) $step);
 
         for ($i = 1; $i <= $maxStars; $i++) {
             $filled = $currentValue >= $i ? 'filled' : ($currentValue >= $i - 0.5 && $allowHalf ? 'half' : 'empty');
-            $inputHtml .= '<span class="field-rating__star field-rating__star--' . $filled . '" data-value="' . $i . '" onclick="window.setRating(\'' . $fieldId . '\', ' . $i . ')">';
-            $inputHtml .= $this->getStarSvg($filled);
-            $inputHtml .= '</span>';
+            
+            $star = Html::span()
+                ->class('field-rating__star', 'field-rating__star--' . $filled)
+                ->data('value', (string) $i)
+                ->attr('onclick', "window.setRating('{$fieldId}', {$i})")
+                ->html($this->getStarSvg($filled));
+
+            $starsContainer->child($star);
         }
 
-        $inputHtml .= '</div>';
+        $wrapper->child($starsContainer);
 
-        // Display value
-        $showValue = $field->getSetting('show_value', true);
-        if ($showValue) {
-            $inputHtml .= '<span class="field-rating__value" id="' . $fieldId . '_display">' . number_format($currentValue, $allowHalf ? 1 : 0) . '</span>';
+        // Display Value
+        if ($field->getSetting('show_value', true)) {
+            $wrapper->child(
+                Html::span()
+                    ->class('field-rating__value')
+                    ->id($fieldId . '_display')
+                    ->text(number_format((float) $currentValue, $allowHalf ? 1 : 0))
+            );
         }
 
-        // Clear button
-        $allowClear = $field->getSetting('allow_clear', true);
-        if ($allowClear) {
-            $inputHtml .= '<button type="button" class="field-rating__clear" onclick="window.clearRating(\'' . $fieldId . '\')" title="Clear rating">×</button>';
+        // Clear Button
+        if ($field->getSetting('allow_clear', true)) {
+            $wrapper->child(
+                Html::button()
+                    ->attr('type', 'button')
+                    ->class('field-rating__clear')
+                    ->attr('onclick', "window.clearRating('{$fieldId}')")
+                    ->attr('title', 'Clear rating')
+                    ->text('×')
+            );
         }
 
-        $inputHtml .= '</div>';
-
-        return $this->renderWrapper($field, $inputHtml, $context);
+        return $wrapper;
     }
 
-    public function renderDisplay(FieldDefinition $field, mixed $value, array $context = []): string
+    public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult
     {
         if ($this->isEmpty($value)) {
-            return '<span class="field-display field-display--empty">Not rated</span>';
+            return RenderResult::fromHtml(
+                Html::span()->class('field-display', 'field-display--empty')->text('Not rated')->render()
+            );
         }
 
-        $maxStars = $field->getSetting('max_stars', 5);
-        $allowHalf = $field->getSetting('allow_half', false);
+        $maxStars = (int) $field->getSetting('max_stars', 5);
+        $allowHalf = (bool) $field->getSetting('allow_half', false);
 
-        $html = '<span class="field-display field-display--rating">';
-
+        $stars = '';
         for ($i = 1; $i <= $maxStars; $i++) {
-            $filled = $value >= $i ? '★' : ($value >= $i - 0.5 && $allowHalf ? '⯨' : '☆');
-            $html .= $filled;
+            $stars .= $value >= $i ? '★' : ($value >= $i - 0.5 && $allowHalf ? '⯨' : '☆');
         }
 
-        $html .= ' <span class="field-rating__number">(' . number_format((float) $value, 1) . ')</span>';
-        $html .= '</span>';
+        $html = Html::span()
+            ->class('field-display', 'field-display--rating')
+            ->html($stars . ' <span class="field-rating__number">(' . number_format((float) $value, 1) . ')</span>');
 
-        return $html;
+        return RenderResult::fromHtml($html->render());
     }
 
-    public function prepareValue(FieldDefinition $field, mixed $value): mixed
-    {
-        if ($this->isEmpty($value)) {
-            return null;
-        }
-
-        $maxStars = $field->getSetting('max_stars', 5);
-        $value = (float) $value;
-
-        // Clamp value
-        return max(0, min($maxStars, $value));
-    }
-
-    public function validate(FieldDefinition $field, mixed $value): array
+    public function validate(FieldDefinition $field, mixed $value): ValidationResult
     {
         $errors = [];
 
         if ($value !== null && $value !== '') {
-            $maxStars = $field->getSetting('max_stars', 5);
-            $allowHalf = $field->getSetting('allow_half', false);
+            $maxStars = (int) $field->getSetting('max_stars', 5);
+            $allowHalf = (bool) $field->getSetting('allow_half', false);
             $numValue = (float) $value;
 
             if ($numValue < 0 || $numValue > $maxStars) {
@@ -132,7 +160,11 @@ class RatingWidget extends AbstractFieldWidget
             }
         }
 
-        return $errors;
+        if (!empty($errors)) {
+            return ValidationResult::failure($errors);
+        }
+
+        return ValidationResult::success();
     }
 
     private function getStarSvg(string $state): string
@@ -160,12 +192,8 @@ class RatingWidget extends AbstractFieldWidget
         </svg>';
     }
 
-    public function getInitScript(FieldDefinition $field, string $elementId): string
+    protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
-        $maxStars = $field->getSetting('max_stars', 5);
-        $allowHalf = $field->getSetting('allow_half', false);
-        $step = $allowHalf ? 0.5 : 1;
-
         return <<<JS
 (function() {
     const wrapper = document.getElementById('{$elementId}_wrapper');
@@ -174,6 +202,8 @@ class RatingWidget extends AbstractFieldWidget
     const stars = wrapper.querySelectorAll('.field-rating__star');
     const input = document.getElementById('{$elementId}');
     
+    if(!input) return;
+
     stars.forEach((star, index) => {
         star.addEventListener('mouseenter', function() {
             highlightStars(stars, index + 1);
@@ -193,17 +223,7 @@ class RatingWidget extends AbstractFieldWidget
 JS;
     }
 
-    public static function getCssAssets(): array
-    {
-        return ['/css/fields/rating.css'];
-    }
-
-    public static function getJsAssets(): array
-    {
-        return ['/js/fields/rating.js'];
-    }
-
-    public static function getSettingsSchema(): array
+    public function getSettingsSchema(): array
     {
         return [
             'max_stars' => [

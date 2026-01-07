@@ -255,11 +255,138 @@ final class CmsServiceProvider
                     
                     return $manager;
                 },
+
+                // Field System
+                \App\Cms\Fields\Validation\FieldValidator::class => function (ContainerInterface $c) {
+                    return new \App\Cms\Fields\Validation\FieldValidator();
+                },
+
+                \App\Cms\Fields\Widget\WidgetRegistry::class => function (ContainerInterface $c) {
+                    $registry = new \App\Cms\Fields\Widget\WidgetRegistry(
+                        $c->get(\App\Cms\Fields\Validation\FieldValidator::class)
+                    );
+
+                    // Auto-discover widgets
+                    $discoveredWidgets = self::discoverWidgets();
+                    
+                    // Register all discovered widgets
+                    $registry->registerMany($discoveredWidgets);
+
+                    // Set Defaults
+                    $registry->setTypeDefault('string', 'text_input');
+
+                    return $registry;
+                },
             ]
         );
 
         return array_merge($definitions, self::discoverModuleServices());
     }
+
+    /**
+     * Discover Widgets from App and Modules
+     * @return array<\App\Cms\Fields\Widget\WidgetInterface>
+     */
+    private static function discoverWidgets(): array
+    {
+        $baseDir = defined('ML_BASE_PATH') ? ML_BASE_PATH : getcwd();
+        $widgets = [];
+
+        // 1. Discover core widgets from app/Cms/Fields/Widget
+        $coreWidgetDir = $baseDir . '/app/Cms/Fields/Widget';
+        if (is_dir($coreWidgetDir)) {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($coreWidgetDir, \RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+
+            foreach ($iterator as $file) {
+                if ($file->getExtension() !== 'php' || !str_contains($file->getFilename(), 'Widget.php')) {
+                    continue;
+                }
+
+                $className = self::getClassFromPath($file->getPathname(), $baseDir);
+
+                try {
+                    if (!$className || !class_exists($className)) {
+                        continue;
+                    }
+
+                    $reflection = new \ReflectionClass($className);
+                    if (!$reflection->isAbstract() && $reflection->implementsInterface(\App\Cms\Fields\Widget\WidgetInterface::class)) {
+                        $widgets[] = new $className();
+                    }
+                } catch (\Throwable $e) {
+                    error_log("Failed to load widget {$className}: " . $e->getMessage());
+                }
+            }
+        }
+
+        // 2. Discover widgets from modules via ModuleInterface
+        $modules = self::discoverModules();
+        foreach ($modules as $module) {
+            try {
+                if ($module->isEnabled()) {
+                    foreach ($module->getWidgets() as $widget) {
+                        $widgets[] = $widget;
+                    }
+                }
+            } catch (\Throwable $e) {
+                error_log("Failed to get widgets from module {$module->getName()}: " . $e->getMessage());
+            }
+        }
+
+        return $widgets;
+    }
+
+    /**
+     * Discover all modules implementing ModuleInterface
+     * @return array<\App\Cms\Module\ModuleInterface>
+     */
+    private static function discoverModules(): array
+    {
+        $baseDir = defined('ML_BASE_PATH') ? ML_BASE_PATH : getcwd();
+        $modulesDir = $baseDir . '/app/Modules';
+        $modules = [];
+
+        if (!is_dir($modulesDir)) {
+            return $modules;
+        }
+
+        // Look for *Module.php files in each module directory
+        $iterator = new \DirectoryIterator($modulesDir);
+
+        foreach ($iterator as $moduleDir) {
+            if (!$moduleDir->isDir() || $moduleDir->isDot()) {
+                continue;
+            }
+
+            // Check for ModuleName/ModuleNameModule.php pattern
+            $moduleName = $moduleDir->getFilename();
+            $moduleFile = $moduleDir->getPathname() . '/' . $moduleName . 'Module.php';
+
+            if (!file_exists($moduleFile)) {
+                continue;
+            }
+
+            $className = 'App\\Modules\\' . $moduleName . '\\' . $moduleName . 'Module';
+
+            try {
+                if (!class_exists($className)) {
+                    continue;
+                }
+
+                $reflection = new \ReflectionClass($className);
+                if ($reflection->implementsInterface(\App\Cms\Module\ModuleInterface::class)) {
+                    $modules[] = $reflection->newInstance();
+                }
+            } catch (\Throwable $e) {
+                error_log("Failed to load module {$className}: " . $e->getMessage());
+            }
+        }
+
+        return $modules;
+    }
+
 
     /**
      * Discover services from module.mlc files
@@ -548,7 +675,7 @@ final class CmsServiceProvider
     /**
      * Convert file path to class name based on PSR-4 App\ -> app/ mapping
      */
-    private function getClassFromPath(string $path, string $basePath): ?string
+    private static function getClassFromPath(string $path, string $basePath): ?string
     {
         // Convert /path/to/app/Controllers/Foo.php -> App\Controllers\Foo
         $rel = str_replace($basePath . '/app/', '', $path);

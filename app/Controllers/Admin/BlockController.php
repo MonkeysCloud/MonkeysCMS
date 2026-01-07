@@ -56,31 +56,66 @@ class BlockController extends BaseAdminController
     }
 
     #[Route('GET', '/admin/blocks/create')]
-    public function create(ServerRequestInterface $request): ResponseInterface
+    public function selectType(ServerRequestInterface $request): ResponseInterface
     {
-        // Add CKEditor asset
-        $this->assets->attach('ckeditor');
+        return $this->render('admin/blocks/select_type', [
+            'typesGrouped' => $this->blockManager->getTypesGrouped(),
+            'title' => 'Select Block Type',
+        ]);
+    }
+
+    #[Route('GET', '/admin/blocks/create/{type}')]
+    public function create(ServerRequestInterface $request, string $type): ResponseInterface
+    {
+        // Add Quill WYSIWYG editor assets (using addFile for correct paths)
+        $this->assets->addFile('/vendor/quill/quill.snow.css');
+        $this->assets->addFile('/vendor/quill/quill.js');
+        $this->assets->addFile('/js/fields/quill-init.js');
         
-        $block = new Block();
-        // Default type if passed
-        $queryParams = $request->getQueryParams();
-        if (isset($queryParams['type'])) {
-            $block->block_type = $queryParams['type'];
+        // Verify type exists
+        if (!$this->blockManager->hasType($type)) {
+            return $this->redirect('/admin/blocks/create');
         }
+
+        $block = new Block();
+        $block->block_type = $type;
 
         $types = $this->blockManager->getTypes();
         
         // Render dynamic fields
         $renderedFields = [];
         $currentTypeFields = $this->blockManager->getFieldsForType($block->block_type);
-        foreach ($currentTypeFields as $field) {
+        
+        foreach ($currentTypeFields as $key => $fieldData) {
+             // Convert array to FieldDefinition if needed
+             if (is_array($fieldData)) {
+                 $field = new \App\Cms\Fields\FieldDefinition();
+                 // Map simple array to FieldDefinition
+                 $field->name = $fieldData['label'] ?? $key;
+                 $field->machine_name = $fieldData['machine_name'] ?? $key;
+                 $field->field_type = $fieldData['type'] ?? 'string';
+                 // $field->label property does not exist, name is used.
+                 $field->description = $fieldData['description'] ?? null;
+                 $field->default_value = $fieldData['default'] ?? null;
+                 $field->required = $fieldData['required'] ?? false;
+                 // Add other properties as needed
+                 $field->settings = $fieldData;
+             } else {
+                 $field = $fieldData;
+             }
+
              // Basic context
              $value = $field->default_value;
+             
+             // Render field and capture assets
+             $result = $this->widgetRegistry->renderField($field, $value, RenderContext::create());
+             $this->assets->mergeCollection($result->getAssets());
+
              // Ensure field name is used as input name
              $renderedFields[] = [
                  'label' => $field->name,
                  'machine_name' => $field->machine_name,
-                 'html' => $this->widgetRegistry->renderField($field, $value, RenderContext::create())->getHtml()
+                 'html' => $result->getHtml()
              ];
         }
 
@@ -100,10 +135,25 @@ class BlockController extends BaseAdminController
         $data = (array) $request->getParsedBody();
 
         $block = new Block();
-        $block->admin_title = $data['admin_title'];
-        $block->machine_name = $data['machine_name'] ?: null; // Auto-generated in prePersist if null
+        $block->admin_title = $data['admin_title'] ?? ''; // Safely handle missing key
+        $block->machine_name = $data['machine_name'] ?? ''; // Auto-generated in prePersist if empty
         $block->show_title = isset($data['show_title']);
         $block->title = $data['title'] ?? null;
+        
+        // Basic Validation
+        if (empty($block->admin_title)) {
+             $this->assets->addFile('/vendor/quill/quill.snow.css');
+             $this->assets->addFile('/vendor/quill/quill.js');
+             $this->assets->addFile('/js/fields/quill-init.js');
+             return $this->render('admin/blocks/form', [
+                'block' => $block,
+                'types' => $this->blockManager->getTypes(),
+                'title' => 'Create Block',
+                'action' => '/admin/blocks',
+                'method' => 'POST',
+                'errors' => ['Block Title is required']
+            ]);
+        }
         $block->block_type = $data['block_type'] ?? 'content';
         $block->body = $data['body'] ?? null;
         $block->body_format = $data['body_format'] ?? 'html';
@@ -166,7 +216,9 @@ class BlockController extends BaseAdminController
 
         if (!$success) {
             // Need to reload types and assets if we return view
-            $this->assets->attach('ckeditor');
+            $this->assets->addFile('/vendor/quill/quill.snow.css');
+            $this->assets->addFile('/vendor/quill/quill.js');
+            $this->assets->addFile('/js/fields/quill-init.js');
             return $this->render('admin/blocks/form', [
                 'block' => $block,
                 'types' => $this->blockManager->getTypes(),
@@ -194,18 +246,39 @@ class BlockController extends BaseAdminController
         $block = new Block();
         $block->hydrate($row);
         
-        // Add CKEditor asset
-        $this->assets->attach('ckeditor');
+        // Add Quill WYSIWYG editor assets
+        $this->assets->addFile('/vendor/quill/quill.snow.css');
+        $this->assets->addFile('/vendor/quill/quill.js');
+        $this->assets->addFile('/js/fields/quill-init.js');
 
         // Render dynamic fields
         $renderedFields = [];
         $currentTypeFields = $this->blockManager->getFieldsForType($block->block_type);
-        foreach ($currentTypeFields as $field) {
+        foreach ($currentTypeFields as $key => $fieldData) {
+             // Convert array to FieldDefinition if needed
+             if (is_array($fieldData)) {
+                 $field = new \App\Cms\Fields\FieldDefinition();
+                 $field->name = $fieldData['label'] ?? $key;
+                 $field->machine_name = $fieldData['machine_name'] ?? $key;
+                 $field->field_type = $fieldData['type'] ?? 'string';
+                 $field->description = $fieldData['description'] ?? null;
+                 $field->default_value = $fieldData['default'] ?? null;
+                 $field->required = $fieldData['required'] ?? false;
+                 $field->settings = $fieldData;
+             } else {
+                 $field = $fieldData;
+             }
+
              $value = $block->settings[$field->machine_name] ?? null;
+             
+             // Render field and capture assets
+             $result = $this->widgetRegistry->renderField($field, $value, RenderContext::create());
+             $this->assets->mergeCollection($result->getAssets());
+             
              $renderedFields[] = [
                  'label' => $field->name,
                  'machine_name' => $field->machine_name,
-                 'html' => $this->widgetRegistry->renderField($field, $value, RenderContext::create())->getHtml()
+                 'html' => $result->getHtml()
              ];
         }
 

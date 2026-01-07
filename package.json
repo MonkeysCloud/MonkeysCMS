@@ -16,6 +16,8 @@
   "dependencies": {
     "alpinejs": "^3.14.3",
     "htmx.org": "^1.9.10",
-    "sortablejs": "^1.15.2"
+    "quill": "^2.0.3",
+    "sortablejs": "^1.15.2",
+    "tinymce": "^8.3.1"
   }
 }

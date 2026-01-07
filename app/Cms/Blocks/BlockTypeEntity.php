@@ -118,6 +118,9 @@ class BlockTypeEntity extends BaseEntity
      */
     public function toArray(bool $includeNulls = false): array
     {
+        // DEBUG
+        // echo "DEBUG: BlockTypeEntity::toArray called for " . $this->type_id . "\n";
+        
         return [
             'id' => $this->id,
             'type_id' => $this->type_id,

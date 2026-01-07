@@ -234,10 +234,10 @@ final class BlockManager
         $entity->template = $data['template'] ?? null;
         $entity->default_settings = $data['default_settings'] ?? [];
         $entity->allowed_regions = $data['allowed_regions'] ?? [];
-        $entity->cache_ttl = $data['cache_ttl'] ?? 3600;
+        $entity->cache_ttl = isset($data['cache_ttl']) ? (int) $data['cache_ttl'] : 3600;
         $entity->css_assets = $data['css_assets'] ?? [];
         $entity->js_assets = $data['js_assets'] ?? [];
-        $entity->enabled = $data['enabled'] ?? true;
+        $entity->enabled = (bool) ($data['enabled'] ?? true);
 
         // Save the entity
         $entity->prePersist();
@@ -464,6 +464,67 @@ final class BlockManager
     }
 
     /**
+     * Update a field definition
+     */
+    public function updateFieldOnType(int $typeId, string $machineName, array $fieldData): bool
+    {
+        $stmt = $this->connection->pdo()->prepare(
+            "SELECT * FROM block_type_fields WHERE block_type_id = :type_id AND machine_name = :machine_name"
+        );
+        $stmt->execute(['type_id' => $typeId, 'machine_name' => $machineName]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return false;
+        }
+
+        $field = new FieldDefinition();
+        $field->hydrate($row);
+
+        // Update properties
+        if (isset($fieldData['name'])) $field->name = $fieldData['name'];
+        if (isset($fieldData['description'])) $field->description = $fieldData['description'];
+        if (isset($fieldData['help_text'])) $field->help_text = $fieldData['help_text']; // Correct property?
+        if (isset($fieldData['required'])) $field->required = (bool) $fieldData['required'];
+        if (isset($fieldData['multiple'])) $field->multiple = (bool) $fieldData['multiple'];
+        if (isset($fieldData['cardinality'])) $field->cardinality = $fieldData['cardinality'];
+        if (isset($fieldData['default'])) $field->default_value = $fieldData['default'];
+        if (isset($fieldData['settings'])) $field->settings = $fieldData['settings'];
+        if (isset($fieldData['widget'])) $field->widget = $fieldData['widget'];
+        if (isset($fieldData['weight'])) $field->weight = $fieldData['weight'];
+        
+        $field->updated_at = new \DateTimeImmutable();
+
+        $stmt = $this->connection->pdo()->prepare("
+            UPDATE block_type_fields SET
+                name = :name, description = :description, help_text = :help_text,
+                widget = :widget, required = :required, multiple = :multiple,
+                cardinality = :cardinality, default_value = :default_value,
+                settings = :settings, weight = :weight, updated_at = :updated_at
+            WHERE id = :id
+        ");
+
+        $result = $stmt->execute([
+            'id' => $field->id,
+            'name' => $field->name,
+            'description' => $field->description,
+            'help_text' => $field->help_text ?? null, // help_text might be missing from hydrate if not in table? No, it's in table.
+            'widget' => $field->widget,
+            'required' => $field->required ? 1 : 0,
+            'multiple' => $field->multiple ? 1 : 0,
+            'cardinality' => $field->cardinality,
+            'default_value' => $field->default_value,
+            'settings' => json_encode($field->settings),
+            'weight' => $field->weight,
+            'updated_at' => $field->updated_at->format('Y-m-d H:i:s'),
+        ]);
+
+        $this->invalidateCache();
+
+        return $result;
+    }
+
+    /**
      * Remove a field from a block type
      */
     public function removeFieldFromType(int $typeId, string $machineName): bool
@@ -476,6 +537,67 @@ final class BlockManager
         $this->invalidateCache();
 
         return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Reorder fields for a block type
+     * 
+     * @param int $typeId
+     * @param array<string, int> $weights Key is machine_name, Value is new weight
+     */
+    public function reorderFields(int $typeId, array $weights): void
+    {
+        $connection = $this->connection->pdo();
+        
+        try {
+            $connection->beginTransaction();
+            
+            $stmt = $connection->prepare(
+                "UPDATE block_type_fields SET weight = :weight, updated_at = NOW() WHERE block_type_id = :type_id AND machine_name = :machine_name"
+            );
+            
+            foreach ($weights as $machineName => $weight) {
+                // Skip system fields
+                if (in_array($machineName, ['title', 'content'])) {
+                    continue;
+                }
+                
+                $stmt->execute([
+                    'weight' => (int) $weight,
+                    'type_id' => $typeId,
+                    'machine_name' => $machineName
+                ]);
+            }
+            
+            $connection->commit();
+            $this->invalidateCache();
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Save field weights (including system fields in default_settings)
+     */
+    public function saveFieldWeights(int $typeId, array $weights, string $context): void
+    {
+        $entity = $this->getTypeEntityById($typeId);
+        if (!$entity) {
+            return;
+        }
+
+        // Save ALL weights to default_settings for this context
+        // This decouples the display order from the schema order (block_type_fields table)
+        $contextWeights = [];
+        foreach ($weights as $name => $weight) {
+            $contextWeights[$name] = (int) $weight;
+        }
+
+        $settings = $entity->default_settings ?? [];
+        $settings[$context . '_weights'] = $contextWeights;
+
+        $this->updateDatabaseType($typeId, ['default_settings' => $settings]);
     }
 
     /**
@@ -650,6 +772,7 @@ final class BlockManager
                 'type' => $field->field_type,
                 'label' => $field->name,
                 'required' => $field->required,
+                'multiple' => $field->multiple,
                 'description' => $field->description,
                 'default' => $field->default_value,
                 'widget' => $field->getWidget(),

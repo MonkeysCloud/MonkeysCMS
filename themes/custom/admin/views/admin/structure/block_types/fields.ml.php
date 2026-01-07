@@ -3,15 +3,56 @@
 @section('content')
 <div class="md:flex md:items-center md:justify-between mb-6">
     <div class="min-w-0 flex-1">
-        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-            Manage Fields: {{ $type['label'] }}
-        </h2>
+        <div class="flex items-center gap-4">
+            <a href="/admin/structure/block-types" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            </a>
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                Manage Fields: {{ $type['label'] }}
+            </h2>
+        </div>
     </div>
-    <div class="mt-4 flex md:ml-4 md:mt-0">
-        <a href="{{ $add_url }}" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
-            Add Field
+
+</div>
+
+<div class="border-b border-gray-200 mb-6">
+    <nav class="-mb-px flex gap-8" aria-label="Tabs">
+        <a href="/admin/structure/block-types/{{ $type['id'] }}/edit"
+           class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium">
+           <svg class="-ml-0.5 mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+               <path fill-rule="evenodd" d="M11.5 2a.75.75 0 01.75.75L15 6h-2.25a.75.75 0 01-.75-.75V2.5zm-2.25 0a.75.75 0 00-.75.75V6a2.25 2.25 0 002.25 2.25h3.75a.75.75 0 00.75-.75V2.5a.75.75 0 00-.75-.75H9.25zM5 2.25A2.25 2.25 0 002.75 4.5v11A2.25 2.25 0 005 17.75h9.5A2.25 2.25 0 0016.75 15.5V9.5a.75.75 0 00-.75-.75H12a3.75 3.75 0 01-3.75-3.75V2.75a.75.75 0 00-.75-.75H5z" clip-rule="evenodd" />
+           </svg>
+           <span>Settings</span>
         </a>
-    </div>
+        <a href="/admin/structure/block-types/{{ $type['id'] }}/fields"
+           class="border-blue-500 text-blue-600 group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium" aria-current="page">
+           <svg class="-ml-0.5 mr-2 h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+               <path fill-rule="evenodd" d="M2 3.75A.75.75 0 012.75 3h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 3.75zm0 4.167a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zm0 4.166a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zm0 4.167a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
+           </svg>
+           <span>Manage Fields</span>
+        </a>
+        <a href="/admin/structure/block-types/{{ $type['id'] }}/form-display"
+           class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium">
+           <svg class="-ml-0.5 mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+           </svg>
+           <span>Form Display</span>
+        </a>
+        <a href="/admin/structure/block-types/{{ $type['id'] }}/display"
+           class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium">
+           <svg class="-ml-0.5 mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+           </svg>
+           <span>Content Display</span>
+        </a>
+    </nav>
+</div>
+
+<div class="mb-6 flex justify-end">
+    <a href="{{ $add_url }}" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+        Add Field
+    </a>
 </div>
 
 <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
@@ -34,25 +75,26 @@
                         <td colspan="5" class="py-10 text-center text-gray-500 text-sm">No fields found. Add one to get started.</td>
                     </tr>
                 @else
-                    @foreach($fields as $field)
+                    @foreach($fields as $machineName => $field)
                     <tr>
                         <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                            {{ $field['name'] }}
+                            {{ $field['label'] }}
                             @if(!empty($field['required']))
                                 <span class="text-red-500">*</span>
                             @endif
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {{ $field['machine_name'] }}
+                            {{ $machineName }}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {{ $field['field_type'] }}
+                            {{ $field['type'] }}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                             {{ $field['widget'] ?? 'Default' }}
                         </td>
                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-                            <form action="{{ $base_url }}/fields/{{ $field['machine_name'] }}/delete" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this field? Data in this field will be lost.');">
+                            <a href="{{ $base_url }}/fields/{{ $machineName }}/edit" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                            <form action="{{ $base_url }}/fields/{{ $machineName }}/delete" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this field? Data in this field will be lost.');">
                                 <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
                             </form>
                         </td>

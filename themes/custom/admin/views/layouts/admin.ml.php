@@ -14,6 +14,9 @@
     <!-- Tailwind CSS (compiled) -->
     <link rel="stylesheet" href="/css/app.css">
     
+    <!-- Dynamic Assets CSS -->
+    <?= $assets ? $assets->renderCss() : '' ?>
+
     @stack('styles')
 </head>
 <body class="h-full bg-gray-50 text-gray-900 font-sans antialiased">

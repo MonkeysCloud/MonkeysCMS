@@ -49,6 +49,22 @@ return [
             'homepage' => 'https://ckeditor.com',
         ],
 
+        'tinymce' => [
+            'version' => '7.6.0',
+            'url' => 'https://cdn.tiny.cloud/1/no-api-key/tinymce/{version}/tinymce.min.js',
+            'filename' => 'vendor/tinymce/tinymce.min.js',
+            'description' => 'TinyMCE WYSIWYG Editor (requires license)',
+            'homepage' => 'https://www.tiny.cloud',
+        ],
+
+        'quill' => [
+            'version' => '2.0.2',
+            'url' => 'https://cdn.quilljs.com/2.0.2/quill.min.js',
+            'filename' => 'vendor/quill/quill.js',
+            'description' => 'Quill WYSIWYG Editor (free, open-source)',
+            'homepage' => 'https://quilljs.com',
+        ],
+
         'tailwind' => [
             'version' => '3.4.5',
             'url' => 'https://cdn.tailwindcss.com/{version}',

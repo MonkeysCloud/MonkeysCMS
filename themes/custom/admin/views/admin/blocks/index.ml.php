@@ -48,7 +48,9 @@
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-semibold text-gray-900">{{ $block->admin_title }}</span>
+                                    <a href="/admin/blocks/{{ $block->id }}/edit" class="text-sm font-semibold text-gray-900 hover:text-blue-600 hover:underline">
+                                        {{ $block->admin_title }}
+                                    </a>
                                     @if($block->machine_name)
                                     <span class="text-xs text-gray-500 font-mono">{{ $block->machine_name }}</span>
                                     @endif

@@ -35,3 +35,7 @@
 Thumbs.db
 node_modules
 package-lock.json
+var
+storage/uploads
+storage/cache
+public/vendor

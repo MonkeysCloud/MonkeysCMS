@@ -1,6 +1,17 @@
 @extends('layouts/admin')
 
 @section('content')
+
+@push('styles')
+<link rel="stylesheet" href="/vendor/easymde/easymde.min.css">
+<style>
+    .EasyMDEContainer { margin-bottom: 1.5rem; }
+</style>
+@endpush
+
+@push('scripts')
+<script src="/vendor/easymde/easymde.min.js"></script>
+@endpush
 <div class="max-w-4xl mx-auto py-6">
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900">{{ $title }}</h1>
@@ -36,7 +47,46 @@
                 <?php endif; ?>
 
                 <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-4">
+                    <!-- Block Type and Region Header -->
+                    <div class="sm:col-span-6 bg-gray-50 -mx-4 px-4 py-4 sm:-mx-6 sm:px-6 border-b border-gray-200 mb-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Block Type</label>
+                                <div class="mt-1 flex items-center gap-3">
+                                    <span class="text-base font-medium text-gray-900">
+                                        <?php 
+                                            $currentType = $types[$block->block_type] ?? null;
+                                            echo htmlspecialchars($currentType['label'] ?? $block->block_type);
+                                        ?>
+                                    </span>
+                                    <?php if (!$block->id): ?>
+                                        <a href="/admin/blocks/create" class="text-sm text-blue-600 hover:text-blue-500">(change)</a>
+                                    <?php endif; ?>
+                                </div>
+                                <input type="hidden" name="block_type" value="{{ $block->block_type }}">
+                                <?php if (!empty($currentType['description'])): ?>
+                                    <p class="mt-1 text-sm text-gray-500"><?= htmlspecialchars($currentType['description']) ?></p>
+                                <?php endif; ?>
+                            </div>
+                            <div>
+                                <x-form.select 
+                                    name="region" 
+                                    label="Region" 
+                                    id="region"
+                                    :selected="$block->region"
+                                >
+                                    <option value="">-- None --</option>
+                                    <option value="header" <?= ($block->region === 'header') ? 'selected' : '' ?>>Header</option>
+                                    <option value="sidebar" <?= ($block->region === 'sidebar') ? 'selected' : '' ?>>Sidebar</option>
+                                    <option value="content" <?= ($block->region === 'content') ? 'selected' : '' ?>>Content</option>
+                                    <option value="footer" <?= ($block->region === 'footer') ? 'selected' : '' ?>>Footer</option>
+                                </x-form.select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Title Fields -->
+                    <div class="sm:col-span-6">
                         <x-form.input 
                             name="admin_title" 
                             label="Admin Title" 
@@ -46,25 +96,17 @@
                         />
                     </div>
 
-                    <div class="sm:col-span-4">
-                        <x-form.input 
-                            name="machine_name" 
-                            label="Machine Name" 
-                            value="{{ $block->machine_name ?? '' }}" 
-                            class="font-mono bg-gray-50" 
-                            help="Unique identifier (a-z, 0-9, _). Leave empty to generate from title."
-                        />
-                    </div>
 
-                    <div class="sm:col-span-4">
+                    <div class="sm:col-span-6">
                         <x-form.input 
                             name="title" 
                             label="Display Title" 
                             value="{{ $block->title ?? '' }}" 
+                            help="Title shown to visitors."
                         />
                     </div>
 
-                    <div class="sm:col-span-6">
+                    <div class="sm:col-span-6 flex items-end pb-1">
                         <x-form.checkbox 
                             name="show_title" 
                             label="Show Title" 
@@ -73,47 +115,16 @@
                         />
                     </div>
 
-                    <div class="sm:col-span-3">
-                        <x-form.select 
-                            name="block_type" 
-                            label="Block Type" 
-                            id="block_type"
-                            :selected="$block->block_type"
-                        >
-                            <option value="content" <?= ($block->block_type === 'content') ? 'selected' : '' ?>>Content Block</option>
-                            <option value="html" <?= ($block->block_type === 'html') ? 'selected' : '' ?>>Raw HTML</option>
-                            <?php foreach ($types as $typeId => $typeData): ?>
-                                <?php if ($typeId !== 'content' && $typeId !== 'html'): ?>
-                                    <option value="<?= htmlspecialchars($typeId) ?>" <?= ($block->block_type === (string)$typeId) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($typeData['label']) ?>
-                                    </option>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </x-form.select>
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <x-form.select 
-                            name="region" 
-                            label="Region" 
-                            id="region"
-                            :selected="$block->region"
-                        >
-                            <option value="">-- None --</option>
-                            <option value="header" <?= ($block->region === 'header') ? 'selected' : '' ?>>Header</option>
-                            <option value="sidebar" <?= ($block->region === 'sidebar') ? 'selected' : '' ?>>Sidebar</option>
-                            <option value="content" <?= ($block->region === 'content') ? 'selected' : '' ?>>Content</option>
-                            <option value="footer" <?= ($block->region === 'footer') ? 'selected' : '' ?>>Footer</option>
-                        </x-form.select>
-                    </div>
-
                     <div class="sm:col-span-6">
-                        <x-form.textarea 
+                        <label for="editor" class="block text-sm font-medium text-gray-700">Content</label>
+                        <textarea 
                             name="body" 
-                            label="Content" 
                             id="editor" 
                             rows="10"
-                        >{{ $block->body ?? '' }}</x-form.textarea>
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            data-quill
+                            data-quill-format-select="body_format"
+                        >{{ $block->body ?? '' }}</textarea>
 
                         <div class="mt-4">
                             <x-form.select 
@@ -131,24 +142,16 @@
 
                     <!-- Dynamic Fields -->
                     <?php if (!empty($renderedFields)): ?>
-                    <div class="sm:col-span-6 border-t border-gray-200 pt-6 mt-2">
-                        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Block Settings</h3>
-                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                            <?php foreach ($renderedFields as $field): ?>
-                                <div class="sm:col-span-6">
-                                    <label for="<?= htmlspecialchars($field['machine_name']) ?>" class="block text-sm font-medium text-gray-700">
-                                        <?= htmlspecialchars($field['label']) ?>
-                                    </label>
-                                    <div class="mt-1">
-                                        <?= $field['html'] ?>
-                                    </div>
+                        <?php foreach ($renderedFields as $field): ?>
+                            <div class="sm:col-span-6">
+                                <div class="mt-1">
+                                    <?= $field['html'] ?>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
+                            </div>
+                        <?php endforeach; ?>
                     <?php endif; ?>
 
-                    <div class="sm:col-span-6">
+                    <div class="sm:col-span-6 pt-4 border-t border-gray-200">
                         <x-form.checkbox 
                             name="is_published" 
                             label="Published" 
@@ -215,7 +218,7 @@
                     <div class="sm:col-span-6 border-t border-gray-200 pt-6 mt-2">
                          <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Advanced Settings</h3>
                          <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                            <div class="sm:col-span-3">
+                            <div class="sm:col-span-6">
                                 <x-form.input 
                                     name="css_class" 
                                     label="CSS Classes" 
@@ -223,7 +226,7 @@
                                     help="Space separated classes."
                                 />
                             </div>
-                            <div class="sm:col-span-3">
+                            <div class="sm:col-span-6">
                                 <x-form.input 
                                     name="css_id" 
                                     label="CSS ID" 
@@ -231,7 +234,7 @@
                                     help="Unique HTML ID."
                                 />
                             </div>
-                            <div class="sm:col-span-2">
+                            <div class="sm:col-span-6">
                                 <x-form.input 
                                     name="weight" 
                                     type="number"
@@ -257,44 +260,3 @@
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<!-- Explicitly include CKEditor if not auto-loaded -->
-<?php if (isset($assets) && $assets->hasLibrary('ckeditor')): ?>
-    <!-- Loaded via AssetManager -->
-<?php else: ?>
-    <!-- Fallback if not loaded via asset manager -->
-    <!-- <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script> -->
-<?php endif; ?>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // CKEditor initialization
-        if (typeof ClassicEditor !== 'undefined') {
-            ClassicEditor
-                .create(document.querySelector('#editor'), {
-                    toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo']
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        } else {
-             console.warn('CKEditor not loaded');
-        }
-
-        // Block Type change handler
-        const blockTypeSelect = document.getElementById('block_type');
-        if (blockTypeSelect) {
-            blockTypeSelect.addEventListener('change', function() {
-                const url = new URL(window.location.href);
-                // Only reload if we are creating a new block to load specific fields
-                // Simple check for 'create' in path or empty ID
-                if (url.pathname.endsWith('/create')) {
-                    url.searchParams.set('type', this.value);
-                    window.location.href = url.toString();
-                }
-            });
-        }
-    });
-</script>
-@endpush
