@@ -312,12 +312,14 @@ final class PermissionService
         }
 
         $stmt = $this->connection->pdo()->prepare(
-            "INSERT INTO role_permissions (role_id, permission_id, created_at) VALUES (:role_id, :permission_id, :created_at)"
+            "INSERT INTO role_permissions (role_id, permission_id, created_at, updated_at) VALUES (:role_id, :permission_id, :created_at, :updated_at)" // updated
         );
+        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
         $stmt->execute([
             'role_id' => $role->id,
             'permission_id' => $permission->id,
-            'created_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
 
         // Clear cache
@@ -360,7 +362,7 @@ final class PermissionService
         if (!empty($permissionIds)) {
             $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
             $stmt = $this->connection->pdo()->prepare(
-                "INSERT INTO role_permissions (role_id, permission_id, created_at) VALUES (:role_id, :permission_id, :created_at)"
+                "INSERT INTO role_permissions (role_id, permission_id, created_at, updated_at) VALUES (:role_id, :permission_id, :created_at, :updated_at)" // updated
             );
 
             foreach ($permissionIds as $permissionId) {
@@ -368,6 +370,7 @@ final class PermissionService
                     'role_id' => $role->id,
                     'permission_id' => $permissionId,
                     'created_at' => $now,
+                    'updated_at' => $now,
                 ]);
             }
         }
@@ -396,12 +399,14 @@ final class PermissionService
         }
 
         $stmt = $this->connection->pdo()->prepare(
-            "INSERT INTO user_roles (user_id, role_id, created_at) VALUES (:user_id, :role_id, :created_at)"
+            "INSERT INTO user_roles (user_id, role_id, created_at, updated_at) VALUES (:user_id, :role_id, :created_at, :updated_at)" // updated
         );
+        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
         $stmt->execute([
             'user_id' => $user->id,
             'role_id' => $role->id,
-            'created_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
 
         // Clear user's role cache
@@ -444,7 +449,7 @@ final class PermissionService
         if (!empty($roleIds)) {
             $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
             $stmt = $this->connection->pdo()->prepare(
-                "INSERT INTO user_roles (user_id, role_id, created_at) VALUES (:user_id, :role_id, :created_at)"
+                "INSERT INTO user_roles (user_id, role_id, created_at, updated_at) VALUES (:user_id, :role_id, :created_at, :updated_at)" // updated
             );
 
             foreach ($roleIds as $roleId) {
@@ -452,6 +457,7 @@ final class PermissionService
                     'user_id' => $user->id,
                     'role_id' => $roleId,
                     'created_at' => $now,
+                    'updated_at' => $now,
                 ]);
             }
         }

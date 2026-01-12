@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Cms\Fields\Widget\RichText;
 
 use App\Cms\Fields\FieldDefinition;
-use App\Cms\Fields\Rendering\Html;
 use App\Cms\Fields\Rendering\HtmlBuilder;
 use App\Cms\Fields\Rendering\RenderContext;
 use App\Cms\Fields\Rendering\RenderResult;
@@ -48,69 +47,33 @@ final class WysiwygWidget extends AbstractWidget
 
     protected function initializeAssets(): void
     {
-        $this->assets->addCss('/css/fields/wysiwyg.css');
-        $this->assets->addJs('/vendor/tinymce/tinymce.min.js');
-        $this->assets->addJs('/js/fields/wysiwyg.js');
+        // Use Quill from local vendor
+        $this->assets->addCss('/vendor/quill/quill.snow.css');
+        $this->assets->addJs('/vendor/quill/quill.js');
+        $this->assets->addJs('/js/fields/quill-init.js');
     }
 
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
-        $settings = $this->getSettings($field);
-        $fieldId = $this->getFieldId($field, $context);
-        $height = $settings->getInt('height', 400);
-        $toolbar = $settings->getString('toolbar', 'default');
-        $plugins = $settings->getArray('plugins', ['link', 'image', 'lists', 'table', 'code']);
+        $input = HtmlBuilder::textarea()
+            ->name($field->machine_name)
+            ->id($this->getFieldId($field, $context))
+            ->class('form-textarea block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm')
+            ->attr('rows', '10')
+            ->text($value ?? '')
+            ->attr('data-quill', 'true');
 
-        $wrapper = Html::div()
+        $wrapper = HtmlBuilder::div()
             ->class('field-wysiwyg')
-            ->data('field-id', $fieldId)
-            ->data('height', $height)
-            ->data('toolbar', $toolbar)
-            ->data('plugins', json_encode($plugins));
-
-        $wrapper->child(
-            Html::textarea()
-                ->attrs($this->buildCommonAttributes($field, $context))
-                ->addClass('field-wysiwyg__editor')
-                ->text($value ?? '')
-        );
+            ->child($input);
 
         return $wrapper;
     }
 
+    // getInitScript is no longer needed as quill-init.js handles it
     protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
-        $settings = $this->getSettings($field);
-        $height = $settings->getInt('height', 400);
-        $toolbar = $this->getToolbarConfig($settings->getString('toolbar', 'default'));
-        $plugins = json_encode($settings->getArray('plugins', ['link', 'image', 'lists', 'table', 'code']));
-        $menubar = $settings->getBool('menubar', true) ? 'true' : 'false';
-
-        return <<<JS
-tinymce.init({
-    selector: '#{$elementId}',
-    height: {$height},
-    menubar: {$menubar},
-    plugins: {$plugins},
-    toolbar: '{$toolbar}',
-    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 16px; }',
-    setup: function(editor) {
-        editor.on('change', function() {
-            editor.save();
-        });
-    }
-});
-JS;
-    }
-
-    private function getToolbarConfig(string $preset): string
-    {
-        return match ($preset) {
-            'minimal' => 'undo redo | bold italic | bullist numlist',
-            'simple' => 'undo redo | formatselect | bold italic underline | bullist numlist | link image',
-            'full' => 'undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | code removeformat',
-            default => 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code',
-        };
+        return null;
     }
 
     public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult
@@ -120,7 +83,7 @@ JS;
         }
 
         // Render HTML content as-is (trusted content)
-        $html = Html::div()
+        $html = HtmlBuilder::div()
             ->class('field-display', 'field-display--wysiwyg', 'prose')
             ->html($value)
             ->render();
@@ -143,8 +106,8 @@ JS;
                 ],
                 'default' => 'default',
             ],
-            'menubar' => ['type' => 'boolean', 'label' => 'Show Menu Bar', 'default' => true],
-            'plugins' => ['type' => 'array', 'label' => 'Enabled Plugins'],
+            // 'menubar' => ['type' => 'boolean', 'label' => 'Show Menu Bar', 'default' => true],
+            // 'plugins' => ['type' => 'array', 'label' => 'Enabled Plugins'],
         ];
     }
 }

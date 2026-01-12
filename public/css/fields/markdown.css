@@ -1,0 +1,157 @@
+/* ==========================================================================
+   Markdown Editor
+   ========================================================================== */
+
+.field-markdown__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.field-markdown__toolbar button {
+    padding: 0.375rem 0.5rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.field-markdown__toolbar button:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.field-markdown__separator {
+    width: 1px;
+    background: #d1d5db;
+    margin: 0 0.25rem;
+}
+
+.field-markdown__container {
+    display: flex;
+    border: 1px solid #d1d5db;
+    border-radius: 0 0 0.375rem 0.375rem;
+    min-height: 300px;
+}
+
+.field-markdown__container--split .field-markdown__editor,
+.field-markdown__container--split .field-markdown__preview {
+    width: 50%;
+    flex: 0 0 50%;
+}
+
+.field-markdown__editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.field-markdown__input,
+.field-markdown__textarea {
+    width: 100%;
+    flex: 1;
+    border: none;
+    border-radius: 0 0 0 0.375rem;
+    padding: 0.75rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    resize: vertical;
+    min-height: 300px;
+}
+
+.field-markdown__textarea:focus {
+    outline: none;
+}
+
+.field-markdown__preview {
+    border-left: 1px solid #d1d5db;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.field-markdown__preview-label {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.field-markdown__preview-content {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Hide preview in edit mode */
+.field-markdown[data-mode="edit"] .field-markdown__preview {
+    display: none;
+}
+
+/* Hide editor in preview mode */
+.field-markdown[data-mode="preview"] .field-markdown__editor {
+    display: none;
+}
+
+.field-markdown[data-mode="preview"] .field-markdown__preview {
+    flex: 1;
+    border-left: none;
+}
+
+/* Mode buttons */
+.field-markdown__modes {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-radius: 0 0 0.375rem 0.375rem;
+    justify-content: center;
+}
+
+.field-markdown__mode-btn {
+    padding: 0.5rem 1.25rem;
+    background: #e5e7eb;
+    border: 2px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 90px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    opacity: 0.7;
+}
+
+.field-markdown__mode-btn:hover:not(.active) {
+    background: #f3f4f6;
+    color: #374151;
+    border-color: #9ca3af;
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.field-markdown__mode-btn.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 1;
+    transform: translateY(-2px);
+    font-weight: 700;
+}

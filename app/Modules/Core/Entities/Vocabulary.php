@@ -113,6 +113,11 @@ class Vocabulary extends BaseEntity
      */
     public array $terms = [];
 
+    /**
+     * Term count (non-persisted, used for display purposes)
+     */
+    public int $term_count = 0;
+
     // ─────────────────────────────────────────────────────────────
     // Business Logic
     // ─────────────────────────────────────────────────────────────

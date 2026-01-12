@@ -43,4 +43,20 @@ class PDOConnectionAdapter implements ConnectionInterface
     {
         return $this->pdo;
     }
+
+    public function query(string $query): \PDOStatement
+    {
+        /** @var \PDOStatement */
+        return $this->pdo->query($query);
+    }
+
+    public function prepare(string $query, array $options = []): \PDOStatement
+    {
+        return $this->pdo->prepare($query, $options);
+    }
+
+    public function lastInsertId(?string $name = null): string|false
+    {
+        return $this->pdo->lastInsertId($name);
+    }
 }

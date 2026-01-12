@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cms\Auth;
 
-use App\Cms\User\User;
+use App\Modules\Core\Entities\User;
 use App\Cms\User\UserManager;
 use MonkeysLegion\Auth\Service\AuthService;
 use MonkeysLegion\Auth\Service\JwtService;
@@ -14,8 +14,8 @@ use MonkeysLegion\Auth\TwoFactor\TotpProvider;
 use MonkeysLegion\Auth\Exception\InvalidCredentialsException;
 use MonkeysLegion\Auth\Exception\AccountLockedException;
 use MonkeysLegion\Auth\Exception\TwoFactorRequiredException;
-use MonkeysLegion\Auth\RateLimit\RateLimiterInterface;
-use MonkeysLegion\Auth\Token\TokenStorageInterface;
+use MonkeysLegion\Auth\Contract\RateLimiterInterface;
+use MonkeysLegion\Auth\Contract\TokenStorageInterface;
 
 /**
  * CmsAuthService - Authentication service for MonkeysCMS
@@ -126,7 +126,8 @@ class CmsAuthService
                 );
             }
 
-            // Get user
+            // Get user (CmsUserProvider returns User which implements AuthenticatableInterface)
+            /** @var User $user */
             $user = $this->userProvider->findByEmail($email);
 
             // Record login
@@ -164,8 +165,14 @@ class CmsAuthService
             $result = $this->authService->verify2FA($challengeToken, $code);
 
             // Get user from token
+            // Note: decode() returns an array, not an object
             $payload = $this->jwtService->decode($result->tokens->accessToken);
-            $user = $this->userProvider->findById($payload->sub);
+            /** @var User|null $user */
+            $user = $this->userProvider->findById($payload['sub']);
+
+            if (!$user) {
+                throw new \RuntimeException('User not found for token');
+            }
 
             // Record login
             $user->recordLogin($ip);
@@ -293,11 +300,11 @@ class CmsAuthService
 
         // Create user
         $user = new User();
-        $user->setEmail($data['email']);
-        $user->setUsername($data['username']);
+        $user->email = $data['email'];
+        $user->username = $data['username'];
         $user->setPassword($data['password']);
-        $user->setDisplayName($data['display_name'] ?? null);
-        $user->setStatus('pending');
+        $user->display_name = $data['display_name'] ?? $data['username'];
+        $user->status = 'pending';
 
         $this->userProvider->save($user);
 
@@ -364,13 +371,14 @@ class CmsAuthService
             return false;
         }
 
+        /** @var User $user */
         $user = $this->userProvider->findById($userId);
         if (!$user) {
             return false;
         }
 
         $user->setPassword($newPassword);
-        $user->clearRememberToken();
+        $user->remember_token = null;
         $this->userProvider->save($user);
 
         // Delete reset token
@@ -394,7 +402,7 @@ class CmsAuthService
         }
 
         $user->setPassword($newPassword);
-        $user->clearRememberToken();
+        $user->remember_token = null;
         $this->userProvider->save($user);
 
         // Invalidate other sessions
@@ -418,7 +426,7 @@ class CmsAuthService
             return null;
         }
 
-        return $this->twoFactor->generateSetup($user->getEmail());
+        return $this->twoFactor->generateSetup($user->email);
     }
 
     /**
@@ -526,9 +534,15 @@ class CmsAuthService
         $this->session->set('access_token', $tokens->accessToken);
         $this->session->set('refresh_token', $tokens->refreshToken);
         $this->session->set('token_expires', $tokens->accessExpiresAt);
+        
+        // Set auth_token cookie for vendor AuthenticationMiddleware to read
+        // This is critical for the JWT-based auth flow to work
+        $this->session->setCookie('auth_token', $tokens->accessToken, (int) ($tokens->accessExpiresAt - time()));
 
         if ($remember) {
-            $rememberToken = $user->generateRememberToken();
+            // Generate remember token inline since User entity doesn't have this method
+            $rememberToken = bin2hex(random_bytes(32));
+            $user->remember_token = $rememberToken;
             $this->userProvider->save($user);
             $this->session->setCookie('remember_token', $rememberToken, 60 * 60 * 24 * 30);
         }
@@ -544,7 +558,6 @@ class CmsAuthService
         $tokenExpires = $this->session->get('token_expires');
 
         if (!$userId || !$accessToken) {
-            // Try remember token
             return $this->loadFromRememberToken();
         }
 
@@ -562,12 +575,17 @@ class CmsAuthService
         // Validate token
         try {
             $payload = $this->jwtService->decode($accessToken);
-            $user = $this->userProvider->findById($payload->sub);
+            // Note: decode() returns an array, not an object
+            $userId = $payload['sub'] ?? null;
+            
+            if ($userId !== null) {
+                $user = $this->userProvider->findById($userId);
 
-            if ($user) {
-                $this->currentUser = $user;
-                $this->accessToken = $accessToken;
-                return true;
+                if ($user) {
+                    $this->currentUser = $user;
+                    $this->accessToken = $accessToken;
+                    return true;
+                }
             }
         } catch (\Exception $e) {
             // Token invalid

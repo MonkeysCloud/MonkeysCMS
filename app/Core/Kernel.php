@@ -60,7 +60,7 @@ class Kernel
 
         // 2. Load Configuration
         $loader = new Loader(new Parser(), $this->basePath . '/config');
-        $rawConfig = $loader->load(['app', 'database', 'cache'])->all();
+        $rawConfig = $loader->load(['app', 'database', 'cache', 'assets'])->all();
         $config = new \MonkeysLegion\Mlc\Config($this->resolveEnvVars($rawConfig));
 
         // 3. Build DI Container
@@ -93,8 +93,13 @@ class Kernel
             // Only redirect to installer for CONNECTION failures
             // SQLSTATE codes for connection issues: HY000 (general), 2002/2003/2006 (MySQL connect)
             $code = $e->getCode();
-            $isConnectionError = in_array($code, [2002, 2003, 2006], true) 
-                || str_starts_with((string) $code, 'HY')
+            // SQLSTATE codes for connection issues: 
+            // 08000-08007: Connection exceptions
+            // 2002: Connection refused (MySQL) / No such file or directory (socket)
+            // 2006: MySQL server has gone away
+            // 1045: Access denied
+            $isConnectionError = in_array($code, [2002, 2003, 2006, 1045, 1049], true) 
+                || str_starts_with((string) $code, '08')
                 || str_contains($e->getMessage(), 'Connection refused')
                 || str_contains($e->getMessage(), 'Access denied')
                 || str_contains($e->getMessage(), "Can't connect");
@@ -295,12 +300,36 @@ class Kernel
                 $methodOverride = new \App\Cms\Middleware\MethodOverrideMiddleware();
 
                 // Pipeline
-                $pipelineHandler = new class($methodOverride, $routerHandler) implements \Psr\Http\Server\RequestHandlerInterface {
-                    private \App\Cms\Middleware\MethodOverrideMiddleware $middleware;
-                    private \Psr\Http\Server\RequestHandlerInterface $next;
-                    public function __construct($middleware, $next) { $this->middleware = $middleware; $this->next = $next; }
+                $pipelineHandler = new class($methodOverride, $c->get(\App\Cms\Middleware\StartSessionMiddleware::class), $routerHandler) implements \Psr\Http\Server\RequestHandlerInterface {
+                    private $methodOverride;
+                    private $startSession;
+                    private $next;
+                    
+                    public function __construct($methodOverride, $startSession, $next) { 
+                        $this->methodOverride = $methodOverride; 
+                        $this->startSession = $startSession;
+                        $this->next = $next; 
+                    }
+                    
                     public function handle(ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface {
-                        return $this->middleware->process($request, $this->next);
+                        $sessionMiddleware = $this->startSession;
+                        $methodMiddleware = $this->methodOverride;
+                        $next = $this->next;
+                        
+                        // Execute StartSession -> MethodOverride -> Router
+                        // Wait, MethodOverride usually first to fix methods? 
+                        // Actually session needs to be available for everything.
+                        // Let's wrap: StartSession( MethodOverride( Router ) )
+                        
+                        // Create handler for MethodOverride that calls Router
+                        $methodHandler = new class($methodMiddleware, $next) implements \Psr\Http\Server\RequestHandlerInterface {
+                             private $middleware; private $handler;
+                             public function __construct($m, $h) { $this->middleware = $m; $this->handler = $h; }
+                             public function handle(ServerRequestInterface $r): \Psr\Http\Message\ResponseInterface { return $this->middleware->process($r, $this->handler); }
+                        };
+                        
+                        // Execute StartSession with the MethodOverride-wrapped handler
+                        return $sessionMiddleware->process($request, $methodHandler);
                     }
                 };
 

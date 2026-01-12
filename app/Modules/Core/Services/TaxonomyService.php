@@ -776,7 +776,7 @@ final class TaxonomyService
     /**
      * Get terms as options for select widget
      *
-     * @return array<array{value: int, label: string, depth: int}>
+     * @return array<int, string>
      */
     public function getTermOptions(int $vocabularyId, bool $hierarchical = true): array
     {
@@ -786,7 +786,11 @@ final class TaxonomyService
         }
 
         $terms = $this->getTerms($vocabularyId, true);
-        return array_map(fn($t) => $t->toOption(), $terms);
+        $options = [];
+        foreach ($terms as $term) {
+            $options[$term->id] = $term->name;
+        }
+        return $options;
     }
 
     /**
@@ -795,7 +799,9 @@ final class TaxonomyService
     private function flattenTreeToOptions(array $terms, array &$options = []): array
     {
         foreach ($terms as $term) {
-            $options[] = $term->toOption();
+            $prefix = str_repeat('— ', $term->depth);
+            $options[$term->id] = $prefix . $term->name;
+            
             if (!empty($term->children)) {
                 $this->flattenTreeToOptions($term->children, $options);
             }

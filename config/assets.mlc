@@ -1,0 +1,72 @@
+# MonkeysCMS Asset Configuration
+# Defines external JS/CSS libraries with their versions
+
+assets {
+    # Target directory for downloaded assets
+    public_path = "public/js"
+
+    # Web path for URLs
+    web_path = "/js"
+
+    # Toggle between CDN (true) and Local (false)
+    use_cdn = ${ASSETS_USE_CDN:true}
+
+    # Libraries to manage
+    libraries {
+        htmx {
+            version = "1.9.10"
+            url = "https://unpkg.com/htmx.org@{version}/dist/htmx.min.js"
+            filename = "htmx.min.js"
+            description = "High power tools for HTML"
+        }
+        
+        sortable {
+            version = "1.15.2"
+            url = "https://cdnjs.cloudflare.com/ajax/libs/Sortable/{version}/Sortable.min.js"
+            filename = "sortable.min.js"
+            description = "Reorderable drag-and-drop lists"
+        }
+        
+        alpine {
+            version = "3.14.3"
+            url = "https://cdn.jsdelivr.net/npm/alpinejs@{version}/dist/cdn.min.js"
+            filename = "alpine.min.js"
+            description = "Lightweight JavaScript framework"
+            enabled = true
+        }
+        
+        ckeditor {
+            version = "41.2.0"
+            url = "https://cdn.ckeditor.com/ckeditor5/{version}/classic/ckeditor.js"
+            filename = "ckeditor.js"
+            description = "WYSIWYG Editor"
+        }
+        
+        tinymce {
+            version = "7.6.0"
+            url = "https://cdn.tiny.cloud/1/no-api-key/tinymce/{version}/tinymce.min.js"
+            filename = "vendor/tinymce/tinymce.min.js"
+            description = "TinyMCE WYSIWYG Editor"
+        }
+        
+        quill {
+            version = "2.0.2"
+            url = "https://cdn.quilljs.com/2.0.2/quill.min.js"
+            filename = "vendor/quill/quill.js"
+            description = "Quill WYSIWYG Editor"
+        }
+        
+        tailwind {
+            version = "3.4.5"
+            url = "https://cdn.tailwindcss.com/{version}"
+            filename = "tailwind.js"
+            description = "Utility-first CSS framework"
+        }
+        
+        monkeyscms {
+            version = "1.0.0"
+            filename = "monkeyscms.js"
+            dependencies = ["htmx"]
+        }
+    }
+}

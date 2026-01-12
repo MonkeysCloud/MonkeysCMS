@@ -71,27 +71,36 @@ final class MarkdownWidget extends AbstractWidget
         }
 
         // Editor container
-        $editor = Html::div()->class('field-markdown__container');
+        $container = Html::div()->class('field-markdown__container');
 
+        // Editor section (wraps textarea)
+        $editorSection = Html::div()->class('field-markdown__editor');
+        
         // Textarea
-        $editor->child(
+        $editorSection->child(
             Html::textarea()
                 ->attrs($this->buildCommonAttributes($field, $context))
-                ->addClass('field-markdown__input')
+                ->addClass('field-markdown__textarea', 'w-full')
                 ->attr('rows', $rows)
                 ->text($value ?? '')
         );
+        
+        $container->child($editorSection);
 
         // Preview pane
         if ($showPreview) {
-            $editor->child(
-                Html::div()
-                    ->class('field-markdown__preview', 'prose')
-                    ->id($fieldId . '_preview')
-            );
+            $previewPane = Html::div()
+                ->class('field-markdown__preview');
+            
+            $previewContent = Html::div()
+                ->class('field-markdown__preview-content')
+                ->id($fieldId . '_preview');
+            
+            $previewPane->child($previewContent);
+            $container->child($previewPane);
         }
 
-        $wrapper->child($editor);
+        $wrapper->child($container);
 
         // Mode toggle
         if ($showPreview) {
@@ -100,21 +109,21 @@ final class MarkdownWidget extends AbstractWidget
                     ->class('field-markdown__modes')
                     ->child(
                         Html::button()
-                            ->class('field-markdown__mode', 'active')
+                            ->class('field-markdown__mode-btn', 'active')
                             ->attr('type', 'button')
                             ->data('mode', 'edit')
                             ->text('Edit')
                     )
                     ->child(
                         Html::button()
-                            ->class('field-markdown__mode')
+                            ->class('field-markdown__mode-btn')
                             ->attr('type', 'button')
                             ->data('mode', 'preview')
                             ->text('Preview')
                     )
                     ->child(
                         Html::button()
-                            ->class('field-markdown__mode')
+                            ->class('field-markdown__mode-btn')
                             ->attr('type', 'button')
                             ->data('mode', 'split')
                             ->text('Split')

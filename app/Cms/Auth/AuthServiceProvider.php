@@ -42,6 +42,7 @@ class AuthServiceProvider
     private static ?CmsOAuthService $oauth = null;
     private static ?EmailVerification $emailVerification = null;
     private static ?CmsApiKeyService $apiKeys = null;
+    private static ?CmsAuthService $cmsAuth = null;
 
     /**
      * Initialize the auth service provider
@@ -184,6 +185,21 @@ class AuthServiceProvider
     }
 
     /**
+     * Get CMS Auth Service (wrapper with session management)
+     */
+    public static function getCmsAuthService(): CmsAuthService
+    {
+        if (self::$cmsAuth === null) {
+            self::$cmsAuth = new CmsAuthService(
+                self::getUserProvider(),
+                self::getSessionManager(),
+                self::getConfig()
+            );
+        }
+        return self::$cmsAuth;
+    }
+
+    /**
      * Get Authentication Middleware (Standard)
      */
     public static function getAuthenticationMiddleware(): AuthenticationMiddleware
@@ -277,6 +293,7 @@ class AuthServiceProvider
         self::$oauth = null;
         self::$emailVerification = null;
         self::$apiKeys = null;
+        self::$cmsAuth = null;
     }
     
     /**
