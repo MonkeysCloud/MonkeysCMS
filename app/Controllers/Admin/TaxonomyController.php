@@ -314,11 +314,6 @@ final class TaxonomyController extends BaseAdminController
         return $this->redirect("/admin/taxonomies/{$vocabularyId}/terms");
     }
 
-    private function redirect(string $url): ResponseInterface
-    {
-        return new RedirectResponse($url);
-    }
-
 
     /**
      * Helper: Flatten tree to array with depth

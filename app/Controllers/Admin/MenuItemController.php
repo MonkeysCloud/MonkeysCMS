@@ -168,8 +168,5 @@ final class MenuItemController extends BaseAdminController
         return $options;
     }
 
-    private function redirect(string $url): ResponseInterface
-    {
-        return new \Laminas\Diactoros\Response\RedirectResponse($url);
-    }
+
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Services;
 
 use App\Modules\Core\Entities\Setting;
-use MonkeysLegion\Database\Connection;
+use MonkeysLegion\Database\Contracts\ConnectionInterface;
 use MonkeysLegion\Cache\CacheManager;
 
 /**
@@ -24,7 +24,7 @@ final class SettingsService
     private bool $loaded = false;
 
     public function __construct(
-        private readonly Connection $connection,
+        private readonly ConnectionInterface $connection,
         private readonly CacheManager $cache,
     ) {
     }

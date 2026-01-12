@@ -25,7 +25,7 @@ final class UserController
     /**
      * List users with pagination
      */
-    #[Route('GET', '/admin/users')]
+    #[Route('GET', '/api/admin/users')]
     public function index(ServerRequestInterface $request): ResponseInterface
     {
         $page = (int) ($request->getQueryParams()['page'] ?? 1);
@@ -78,7 +78,7 @@ final class UserController
     /**
      * Get single user
      */
-    #[Route('GET', '/admin/users/{id}')]
+    #[Route('GET', '/api/admin/users/{id}')]
     public function show(int $id): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
@@ -103,7 +103,7 @@ final class UserController
     /**
      * Create user
      */
-    #[Route('POST', '/admin/users')]
+    #[Route('POST', '/api/admin/users')]
     public function create(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
@@ -154,7 +154,7 @@ final class UserController
     /**
      * Update user
      */
-    #[Route('PUT', '/admin/users/{id}')]
+    #[Route('PUT', '/api/admin/users/{id}')]
     public function update(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
@@ -232,7 +232,7 @@ final class UserController
     /**
      * Delete user
      */
-    #[Route('DELETE', '/admin/users/{id}')]
+    #[Route('DELETE', '/api/admin/users/{id}')]
     public function delete(int $id): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
@@ -262,7 +262,7 @@ final class UserController
     /**
      * Get user's roles
      */
-    #[Route('GET', '/admin/users/{id}/roles')]
+    #[Route('GET', '/api/admin/users/{id}/roles')]
     public function getRoles(int $id): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
@@ -282,7 +282,7 @@ final class UserController
     /**
      * Set user's roles
      */
-    #[Route('PUT', '/admin/users/{id}/roles')]
+    #[Route('PUT', '/api/admin/users/{id}/roles')]
     public function setRoles(int $id, ServerRequestInterface $request): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);
@@ -305,7 +305,7 @@ final class UserController
     /**
      * Get user's permissions
      */
-    #[Route('GET', '/admin/users/{id}/permissions')]
+    #[Route('GET', '/api/admin/users/{id}/permissions')]
     public function getPermissions(int $id): ResponseInterface
     {
         $user = $this->repository->find(User::class, $id);

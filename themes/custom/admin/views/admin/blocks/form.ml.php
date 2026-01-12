@@ -116,29 +116,37 @@
                     </div>
 
                     <div class="sm:col-span-6">
-                        <label for="editor" class="block text-sm font-medium text-gray-700">Content</label>
-                        <textarea 
-                            name="body" 
-                            id="editor" 
-                            rows="10"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                            data-quill
-                            data-quill-format-select="body_format"
-                        >{{ $block->body ?? '' }}</textarea>
+                        <label for="body" class="block text-sm font-medium text-gray-700">Content</label>
+                        <div class="mt-1">
+                            <?= $renderedBodyField['html'] ?? '' ?>
+                        </div>
 
                         <div class="mt-4">
-                            <x-form.select 
+                            <?php 
+                                // Use query param if present, otherwise use database value
+                                $currentFormat = $_GET['body_format'] ?? ($block->body_format ?? 'html');
+                            ?>
+                            <label for="body_format" class="block text-sm font-medium text-gray-700 mb-1">Content Format</label>
+                            <select 
                                 name="body_format" 
-                                label="Content Format" 
                                 id="body_format"
-                                :selected="$block->body_format ?? 'html'"
+                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"
                             >
-                                <option value="html" <?= (($block->body_format ?? 'html') === 'html') ? 'selected' : '' ?>>HTML</option>
-                                <option value="markdown" <?= (($block->body_format ?? '') === 'markdown') ? 'selected' : '' ?>>Markdown</option>
-                                <option value="plain" <?= (($block->body_format ?? '') === 'plain') ? 'selected' : '' ?>>Plain Text</option>
-                            </x-form.select>
+                                <option value="html" <?= $currentFormat === 'html' ? 'selected' : '' ?>>HTML</option>
+                                <option value="markdown" <?= $currentFormat === 'markdown' ? 'selected' : '' ?>>Markdown</option>
+                                <option value="plain" <?= $currentFormat === 'plain' ? 'selected' : '' ?>>Plain Text</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Changing format will reload the editor</p>
                         </div>
                     </div>
+                    
+                    <script>
+                        document.getElementById('body_format')?.addEventListener('change', function() {
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('body_format', this.value);
+                            window.location.href = url.toString();
+                        });
+                    </script>
 
                     <!-- Dynamic Fields -->
                     <?php if (!empty($renderedFields)): ?>

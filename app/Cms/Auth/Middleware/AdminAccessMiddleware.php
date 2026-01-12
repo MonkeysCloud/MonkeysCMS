@@ -30,6 +30,10 @@ class AdminAccessMiddleware implements MiddlewareInterface
             return new \Nyholm\Psr7\Response(302, ['Location' => '/login']);
         }
 
+        if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+
         if (!$user->hasPermission('access_admin')) {
             return new \Nyholm\Psr7\Response(403, [], 'Access denied');
         }

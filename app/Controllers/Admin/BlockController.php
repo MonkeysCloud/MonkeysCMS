@@ -67,11 +67,6 @@ class BlockController extends BaseAdminController
     #[Route('GET', '/admin/blocks/create/{type}')]
     public function create(ServerRequestInterface $request, string $type): ResponseInterface
     {
-        // Add Quill WYSIWYG editor assets (using addFile for correct paths)
-        $this->assets->addFile('/vendor/quill/quill.snow.css');
-        $this->assets->addFile('/vendor/quill/quill.js');
-        $this->assets->addFile('/js/fields/quill-init.js');
-        
         // Verify type exists
         if (!$this->blockManager->hasType($type)) {
             return $this->redirect('/admin/blocks/create');
@@ -81,6 +76,26 @@ class BlockController extends BaseAdminController
         $block->block_type = $type;
 
         $types = $this->blockManager->getTypes();
+        
+        // Render body field dynamically based on body_format
+        $bodyFormat = $request->getQueryParams()['body_format'] ?? ($block->body_format ?? 'html');
+        $bodyField = new \App\Cms\Fields\FieldDefinition();
+        $bodyField->name = 'Content';
+        $bodyField->machine_name = 'body';
+        $bodyField->field_type = match($bodyFormat) {
+            'markdown' => 'markdown',
+            'plain' => 'textarea',
+            default => 'html'
+        };
+        
+        $bodyResult = $this->widgetRegistry->renderField($bodyField, $block->body ?? '', RenderContext::create());
+        $this->assets->mergeCollection($bodyResult->getAssets());
+        
+        $renderedBodyField = [
+            'label' => 'Content',
+            'machine_name' => 'body',
+            'html' => $bodyResult->getHtml()
+        ];
         
         // Render dynamic fields
         $renderedFields = [];
@@ -122,6 +137,7 @@ class BlockController extends BaseAdminController
         return $this->render('admin/blocks/form', [
             'block' => $block,
             'types' => $types,
+            'renderedBodyField' => $renderedBodyField,
             'renderedFields' => $renderedFields,
             'title' => 'Create Block',
             'action' => '/admin/blocks',
@@ -246,10 +262,25 @@ class BlockController extends BaseAdminController
         $block = new Block();
         $block->hydrate($row);
         
-        // Add Quill WYSIWYG editor assets
-        $this->assets->addFile('/vendor/quill/quill.snow.css');
-        $this->assets->addFile('/vendor/quill/quill.js');
-        $this->assets->addFile('/js/fields/quill-init.js');
+        // Render body field dynamically based on body_format
+        $bodyFormat = $request->getQueryParams()['body_format'] ?? ($block->body_format ?? 'html');
+        $bodyField = new \App\Cms\Fields\FieldDefinition();
+        $bodyField->name = 'Content';
+        $bodyField->machine_name = 'body';
+        $bodyField->field_type = match($bodyFormat) {
+            'markdown' => 'markdown',
+            'plain' => 'textarea',
+            default => 'html'
+        };
+        
+        $bodyResult = $this->widgetRegistry->renderField($bodyField, $block->body ?? '', RenderContext::create());
+        $this->assets->mergeCollection($bodyResult->getAssets());
+        
+        $renderedBodyField = [
+            'label' => 'Content',
+            'machine_name' => 'body',
+            'html' => $bodyResult->getHtml()
+        ];
 
         // Render dynamic fields
         $renderedFields = [];
@@ -285,6 +316,7 @@ class BlockController extends BaseAdminController
         return $this->render('admin/blocks/form', [
             'block' => $block,
             'types' => $this->blockManager->getTypes(),
+            'renderedBodyField' => $renderedBodyField,
             'renderedFields' => $renderedFields,
             'title' => 'Edit Block: ' . $block->admin_title,
             'action' => '/admin/blocks/' . $id,

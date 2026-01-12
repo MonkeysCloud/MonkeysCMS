@@ -7,6 +7,7 @@ namespace App\Modules\Core\Entities;
 use App\Cms\Attributes\ContentType;
 use App\Cms\Attributes\Field;
 use App\Cms\Attributes\Id;
+use App\Cms\Attributes\Ignore;
 use App\Cms\Attributes\Relation;
 use App\Cms\Core\BaseEntity;
 
@@ -186,12 +187,14 @@ class User extends BaseEntity implements AuthenticatableInterface
      * Roles assigned to this user (loaded separately)
      * @var Role[]
      */
+    #[Ignore]
     public array $roles = [];
 
     /**
      * Direct permissions (in addition to role permissions)
      * @var Permission[]
      */
+    #[Ignore]
     public array $directPermissions = [];
 
     // ─────────────────────────────────────────────────────────────
@@ -204,6 +207,14 @@ class User extends BaseEntity implements AuthenticatableInterface
     }
 
     public function getAuthIdentifier(): int|string
+    {
+        return $this->id;
+    }
+
+    /**
+     * Get user ID
+     */
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -401,9 +412,20 @@ class User extends BaseEntity implements AuthenticatableInterface
     }
 
     /**
-     * Convert to array (excludes sensitive data)
+     * Convert to array for database storage
+     * 
+     * Note: Uses parent implementation which correctly handles all Field-annotated properties.
+     * For API/display purposes, use toDisplayArray() instead.
      */
     public function toArray(bool $includeNulls = false): array
+    {
+        return parent::toArray($includeNulls);
+    }
+
+    /**
+     * Convert to array for display/API (excludes sensitive data, adds computed fields)
+     */
+    public function toDisplayArray(bool $includeNulls = false): array
     {
         $data = parent::toArray($includeNulls);
 

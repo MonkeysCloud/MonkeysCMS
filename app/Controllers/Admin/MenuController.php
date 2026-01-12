@@ -177,8 +177,5 @@ final class MenuController extends BaseAdminController
         return $this->redirect('/admin/menus');
     }
 
-    private function redirect(string $url): ResponseInterface
-    {
-        return new \Laminas\Diactoros\Response\RedirectResponse($url);
-    }
+
 }

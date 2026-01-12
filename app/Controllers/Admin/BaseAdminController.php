@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Cms\Auth\SessionManager;
+use App\Cms\Auth\AuthServiceProvider;
+use App\Cms\Security\PermissionService;
 use App\Modules\Core\Services\MenuService;
 use MonkeysLegion\Template\MLView;
 use Laminas\Diactoros\Response\HtmlResponse;
@@ -53,14 +55,28 @@ abstract class BaseAdminController
         $adminMenu = $this->menuService->getMenuByNameWithItems('admin');
         $menuTree = $adminMenu ? $adminMenu->getItemTree() : [];
 
+        // Get current authenticated user from CmsAuthService (reads from session)
+        // LoginController now stores session data after successful login
+        $cmsAuth = AuthServiceProvider::getCmsAuthService();
+        $currentUser = $cmsAuth->user();
+
         $commonData = [
             'admin_menu_tree' => $menuTree,
             'csrf_token' => $this->session?->getCsrfToken() ?? '',
             'assets' => $this->assets,
+            'current_user' => $currentUser,
         ];
 
         $html = $this->view->render($view, array_merge($commonData, $data));
 
         return new HtmlResponse($html);
     }
+    /**
+     * Helper to create a redirect response
+     */
+    protected function redirect(string $url): ResponseInterface
+    {
+        return new \Laminas\Diactoros\Response\RedirectResponse($url);
+    }
 }
+

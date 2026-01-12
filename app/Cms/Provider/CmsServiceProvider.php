@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Cms\Provider;
 
 use App\Cms\Auth\AuthServiceProvider;
+use App\Cms\Auth\SessionManager;
 use Psr\Container\ContainerInterface;
 use MonkeysLegion\Router\Router;
 use MonkeysLegion\Files\FilesManager;
@@ -52,6 +53,51 @@ final class CmsServiceProvider
             // Disable secure cookies in local environment
             $config['session_secure'] = ($env !== 'local' && $env !== 'development');
         }
+
+        // Load settings from DB for Auth
+        try {
+            // We use direct PDO here because SettingsService might not be fully ready/cached at bootAuth time
+            // or to keep it lightweight.
+            $stmt = $pdo->prepare("SELECT value, type FROM settings WHERE `key` = ?");
+            
+            // 1. Session Lifetime
+            $stmt->execute(['auth.session_lifetime']);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $config['session_lifetime'] = (int) $row['value'];
+            }
+
+            // 2. Session Secure (Override env config if set in DB)
+            $stmt->execute(['auth.session_secure']);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                // In local/development environments, always disable secure cookies (HTTPS not available)
+                $appConfig = $this->container->has('config') ? $this->container->get('config') : null;
+                $env = $appConfig ? $appConfig->get('app.env', 'production') : 'production';
+                
+                if ($env === 'local' || $env === 'development') {
+                    // Force disable secure cookies in local environments
+                    if ((bool) $row['value']) {
+                        error_log('Warning: Secure cookies requested but env=' . $env . '. Disabling for local development.');
+                    }
+                    $config['session_secure'] = false;
+                } else {
+                    $config['session_secure'] = (bool) $row['value'];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore DB errors during auth boot (e.g. during installation)
+            error_log('Failed to load auth settings: ' . $e->getMessage());
+        }
+
+        // Pre-configure session globals BEFORE any middleware can call session_start()
+        // This fixes the issue where vendor middleware (like CsrfMiddleware) starts
+        // sessions with default settings, ignoring our configured session lifetime.
+        SessionManager::configureGlobals([
+            'name' => $config['session_name'] ?? 'cms_session',
+            'lifetime' => $config['session_lifetime'] ?? 7200,
+            'secure' => $config['session_secure'] ?? true,
+        ]);
 
         // Initialize AuthServiceProvider with database connection and config
         AuthServiceProvider::init($pdo, $config);

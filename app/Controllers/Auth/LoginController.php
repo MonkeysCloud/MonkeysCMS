@@ -97,6 +97,14 @@ class LoginController
                 // Get Tokens
                 $tokens = $result->tokens;
                 
+                // Store authentication data in session for CmsAuthService
+                // This ensures BaseAdminController can access the current user
+                $this->session->set('user_id', $result->user->getAuthIdentifier());
+                $this->session->set('access_token', $tokens->accessToken);
+                $this->session->set('refresh_token', $tokens->refreshToken);
+                // Token expires at: accessExpiresAt is already a timestamp from the vendor auth
+                $this->session->set('token_expires', $tokens->accessExpiresAt);
+                
                 // Get secure setting
                 $isSecure = \App\Cms\Auth\AuthServiceProvider::getConfig('session_secure', true);
                 $secureFlag = $isSecure ? "; Secure" : "";

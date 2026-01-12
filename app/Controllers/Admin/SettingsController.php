@@ -23,7 +23,7 @@ final class SettingsController
     /**
      * Get all settings grouped
      */
-    #[Route('GET', '/admin/settings')]
+    #[Route('GET', '/admin/api/settings')]
     public function index(): ResponseInterface
     {
         $grouped = $this->settings->getAllGrouped();
@@ -44,7 +44,7 @@ final class SettingsController
     /**
      * Get settings for a specific group
      */
-    #[Route('GET', '/admin/settings/group/{group}')]
+    #[Route('GET', '/admin/api/settings/group/{group}')]
     public function getGroup(string $group): ResponseInterface
     {
         $settings = $this->settings->getGroup($group);
@@ -58,7 +58,7 @@ final class SettingsController
     /**
      * Get a single setting
      */
-    #[Route('GET', '/admin/settings/{key}')]
+    #[Route('GET', '/admin/api/settings/{key}')]
     public function show(string $key): ResponseInterface
     {
         // Handle dots in key (URL encoded)
@@ -78,7 +78,7 @@ final class SettingsController
     /**
      * Update a single setting
      */
-    #[Route('PUT', '/admin/settings/{key}')]
+    #[Route('PUT', '/admin/api/settings/{key}')]
     public function update(string $key, ServerRequestInterface $request): ResponseInterface
     {
         $key = str_replace('_', '.', $key);
@@ -107,7 +107,7 @@ final class SettingsController
     /**
      * Create a new setting
      */
-    #[Route('POST', '/admin/settings')]
+    #[Route('POST', '/admin/api/settings')]
     public function create(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
@@ -141,7 +141,7 @@ final class SettingsController
     /**
      * Delete a setting
      */
-    #[Route('DELETE', '/admin/settings/{key}')]
+    #[Route('DELETE', '/admin/api/settings/{key}')]
     public function delete(string $key): ResponseInterface
     {
         $key = str_replace('_', '.', $key);
@@ -167,7 +167,7 @@ final class SettingsController
     /**
      * Bulk update settings
      */
-    #[Route('PUT', '/admin/settings/bulk')]
+    #[Route('PUT', '/admin/api/settings/bulk')]
     public function bulkUpdate(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
@@ -195,7 +195,7 @@ final class SettingsController
     /**
      * Clear settings cache
      */
-    #[Route('POST', '/admin/settings/cache/clear')]
+    #[Route('POST', '/admin/api/settings/cache/clear')]
     public function clearCache(): ResponseInterface
     {
         $this->settings->clearCache();
@@ -209,7 +209,7 @@ final class SettingsController
     /**
      * Reset settings to defaults
      */
-    #[Route('POST', '/admin/settings/reset')]
+    #[Route('POST', '/admin/api/settings/reset')]
     public function resetDefaults(): ResponseInterface
     {
         $this->settings->seedDefaults();

@@ -32,6 +32,42 @@ class SessionManager
     }
 
     /**
+     * Pre-configure PHP session settings globally.
+     * 
+     * Call this VERY early in the request lifecycle before any code can call session_start().
+     * This ensures that even if external middleware starts the session, it uses our configured parameters.
+     *
+     * @param array $config Session configuration (name, lifetime, secure, httponly, samesite, path, domain)
+     */
+    public static function configureGlobals(array $config): void
+    {
+        // Don't configure if session already started
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return;
+        }
+        
+        // Configure session settings before session starts
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.cookie_secure', ($config['secure'] ?? true) ? '1' : '0');
+        ini_set('session.cookie_samesite', $config['samesite'] ?? 'Lax');
+        ini_set('session.gc_maxlifetime', (string) ($config['lifetime'] ?? 7200));
+        
+        // Set cookie params globally - will apply to session_start() when called
+        session_set_cookie_params([
+            'lifetime' => $config['lifetime'] ?? 7200,
+            'path' => $config['path'] ?? '/',
+            'domain' => $config['domain'] ?? null,
+            'secure' => $config['secure'] ?? true,
+            'httponly' => $config['httponly'] ?? true,
+            'samesite' => $config['samesite'] ?? 'Lax',
+        ]);
+        
+        session_name($config['name'] ?? 'cms_session');
+    }
+
+    /**
      * Start the session
      */
     public function start(): void

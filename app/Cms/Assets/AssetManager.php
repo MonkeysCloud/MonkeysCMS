@@ -41,8 +41,6 @@ class AssetManager
     public function attach(string $name): self
     {
         if (!isset($this->libraries[$name])) {
-            // Check if it's a direct path or just ignore?
-            // For now, ignore unknown libraries to prevent errors, or log warning.
             return $this;
         }
 
@@ -59,7 +57,6 @@ class AssetManager
         $path = $this->resolvePath($name, $lib);
 
         // 3. Add to collection
-        // Detect type by extension or allow explicit type in config
         if (str_ends_with($path, '.css')) {
             $this->collection->addCss($path);
         } else {

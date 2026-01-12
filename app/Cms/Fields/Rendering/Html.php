@@ -46,6 +46,11 @@ final class Html
         return HtmlBuilder::select();
     }
 
+    public static function option(string $value, string $label, bool $selected = false): HtmlBuilder
+    {
+        return HtmlBuilder::option($value, $label, $selected);
+    }
+
     public static function button(string $type = 'button'): HtmlBuilder
     {
         return HtmlBuilder::button($type);

@@ -654,6 +654,7 @@ input[type="time"].field-widget__control {
     flex: 1;
 }
 
+.field-markdown__input,
 .field-markdown__textarea {
     width: 100%;
     border: none;
