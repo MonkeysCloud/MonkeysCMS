@@ -12,9 +12,10 @@ declare(strict_types=1);
 use MonkeysLegion\Mlc\Loader;
 use MonkeysLegion\Mlc\Parser;
 use MonkeysLegion\Mlc\Config;
-use MonkeysLegion\Mlc\Cache\FileCache;
+use MonkeysLegion\Http\SimpleFileCache;
 use MonkeysLegion\Mlc\Validator\SchemaValidator;
 use MonkeysLegion\Database\Connection;
+use MonkeysLegion\Database\Contracts\ConnectionInterface;
 use MonkeysLegion\Database\ConnectionFactory;
 use MonkeysLegion\Template\Renderer;
 use MonkeysLegion\Template\Compiler;
@@ -63,6 +64,7 @@ use App\Controllers\Admin\MediaController;
 use App\Controllers\Admin\CacheController;
 use App\Controllers\Admin\BlockTypeController;
 use App\Controllers\Admin\ContentTypeController;
+use App\Controllers\Admin\ContentTypePageController;
 
 // Block System
 use App\Cms\Blocks\BlockManager;
@@ -94,9 +96,8 @@ use App\Middleware\RequirePermissionMiddleware;
 $basePath = dirname(__DIR__);
 
 // Initialize MLC configuration loader with caching
-$configCache = new FileCache(
-    $basePath . '/var/cache/config',
-    ttl: 3600 // 1 hour cache
+$configCache = new SimpleFileCache(
+    $basePath . '/var/cache/config'
 );
 
 $configLoader = new Loader(
@@ -110,7 +111,8 @@ $configLoader = new Loader(
 $config = $configLoader->load(['app', 'database', 'cache', 'files']);
 
 // Validate configuration in development
-if ($config->getBool('app.debug', false)) {
+$debug = filter_var($config->get('app.debug'), FILTER_VALIDATE_BOOL);
+if ($debug) {
     $schema = require __DIR__ . '/schema.php';
     $validator = new SchemaValidator($schema);
     $errors = $validator->validate($config->all());
@@ -539,7 +541,7 @@ return [
     // ─────────────────────────────────────────────────────────────
     
     ContentTypeManager::class => function (
-        Connection $conn,
+        ConnectionInterface $conn,
         ?ModuleManager $mm,
         ?SchemaGenerator $sg,
         ?CacheManager $cache
@@ -549,12 +551,22 @@ return [
         // Register entity types from Core module
         $manager->registerModuleTypes(dirname(__DIR__) . '/app/Modules/Core');
         
+        // Ensure default content types (Article) exist
+        try {
+            $manager->ensureDefaultTypes();
+        } catch (\Exception $e) {
+            error_log('ContentTypeManager::ensureDefaultTypes failed: ' . $e->getMessage());
+        }
+        
         return $manager;
     },
     
     ContentTypeController::class => function (ContentTypeManager $manager): ContentTypeController {
         return new ContentTypeController($manager);
     },
+    
+    // ContentTypePageController uses auto-wiring for all dependencies
+    // (MLView, MenuService, SessionManager, AssetManager, ContentTypeManager)
     
     // ─────────────────────────────────────────────────────────────
     // Enhanced Taxonomy System

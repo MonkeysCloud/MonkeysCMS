@@ -1,0 +1,166 @@
+/**
+ * MonkeysCMS Decimal Field Widget CSS
+ * Consistent styling for decimal/currency input with validation states
+ */
+
+.field-decimal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-decimal__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Input group with prefix/suffix */
+.field-decimal__input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.field-decimal__prefix,
+.field-decimal__suffix {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  white-space: nowrap;
+}
+
+.field-decimal__prefix {
+  border-right: none;
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.field-decimal__suffix {
+  border-left: none;
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.field-decimal__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  transition: all 0.15s ease;
+  -moz-appearance: textfield;
+}
+
+/* Remove spin buttons */
+.field-decimal__input::-webkit-outer-spin-button,
+.field-decimal__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* When has prefix */
+.field-decimal__input-group .field-decimal__prefix + .field-decimal__input {
+  border-radius: 0;
+  border-left: none;
+}
+
+/* When has suffix */
+.field-decimal__input-group .field-decimal__input:not(:last-child) {
+  border-radius: 0;
+}
+
+/* When has both */
+.field-decimal__input-group .field-decimal__prefix + .field-decimal__input:not(:last-child) {
+  border-radius: 0;
+}
+
+/* When only input with prefix */
+.field-decimal__input-group .field-decimal__prefix + .field-decimal__input:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+/* When only input with suffix */
+.field-decimal__input-group .field-decimal__input:first-child:not(:last-child) {
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.field-decimal__input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-decimal__input::placeholder {
+  color: #9ca3af;
+}
+
+/* Validation states */
+.field-decimal__input.is-valid {
+  border-color: #10b981;
+}
+
+.field-decimal__input.is-valid:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.field-decimal__input.is-invalid {
+  border-color: #ef4444;
+}
+
+.field-decimal__input.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Validation icon */
+.field-decimal__icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.field-decimal__input.is-valid ~ .field-decimal__icon--valid,
+.field-decimal__input.is-invalid ~ .field-decimal__icon--invalid {
+  opacity: 1;
+}
+
+.field-decimal__icon--valid {
+  color: #10b981;
+}
+
+.field-decimal__icon--invalid {
+  color: #ef4444;
+}
+
+/* Validation message */
+.field-decimal__message {
+  font-size: 0.75rem;
+  min-height: 1rem;
+  transition: color 0.15s;
+}
+
+.field-decimal__message--valid {
+  color: #10b981;
+}
+
+.field-decimal__message--invalid {
+  color: #ef4444;
+}
+
+/* Display mode */
+.field-display--decimal {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}

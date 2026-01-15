@@ -43,7 +43,7 @@ final class UserReferenceWidget extends AbstractWidget
 
     public function getSupportedTypes(): array
     {
-        return ['user_reference', 'user'];
+        return ['user_reference', 'user', 'string', 'integer'];
     }
 
     public function supportsMultiple(): bool
@@ -67,7 +67,8 @@ final class UserReferenceWidget extends AbstractWidget
         $values = is_array($value) ? $value : ($value ? [$value] : []);
 
         $wrapper = Html::div()
-            ->class('field-user-reference')
+            ->id($fieldId . '_wrapper')
+            ->class('field-entity-reference')
             ->data('field-id', $fieldId)
             ->data('multiple', $multiple ? 'true' : 'false')
             ->data('roles', json_encode($roleFilter));
@@ -76,11 +77,13 @@ final class UserReferenceWidget extends AbstractWidget
         $wrapper->child(
             Html::hidden($fieldName, $multiple ? json_encode($values) : ($values[0] ?? ''))
                 ->id($fieldId)
-                ->class('field-user-reference__value')
+                ->class('field-entity-reference__value')
         );
 
         // Selected users
-        $selected = Html::div()->class('field-user-reference__selected');
+        $selected = Html::div()
+            ->id($fieldId . '_selected')
+            ->class('field-entity-reference__selected');
 
         foreach ($values as $userId) {
             // In production, fetch user info from database
@@ -92,10 +95,11 @@ final class UserReferenceWidget extends AbstractWidget
         // Search input
         $wrapper->child(
             Html::div()
-                ->class('field-user-reference__search')
+                ->class('field-entity-reference__search')
                 ->child(
                     Html::input('text')
-                        ->class('field-user-reference__input')
+                        ->id($fieldId . '_search')
+                        ->class('field-entity-reference__input')
                         ->attr('placeholder', 'Search users...')
                         ->attr('autocomplete', 'off')
                 )
@@ -104,8 +108,8 @@ final class UserReferenceWidget extends AbstractWidget
         // Dropdown
         $wrapper->child(
             Html::div()
-                ->class('field-user-reference__dropdown')
-                ->id($fieldId . '_dropdown')
+                ->class('field-entity-reference__dropdown')
+                ->id($fieldId . '_results')
         );
 
         return $wrapper;
@@ -114,13 +118,13 @@ final class UserReferenceWidget extends AbstractWidget
     private function buildUserBadge(mixed $userId, string $displayName, ?string $avatar = null): HtmlBuilder
     {
         $badge = Html::div()
-            ->class('field-user-reference__user')
+            ->class('field-entity-reference__item')
             ->data('id', $userId);
 
         if ($avatar) {
             $badge->child(
                 Html::element('img')
-                    ->class('field-user-reference__avatar')
+                    ->class('field-entity-reference__avatar')
                     ->attr('src', $avatar)
                     ->attr('alt', '')
             );
@@ -128,14 +132,15 @@ final class UserReferenceWidget extends AbstractWidget
 
         $badge->child(
             Html::span()
-                ->class('field-user-reference__name')
+                ->class('field-entity-reference__item-label')
                 ->text($displayName)
         );
 
         $badge->child(
             Html::button()
-                ->class('field-user-reference__remove')
+                ->class('field-entity-reference__item-remove')
                 ->attr('type', 'button')
+                ->attr('onclick', "window.removeEntityReference(this.closest('[data-field-id]').dataset.fieldId, {$userId})")
                 ->text('×')
         );
 
@@ -144,7 +149,15 @@ final class UserReferenceWidget extends AbstractWidget
 
     protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
-        return "CmsEntityReference.init('{$elementId}', '/api/users/search');";
+        $options = [
+            'targetType' => 'user',
+            'multiple' => $field->multiple,
+            'searchEndpoint' => '/api/users/search',
+            'lookupEndpoint' => '/api/users/lookup',
+        ];
+
+        // Values are now read from the DOM input if not provided
+        return "window.initEntityReference('{$elementId}', null, " . json_encode($options) . ");";
     }
 
     public function prepareValue(FieldDefinition $field, mixed $value): mixed

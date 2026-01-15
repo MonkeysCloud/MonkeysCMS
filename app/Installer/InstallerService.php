@@ -567,11 +567,12 @@ class InstallerService
         $items = [
             ['title' => 'Dashboard', 'url' => '/admin', 'icon' => '📊', 'weight' => 0],
             ['title' => 'Content', 'url' => '/admin/content', 'icon' => '📝', 'weight' => 10],
+            ['title' => 'Blocks', 'url' => '/admin/blocks', 'icon' => '🧱', 'weight' => 50, 'parent' => 'Content'],
             ['title' => 'Media', 'url' => '/admin/media', 'icon' => '🖼️', 'weight' => 20],
             ['title' => 'Taxonomy', 'url' => '/admin/taxonomies', 'icon' => '🏷️', 'weight' => 30],
             ['title' => 'Menus', 'url' => '/admin/menus', 'icon' => '📋', 'weight' => 40],
-            ['title' => 'Blocks', 'url' => '/admin/blocks', 'icon' => '🧱', 'weight' => 50],
             ['title' => 'Structure', 'url' => '/admin/structure', 'icon' => '🏗️', 'weight' => 55],
+            ['title' => 'Block Types', 'url' => '/admin/structure/block-types', 'icon' => '🧱', 'weight' => 10, 'parent' => 'Structure'],
             ['title' => 'Users', 'url' => '/admin/users', 'icon' => '👥', 'weight' => 60],
             ['title' => 'Roles', 'url' => '/admin/roles', 'icon' => '🎭', 'weight' => 70],
             ['title' => 'Modules', 'url' => '/admin/modules', 'icon' => '🧩', 'weight' => 80],
@@ -580,16 +581,24 @@ class InstallerService
         ];
 
         $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $idMap = [];
 
         foreach ($items as $item) {
+            $parentId = null;
+            if (isset($item['parent']) && isset($idMap[$item['parent']])) {
+                $parentId = $idMap[$item['parent']];
+            }
+
             $stmt = $this->pdo->prepare("
                 INSERT INTO menu_items (menu_id, parent_id, title, url, link_type, target, icon, css_class, weight, depth, is_published, expanded, visibility, attributes, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
-                $menuId, null, $item['title'], $item['url'], 'internal', '_self',
-                $item['icon'], null, $item['weight'], 0, 1, 0, '[]', '[]', $now, $now,
+                $menuId, $parentId, $item['title'], $item['url'], 'internal', '_self',
+                $item['icon'], null, $item['weight'], $parentId ? 1 : 0, 1, 0, '[]', '[]', $now, $now,
             ]);
+            
+            $idMap[$item['title']] = (int) $this->pdo->lastInsertId();
         }
 
         return "Created " . count($items) . " admin menu items";

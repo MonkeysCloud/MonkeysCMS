@@ -20,6 +20,18 @@ const assets = [
   {
     src: 'node_modules/sortablejs/Sortable.min.js',
     dest: 'public/js/sortable.min.js'
+  },
+  {
+    src: 'node_modules/codemirror/lib/codemirror.js',
+    dest: 'public/vendor/codemirror/codemirror.min.js'
+  },
+  {
+    src: 'node_modules/codemirror/lib/codemirror.css',
+    dest: 'public/vendor/codemirror/codemirror.min.css'
+  },
+  {
+    src: 'node_modules/codemirror/theme/dracula.css',
+    dest: 'public/vendor/codemirror/theme/dracula.css'
   }
 ];
 

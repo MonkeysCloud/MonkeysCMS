@@ -46,6 +46,30 @@ final class SwitchWidget extends AbstractWidget
         return ['boolean'];
     }
 
+    protected function initializeAssets(): void
+    {
+        $this->assets->addCss('/css/fields/switch.css');
+        $this->assets->addJs('/js/fields/switch.js');
+    }
+
+    protected function getInitScript(FieldDefinition $field, string $elementId): ?string
+    {
+        $settings = $this->getSettings($field);
+        $size = $settings->getString('size', '');
+        $color = $settings->getString('color', '');
+        
+        $options = [];
+        if ($size) {
+            $options[] = "size: '{$size}'";
+        }
+        if ($color) {
+            $options[] = "color: '{$color}'";
+        }
+        
+        $optionsStr = $options ? '{' . implode(', ', $options) . '}' : '{}';
+        return "CmsSwitch.init('{$elementId}', {$optionsStr});";
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);

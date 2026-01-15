@@ -319,28 +319,19 @@ final class CmsRepository
         }
 
         // Build LIKE query for each field
-        $qb = $this->qb->from($tableName);
+        $whereParts = [];
+        $params = [];
         $searchTerm = '%' . $query . '%';
 
-        // Use OR conditions for each field
-        $qb->where(function ($q) use ($fields, $searchTerm) {
-            foreach ($fields as $i => $field) {
-                if ($i === 0) {
-                    $q->where($field, 'LIKE', $searchTerm);
-                } else {
-                    $q->orWhere($field, 'LIKE', $searchTerm);
-                }
-            }
-        });
+        foreach ($fields as $field) {
+            $whereParts[] = "`{$field}` LIKE ?";
+            $params[] = $searchTerm;
+        }
 
-        $qb->limit($limit);
+        $whereClause = implode(' OR ', $whereParts);
+        $sql = "SELECT * FROM `{$tableName}` WHERE ({$whereClause}) LIMIT {$limit}";
 
-        $rows = $qb->fetchAllAssoc();
-
-        return array_map(
-            fn(array $row) => (new $entityClass())->hydrate($row),
-            $rows
-        );
+        return $this->rawQuery($entityClass, $sql, $params);
     }
 
     /**

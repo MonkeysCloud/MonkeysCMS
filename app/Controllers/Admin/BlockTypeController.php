@@ -8,6 +8,7 @@ use App\Cms\Blocks\BlockManager;
 use App\Cms\Auth\SessionManager;
 use App\Modules\Core\Services\MenuService;
 use App\Cms\Fields\FieldType; // Added import
+use App\Cms\Fields\Widget\WidgetRegistry;
 use App\Cms\Assets\AssetManager;
 use MonkeysLegion\Template\MLView;
 use MonkeysLegion\Router\Attributes\Route;
@@ -27,6 +28,7 @@ class BlockTypeController extends BaseAdminController
         SessionManager $session,
         AssetManager $assetManager,
         private readonly BlockManager $blockManager,
+        private readonly WidgetRegistry $widgetRegistry,
     ) {
         parent::__construct($view, $menuService, $session);
         $this->setAssetManager($assetManager);
@@ -377,8 +379,8 @@ class BlockTypeController extends BaseAdminController
         }
 
         try {
-            $this->blockManager->addFieldToType($type['entity']->id, $data);
-            return new RedirectResponse('/admin/structure/block-types/' . $id . '/fields');
+            $field = $this->blockManager->addFieldToType($type['entity']->id, $data);
+            return new RedirectResponse('/admin/structure/block-types/' . $id . '/fields/' . $field->machine_name . '/edit');
         } catch (\Exception $e) {
             return $this->render('admin/structure/block_types/add_field', [
                 'type' => $type,
@@ -420,12 +422,25 @@ class BlockTypeController extends BaseAdminController
         if (!isset($fields[$fieldName])) {
              return new RedirectResponse('/admin/structure/block-types/' . $id . '/fields');
         }
+        
+        $fieldDef = $fields[$fieldName];
+        $currentWidgetId = $fieldDef['widget'] ?? $this->widgetRegistry->resolve(
+            \App\Cms\Fields\FieldDefinition::fromArray($fieldDef)
+        )->getId();
+
+        $widget = $this->widgetRegistry->get($currentWidgetId);
+        $settingsSchema = $widget ? $widget->getSettingsSchema() : [];
+        $currentSettings = $fieldDef['settings'] ?? [];
+
 
         return $this->render('admin/structure/block_types/edit_field', [
             'type' => $type,
-            'field' => $fields[$fieldName],
+            'field' => $fieldDef,
             'machine_name' => $fieldName,
             'grouped_types' => FieldType::getGrouped(),
+            'widget_options' => $this->widgetRegistry->getOptionsForType($fields[$fieldName]['type'] ?? 'string'),
+            'widget_settings_schema' => $settingsSchema,
+            'widget_settings' => $currentSettings,
             'action' => '/admin/structure/block-types/' . $id . '/fields/' . $fieldName . '/update',
             'cancel_url' => '/admin/structure/block-types/' . $id . '/fields',
         ]);
@@ -438,13 +453,6 @@ class BlockTypeController extends BaseAdminController
     public function updateField(ServerRequestInterface $request, string $id, string $fieldName): ResponseInterface
     {
         $data = (array) $request->getParsedBody();
-        file_put_contents(
-            dirname(__DIR__, 4) . '/var/logs/debug_form.log', 
-            date('Y-m-d H:i:s') . " - UpdateField (POST /update) hit\n" . 
-            "ID: $id, Field: $fieldName\n" . 
-            "Data: " . print_r($data, true) . "\n\n", 
-            FILE_APPEND
-        );
         $type = $this->blockManager->getType($id);
 
         if (!$type || $type['source'] !== 'database') {

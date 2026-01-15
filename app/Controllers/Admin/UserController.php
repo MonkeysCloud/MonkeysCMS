@@ -368,4 +368,68 @@ final class UserController
 
         return $errors;
     }
+
+    /**
+     * Search users for autocomplete
+     */
+    #[Route('GET', '/api/users/search')]
+    public function search(ServerRequestInterface $request): ResponseInterface
+    {
+        $query = $request->getQueryParams()['q'] ?? '';
+        $page = (int) ($request->getQueryParams()['page'] ?? 1);
+        $perPage = 20;
+
+        if (empty($query)) {
+            return json(['results' => []]);
+        }
+
+        $users = $this->repository->search(
+            User::class, 
+            $query, 
+            ['username', 'display_name', 'email'], 
+            $perPage
+        );
+
+        $results = array_map(function (User $user) {
+            return [
+                'id' => $user->id,
+                'title' => $user->display_name . ' (' . $user->email . ')',
+                'avatar' => $user->avatar,
+            ];
+        }, $users);
+
+        return json(['success' => true, 'data' => $results]);
+    }
+
+    /**
+     * Lookup users by IDs
+     */
+    #[Route('GET', '/api/users/lookup')]
+    public function lookup(ServerRequestInterface $request): ResponseInterface
+    {
+        $idsStr = $request->getQueryParams()['ids'] ?? '';
+        if (empty($idsStr)) {
+            return json(['success' => true, 'data' => []]);
+        }
+
+        $ids = array_map('intval', explode(',', $idsStr));
+        $users = [];
+        
+        foreach ($ids as $id) {
+            $user = $this->repository->find(User::class, $id);
+            if ($user) {
+                $users[] = $user;
+            }
+        }
+
+        $data = array_map(function (User $user) {
+            return [
+                'id' => $user->id,
+                'title' => $user->display_name . ' (' . $user->email . ')', // JS expects 'title' or 'name'
+                'avatar' => $user->avatar,
+            ];
+        }, $users);
+
+        return json(['success' => true, 'data' => $data]);
+    }
 }
