@@ -114,7 +114,8 @@ class BlockController extends BaseAdminController
                  $field->default_value = $fieldData['default'] ?? null;
                  $field->required = $fieldData['required'] ?? false;
                  // Add other properties as needed
-                 $field->settings = $fieldData;
+                 $field->settings = $fieldData['settings'] ?? [];
+                 $field->widget_settings = $fieldData['widget_settings'] ?? [];
              } else {
                  $field = $fieldData;
              }
@@ -295,7 +296,8 @@ class BlockController extends BaseAdminController
                  $field->description = $fieldData['description'] ?? null;
                  $field->default_value = $fieldData['default'] ?? null;
                  $field->required = $fieldData['required'] ?? false;
-                 $field->settings = $fieldData;
+                 $field->settings = $fieldData['settings'] ?? [];
+                 $field->widget_settings = $fieldData['widget_settings'] ?? [];
              } else {
                  $field = $fieldData;
              }

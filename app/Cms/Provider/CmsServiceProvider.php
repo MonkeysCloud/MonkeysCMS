@@ -56,6 +56,11 @@ final class CmsServiceProvider
 
         // Load settings from DB for Auth
         try {
+            // Determine session save path
+            $basePath = defined('ML_BASE_PATH') ? ML_BASE_PATH : dirname(__DIR__, 3);
+            $sessionPath = $basePath . '/storage/sessions';
+            $config['session_save_path'] = $sessionPath;
+
             // We use direct PDO here because SettingsService might not be fully ready/cached at bootAuth time
             // or to keep it lightweight.
             $stmt = $pdo->prepare("SELECT value, type FROM settings WHERE `key` = ?");
@@ -97,6 +102,7 @@ final class CmsServiceProvider
             'name' => $config['session_name'] ?? 'cms_session',
             'lifetime' => $config['session_lifetime'] ?? 7200,
             'secure' => $config['session_secure'] ?? true,
+            'save_path' => $config['session_save_path'] ?? null,
         ]);
 
         // Initialize AuthServiceProvider with database connection and config

@@ -86,14 +86,32 @@ final class GalleryWidget extends AbstractWidget
 
         $wrapper->child($grid);
 
-        // Add button
-        $wrapper->child(
-            Html::button()
-                ->class('field-gallery__add')
-                ->attr('type', 'button')
-                ->data('action', 'add')
-                ->text('+ Add Images')
+        // Actions container
+        $actions = Html::div()->class('field-gallery__actions');
+
+        // File input for uploading
+        $actions->child(
+            Html::element('label')
+                ->class('field-gallery__upload')
+                ->child(
+                    Html::input('file')
+                        ->class('field-gallery__file')
+                        ->attr('accept', 'image/jpeg,image/png,image/gif,image/webp')
+                        ->attr('multiple', 'multiple')
+                )
+                ->child(Html::span()->text('Upload'))
         );
+
+        // Browse media library
+        $actions->child(
+            Html::button()
+                ->class('field-gallery__browse')
+                ->attr('type', 'button')
+                ->data('action', 'browse')
+                ->text('Browse Library')
+        );
+
+        $wrapper->child($actions);
 
         return $wrapper;
     }

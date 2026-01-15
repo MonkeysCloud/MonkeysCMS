@@ -66,6 +66,24 @@ final class AddressWidget extends AbstractWidget
             'street1', 'street2', 'city', 'state', 'postal_code', 'country'
         ]);
 
+        $countryMode = $settings->getString('country_mode', 'all');
+        $allowedCountries = $settings->getArray('allowed_countries', []);
+        $singleCountry = $settings->getString('single_country', 'US');
+        $defaultCountry = $settings->getString('default_country', 'US');
+
+        // Determine effective country list and default
+        $countries = \App\Cms\Data\Countries::getAll();
+        
+        if ($countryMode === 'specific' && !empty($allowedCountries)) {
+            $countries = array_intersect_key($countries, array_flip($allowedCountries));
+            // Ensure default is in allowed list, otherwise pick first allowed
+            if (!isset($countries[$defaultCountry])) {
+                $defaultCountry = array_key_first($countries);
+            }
+        } elseif ($countryMode === 'single') {
+            $defaultCountry = $singleCountry;
+        }
+
         $wrapper = Html::div()->class('field-address');
 
         // Street Address 1
@@ -140,12 +158,19 @@ final class AddressWidget extends AbstractWidget
         }
 
         if (in_array('country', $enabledFields)) {
-            $row2->child($this->buildCountrySelect(
-                $fieldId,
-                $fieldName,
-                $value['country'] ?? '',
-                $context
-            )->addClass('field-address__col--2'));
+            if ($countryMode === 'single') {
+                $wrapper->child(
+                    Html::hidden($fieldName . '[country]', $value['country'] ?? $defaultCountry)
+                );
+            } else {
+                $row2->child($this->buildCountrySelect(
+                    $fieldId,
+                    $fieldName,
+                    $value['country'] ?? $defaultCountry,
+                    $countries,
+                    $context
+                )->addClass('field-address__col--2'));
+            }
         }
 
         $wrapper->child($row2);
@@ -188,10 +213,9 @@ final class AddressWidget extends AbstractWidget
         string $fieldId,
         string $fieldName,
         string $value,
+        array $countries,
         RenderContext $context
     ): HtmlBuilder {
-        $countries = $this->getCountries();
-
         $select = Html::select()
             ->id($fieldId . '_country')
             ->name($fieldName . '[country]')
@@ -208,26 +232,6 @@ final class AddressWidget extends AbstractWidget
             ->class('field-address__field')
             ->child(Html::label()->attr('for', $fieldId . '_country')->text('Country'))
             ->child($select);
-    }
-
-    private function getCountries(): array
-    {
-        return [
-            'US' => 'United States',
-            'CA' => 'Canada',
-            'MX' => 'Mexico',
-            'GB' => 'United Kingdom',
-            'DE' => 'Germany',
-            'FR' => 'France',
-            'ES' => 'Spain',
-            'IT' => 'Italy',
-            'JP' => 'Japan',
-            'CN' => 'China',
-            'AU' => 'Australia',
-            'BR' => 'Brazil',
-            'IN' => 'India',
-            // Add more as needed
-        ];
     }
 
     public function prepareValue(FieldDefinition $field, mixed $value): mixed
@@ -298,7 +302,7 @@ final class AddressWidget extends AbstractWidget
         }
 
         if (!empty($value['country'])) {
-            $countries = $this->getCountries();
+            $countries = \App\Cms\Data\Countries::getAll();
             $parts[] = $countries[$value['country']] ?? $value['country'];
         }
 
@@ -307,7 +311,7 @@ final class AddressWidget extends AbstractWidget
 
     private function buildAddressHtml(array $parts): string
     {
-        return Html::address()
+        return Html::element('address')
             ->class('field-display', 'field-display--address')
             ->html(implode('<br>', array_map('htmlspecialchars', $parts)))
             ->render();
@@ -315,13 +319,51 @@ final class AddressWidget extends AbstractWidget
 
     public function getSettingsSchema(): array
     {
+        $countries = \App\Cms\Data\Countries::getAll();
+
         return [
+            'country_mode' => [
+                'type' => 'select',
+                'label' => 'Country Selection',
+                'options' => [
+                    'all' => 'All Countries',
+                    'specific' => 'Specific Countries',
+                    'single' => 'Single Country'
+                ],
+                'default' => 'all'
+            ],
+            'allowed_countries' => [
+                'type' => 'multiselect',
+                'label' => 'Allowed Countries',
+                'options' => $countries,
+                'depends_on' => ['country_mode' => 'specific']
+            ],
+            'single_country' => [
+                'type' => 'select',
+                'label' => 'Country',
+                'options' => $countries,
+                'depends_on' => ['country_mode' => 'single']
+            ],
+            'default_country' => [
+                'type' => 'select',
+                'label' => 'Default Country', 
+                'options' => $countries,
+                'default' => 'US',
+                'depends_on' => ['country_mode' => ['all', 'specific']]
+            ],
             'fields' => [
-                'type' => 'array',
+                'type' => 'multiselect',
                 'label' => 'Enabled Fields',
+                'options' => [
+                    'street1' => 'Street Address',
+                    'street2' => 'Street Address 2',
+                    'city' => 'City',
+                    'state' => 'State/Province',
+                    'postal_code' => 'Postal Code',
+                    'country' => 'Country'
+                ],
                 'default' => ['street1', 'street2', 'city', 'state', 'postal_code', 'country'],
             ],
-            'default_country' => ['type' => 'string', 'label' => 'Default Country', 'default' => 'US'],
         ];
     }
 }

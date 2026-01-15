@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Cms\ContentTypes;
 
+use App\Cms\ContentTypes\ContentTypeRepository;
 use App\Cms\Core\BaseEntity;
 use App\Cms\Core\SchemaGenerator;
 use App\Cms\Fields\FieldDefinition;
 use App\Cms\Modules\ModuleManager;
-use MonkeysLegion\Database\Connection;
+use MonkeysLegion\Database\Contracts\ConnectionInterface;
 use MonkeysLegion\Cache\CacheManager;
 
 /**
@@ -54,7 +55,7 @@ final class ContentTypeManager
     private bool $initialized = false;
 
     public function __construct(
-        private readonly Connection $connection,
+        private readonly ConnectionInterface $connection,
         private readonly ?ModuleManager $moduleManager = null,
         private readonly ?SchemaGenerator $schemaGenerator = null,
         private readonly ?CacheManager $cache = null,
@@ -196,6 +197,92 @@ final class ContentTypeManager
     }
 
     /**
+     * Ensure default content types exist
+     * 
+     * Creates the Article content type if it doesn't exist, with standard fields
+     * for a typical blog/news system.
+     */
+    public function ensureDefaultTypes(): void
+    {
+        $this->ensureInitialized();
+        
+        if (!$this->hasType('article')) {
+            $article = $this->createDatabaseType([
+                'type_id' => 'article',
+                'label' => 'Article',
+                'label_plural' => 'Articles',
+                'description' => 'Standard article content type for news, blog posts, and general content.',
+                'icon' => '📝',
+                'publishable' => true,
+                'revisionable' => false,
+                'translatable' => false,
+                'has_author' => true,
+                'has_taxonomy' => true,
+                'has_media' => true,
+                'title_field' => 'title',
+                'slug_field' => 'slug',
+                'url_pattern' => '/articles/{slug}',
+                'enabled' => true,
+            ]);
+
+            // Add default fields for Article
+            $this->addFieldToType($article->id, [
+                'name' => 'Body',
+                'machine_name' => 'body',
+                'type' => 'html',
+                'description' => 'The main content of the article',
+                'required' => true,
+                'widget' => 'wysiwyg',
+                'weight' => 0,
+            ]);
+
+            $this->addFieldToType($article->id, [
+                'name' => 'Summary',
+                'machine_name' => 'summary',
+                'type' => 'text',
+                'description' => 'A brief summary for teasers and meta descriptions',
+                'required' => false,
+                'widget' => 'textarea',
+                'weight' => 1,
+            ]);
+
+            $this->addFieldToType($article->id, [
+                'name' => 'Featured Image',
+                'machine_name' => 'featured_image',
+                'type' => 'image',
+                'description' => 'Main image displayed with the article',
+                'required' => false,
+                'widget' => 'media_library',
+                'weight' => 2,
+            ]);
+
+            $this->addFieldToType($article->id, [
+                'name' => 'Categories',
+                'machine_name' => 'categories',
+                'type' => 'taxonomy',
+                'description' => 'Article categories',
+                'required' => false,
+                'multiple' => true,
+                'widget' => 'select',
+                'settings' => ['vocabulary' => 'categories'],
+                'weight' => 3,
+            ]);
+
+            $this->addFieldToType($article->id, [
+                'name' => 'Tags',
+                'machine_name' => 'tags',
+                'type' => 'taxonomy',
+                'description' => 'Article tags for topic classification',
+                'required' => false,
+                'multiple' => true,
+                'widget' => 'autocomplete',
+                'settings' => ['vocabulary' => 'tags'],
+                'weight' => 4,
+            ]);
+        }
+    }
+
+    /**
      * Create a database-defined content type
      */
     public function createDatabaseType(array $data): ContentTypeEntity
@@ -223,7 +310,7 @@ final class ContentTypeManager
         $entity->prePersist();
 
         // Save the entity
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             INSERT INTO content_types (
                 type_id, label, label_plural, description, icon, is_system, enabled,
                 publishable, revisionable, translatable, has_author, has_taxonomy, has_media,
@@ -262,7 +349,7 @@ final class ContentTypeManager
             'updated_at' => $entity->updated_at->format('Y-m-d H:i:s'),
         ]);
 
-        $entity->id = (int) $this->connection->lastInsertId();
+        $entity->id = (int) $this->connection->pdo()->lastInsertId();
 
         // Add fields if provided
         if (!empty($data['fields'])) {
@@ -325,7 +412,7 @@ final class ContentTypeManager
 
         $entity->updated_at = new \DateTimeImmutable();
 
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             UPDATE content_types SET
                 label = :label, label_plural = :label_plural, description = :description,
                 icon = :icon, publishable = :publishable, revisionable = :revisionable,
@@ -368,17 +455,17 @@ final class ContentTypeManager
         // Drop the content table if requested
         if ($dropTable) {
             $tableName = $entity->getTableName();
-            $this->connection->exec("DROP TABLE IF EXISTS {$tableName}");
+            $this->connection->pdo()->exec("DROP TABLE IF EXISTS {$tableName}");
         }
 
         // Delete field instances
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM content_type_fields WHERE content_type_id = :type_id"
         );
         $stmt->execute(['type_id' => $id]);
 
         // Delete the type
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM content_types WHERE id = :id AND is_system = 0"
         );
         $stmt->execute(['id' => $id]);
@@ -417,7 +504,7 @@ final class ContentTypeManager
         $field->prePersist();
 
         // Save to database
-        $stmt = $this->connection->prepare("
+        $stmt = $this->connection->pdo()->prepare("
             INSERT INTO content_type_fields (
                 content_type_id, name, machine_name, field_type, description, help_text,
                 widget, required, multiple, cardinality, default_value, settings,
@@ -453,7 +540,7 @@ final class ContentTypeManager
             'updated_at' => $field->updated_at->format('Y-m-d H:i:s'),
         ]);
 
-        $field->id = (int) $this->connection->lastInsertId();
+        $field->id = (int) $this->connection->pdo()->lastInsertId();
 
         // Add column to content table
         if ($entity) {
@@ -476,13 +563,13 @@ final class ContentTypeManager
         if ($dropColumn && $entity) {
             try {
                 $tableName = $entity->getTableName();
-                $this->connection->exec("ALTER TABLE {$tableName} DROP COLUMN {$machineName}");
+                $this->connection->pdo()->exec("ALTER TABLE {$tableName} DROP COLUMN {$machineName}");
             } catch (\Exception $e) {
                 // Column might not exist
             }
         }
 
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "DELETE FROM content_type_fields WHERE content_type_id = :type_id AND machine_name = :machine_name"
         );
         $stmt->execute(['type_id' => $typeId, 'machine_name' => $machineName]);
@@ -552,10 +639,10 @@ final class ContentTypeManager
 
         $sql = "INSERT INTO {$tableName} (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $placeholders) . ")";
 
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->connection->pdo()->prepare($sql);
         $stmt->execute($insertData);
 
-        return (int) $this->connection->lastInsertId();
+        return (int) $this->connection->pdo()->lastInsertId();
     }
 
     /**
@@ -603,7 +690,7 @@ final class ContentTypeManager
 
         $updateData['id'] = $id;
 
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->connection->pdo()->prepare($sql);
         $stmt->execute($updateData);
 
         return true;
@@ -621,7 +708,7 @@ final class ContentTypeManager
 
         $tableName = $type['table_name'];
 
-        $stmt = $this->connection->prepare("DELETE FROM {$tableName} WHERE id = :id");
+        $stmt = $this->connection->pdo()->prepare("DELETE FROM {$tableName} WHERE id = :id");
         $stmt->execute(['id' => $id]);
 
         return $stmt->rowCount() > 0;
@@ -639,7 +726,7 @@ final class ContentTypeManager
 
         $tableName = $type['table_name'];
 
-        $stmt = $this->connection->prepare("SELECT * FROM {$tableName} WHERE id = :id");
+        $stmt = $this->connection->pdo()->prepare("SELECT * FROM {$tableName} WHERE id = :id");
         $stmt->execute(['id' => $id]);
 
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -687,7 +774,7 @@ final class ContentTypeManager
 
         // Get total count
         $countSql = "SELECT COUNT(*) FROM {$tableName} {$whereClause}";
-        $stmt = $this->connection->prepare($countSql);
+        $stmt = $this->connection->pdo()->prepare($countSql);
         $stmt->execute($params);
         $total = (int) $stmt->fetchColumn();
 
@@ -695,7 +782,7 @@ final class ContentTypeManager
         $offset = ($page - 1) * $perPage;
         $sql = "SELECT * FROM {$tableName} {$whereClause} ORDER BY {$sortField} {$sortDir} LIMIT {$perPage} OFFSET {$offset}";
 
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->connection->pdo()->prepare($sql);
         $stmt->execute($params);
 
         $items = [];
@@ -719,7 +806,7 @@ final class ContentTypeManager
     private function createContentTable(ContentTypeEntity $entity): void
     {
         $sql = $entity->generateTableSql();
-        $this->connection->exec($sql);
+        $this->connection->pdo()->exec($sql);
     }
 
     private function addColumnToTable(string $tableName, FieldDefinition $field): void
@@ -728,7 +815,7 @@ final class ContentTypeManager
         $sql = "ALTER TABLE {$tableName} ADD COLUMN {$columnDef}";
 
         try {
-            $this->connection->exec($sql);
+            $this->connection->pdo()->exec($sql);
         } catch (\Exception $e) {
             // Column might already exist
         }
@@ -745,8 +832,9 @@ final class ContentTypeManager
             }
         }
 
-        try {
-            $stmt = $this->connection->query(
+        // Check if DB is initialized
+        if ($this->hasCmsTables()) {
+            $stmt = $this->connection->pdo()->query(
                 "SELECT * FROM content_types WHERE enabled = 1 ORDER BY weight, label"
             );
 
@@ -761,14 +849,12 @@ final class ContentTypeManager
             if ($this->cache) {
                 $this->cache->store()->set(self::CACHE_KEY, $this->dbTypes, self::CACHE_TTL);
             }
-        } catch (\Exception $e) {
-            // Table might not exist yet
         }
     }
 
     private function loadTypeFields(int $typeId): array
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->connection->pdo()->prepare(
             "SELECT * FROM content_type_fields WHERE content_type_id = :type_id ORDER BY weight, name"
         );
         $stmt->execute(['type_id' => $typeId]);
@@ -785,7 +871,7 @@ final class ContentTypeManager
 
     private function getTypeEntityById(int $id): ?ContentTypeEntity
     {
-        $stmt = $this->connection->prepare("SELECT * FROM content_types WHERE id = :id");
+        $stmt = $this->connection->pdo()->prepare("SELECT * FROM content_types WHERE id = :id");
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -1027,5 +1113,18 @@ final class ContentTypeManager
                 INDEX idx_field_type (field_type)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ";
+    }
+
+    /**
+     * Check if CMS tables exist
+     */
+    public function hasCmsTables(): bool
+    {
+        try {
+            $stmt = $this->connection->pdo()->query("SHOW TABLES LIKE 'content_types'");
+            return $stmt->rowCount() > 0;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }

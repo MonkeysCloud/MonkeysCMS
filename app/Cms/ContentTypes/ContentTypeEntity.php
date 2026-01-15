@@ -113,8 +113,9 @@ class ContentTypeEntity extends BaseEntity
 
     /**
      * Get the table name for content of this type
+     * Note: Different from BaseEntity::getTableName() which returns the entity's own table
      */
-    public function getTableName(): string
+    public function getContentTableName(): string
     {
         return 'content_' . $this->type_id;
     }
@@ -162,7 +163,7 @@ class ContentTypeEntity extends BaseEntity
     /**
      * Convert to array for API responses
      */
-    public function toArray(): array
+    public function toArray(bool $includeNulls = false): array
     {
         return [
             'id' => $this->id,

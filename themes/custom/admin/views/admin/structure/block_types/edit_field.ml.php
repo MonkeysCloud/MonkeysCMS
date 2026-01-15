@@ -66,6 +66,79 @@
             </div>
 
             <div class="mb-4">
+                <label for="widget" class="block text-sm font-medium text-gray-700 mb-1">Form Widget</label>
+                <select name="widget" id="widget"
+                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
+                    @foreach($widget_options as $widget_id => $widget_label)
+                        <option value="{{ $widget_id }}" {{ $widget_id === ($field['widget'] ?? '') ? 'selected' : '' }}>
+                            {{ $widget_label }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-sm text-gray-500">Controls how this field is entered in forms.</p>
+            </div>
+
+            @if(!empty($widget_settings_schema))
+                <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-900 mb-4">Widget Settings</h3>
+                    
+                    @foreach($widget_settings_schema as $key => $schema)
+                        <div class="mb-4 last:mb-0">
+                            <label for="settings_{{ $key }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                {{ $schema['label'] }}
+                            </label>
+
+                            @if($schema['type'] === 'boolean')
+                                <div class="relative flex items-start">
+                                    <div class="flex h-5 items-center">
+                                        <input type="hidden" name="settings[{{ $key }}]" value="0">
+                                        <input id="settings_{{ $key }}" name="settings[{{ $key }}]" type="checkbox" value="1"
+                                            {{ ($widget_settings[$key] ?? $schema['default'] ?? false) ? 'checked' : '' }}
+                                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label for="settings_{{ $key }}" class="font-medium text-gray-700">Enable</label>
+                                    </div>
+                                </div>
+
+                            @elseif($schema['type'] === 'select')
+                                <select name="settings[{{ $key }}]" id="settings_{{ $key }}"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
+                                    @foreach($schema['options'] as $optValue => $optLabel)
+                                        <option value="{{ $optValue }}" 
+                                            {{ (string)($widget_settings[$key] ?? $schema['default'] ?? '') === (string)$optValue ? 'selected' : '' }}>
+                                            {{ $optLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                            @elseif($schema['type'] === 'multiselect')
+                                <select name="settings[{{ $key }}][]" id="settings_{{ $key }}" multiple
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 h-32">
+                                    @php
+                                        $selectedValues = $widget_settings[$key] ?? $schema['default'] ?? [];
+                                        if (!is_array($selectedValues)) $selectedValues = [];
+                                    @endphp
+                                    @foreach($schema['options'] as $optValue => $optLabel)
+                                        <option value="{{ $optValue }}"
+                                            {{ in_array((string)$optValue, $selectedValues) ? 'selected' : '' }}>
+                                            {{ $optLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple.</p>
+
+                            @else
+                                <input type="text" name="settings[{{ $key }}]" id="settings_{{ $key }}"
+                                    value="{{ $widget_settings[$key] ?? $schema['default'] ?? '' }}"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            <div class="mb-4">
                 <div class="relative flex items-start">
                     <div class="flex h-5 items-center">
                         <input type="hidden" name="required" value="0">

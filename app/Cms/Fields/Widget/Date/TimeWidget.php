@@ -46,20 +46,61 @@ final class TimeWidget extends AbstractWidget
         return ['time'];
     }
 
+    protected function initializeAssets(): void
+    {
+        // Flatpickr library
+        $this->assets->addCss('https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css');
+        $this->assets->addJs('https://cdn.jsdelivr.net/npm/flatpickr');
+        
+        // Custom styling
+        $this->assets->addCss('/css/fields/date.css');
+        $this->assets->addJs('/js/fields/date.js');
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
+        $fieldId = $this->getFieldId($field, $context);
+        $fieldName = $this->getFieldName($field, $context);
         $formattedValue = $this->formatValue($field, $value);
 
+        // Main wrapper
+        $wrapper = Html::div()
+            ->class('field-time')
+            ->data('field-id', $fieldId);
+
+        // Input wrapper
+        $inputWrapper = Html::div()->class('field-time__input-wrapper');
+
         $input = Html::input('time')
-            ->attrs($this->buildCommonAttributes($field, $context))
+            ->id($fieldId)
+            ->name($fieldName)
+            ->class('field-time__input')
             ->value($formattedValue);
 
         if ($step = $settings->getInt('step')) {
             $input->attr('step', $step);
         }
 
-        return $input;
+        $inputWrapper->child($input);
+        $wrapper->child($inputWrapper);
+
+        return $wrapper;
+    }
+
+    protected function getInitScript(FieldDefinition $field, string $elementId): ?string
+    {
+        $settings = $this->getSettings($field);
+        
+        $options = [
+            'enableTime' => true,
+            'noCalendar' => true,
+            'dateFormat' => 'H:i',
+            'altFormat' => 'h:i K', // AM/PM format
+        ];
+
+        $optionsJson = json_encode($options);
+        return "CmsDate.init('{$elementId}', {$optionsJson});";
     }
 
     public function formatValue(FieldDefinition $field, mixed $value): mixed

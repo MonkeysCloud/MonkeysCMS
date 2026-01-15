@@ -58,14 +58,32 @@ final class AddressWidget extends AbstractWidget
         $settings = $this->getSettings($field);
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
-        $showCountry = $settings->getBool('show_country', true);
+        
+        $countryMode = $settings->getString('country_mode', 'all');
+        $allowedCountries = $settings->getArray('allowed_countries', []);
+        $singleCountry = $settings->getString('single_country', 'US');
         $defaultCountry = $settings->getString('default_country', 'US');
+
+        // Determine effective country list and default
+        $countries = \App\Cms\Data\Countries::getAll();
+        
+        if ($countryMode === 'specific' && !empty($allowedCountries)) {
+            $countries = array_intersect_key($countries, array_flip($allowedCountries));
+            // Ensure default is in allowed list, otherwise pick first allowed
+            if (!isset($countries[$defaultCountry])) {
+                $defaultCountry = array_key_first($countries);
+            }
+        } elseif ($countryMode === 'single') {
+            $defaultCountry = $singleCountry;
+        }
 
         // Parse value
         $address = is_array($value) ? $value : [];
+        $currentCountry = $address['country'] ?? $defaultCountry;
 
         $wrapper = Html::div()
             ->class('field-address')
+            ->id($fieldId . '_wrapper') // Added ID for JS init
             ->data('field-id', $fieldId);
 
         // Hidden input for JSON value
@@ -159,7 +177,16 @@ final class AddressWidget extends AbstractWidget
                 )
         );
 
-        if ($showCountry) {
+        // Country selection logic
+        if ($countryMode === 'single') {
+            // In single mode, we just add a hidden input for the country
+            // and optionally display the country name as text
+            $wrapper->child(
+                Html::hidden('', $currentCountry)
+                    ->data('field', 'country')
+            );
+        } else {
+            // For 'all' or 'specific', show the dropdown
             $postalCountryRow->child(
                 Html::div()
                     ->class('field-address__field', 'field-address__field--country')
@@ -169,7 +196,7 @@ final class AddressWidget extends AbstractWidget
                             ->text('Country')
                     )
                     ->child(
-                        $this->buildCountrySelect($fieldId . '_country', $address['country'] ?? $defaultCountry)
+                        $this->buildCountrySelect($fieldId . '_country', $currentCountry, $countries)
                     )
             );
         }
@@ -196,26 +223,8 @@ final class AddressWidget extends AbstractWidget
             );
     }
 
-    private function buildCountrySelect(string $id, string $selected): HtmlBuilder
+    private function buildCountrySelect(string $id, string $selected, array $countries): HtmlBuilder
     {
-        $countries = [
-            'US' => 'United States',
-            'CA' => 'Canada',
-            'GB' => 'United Kingdom',
-            'AU' => 'Australia',
-            'DE' => 'Germany',
-            'FR' => 'France',
-            'ES' => 'Spain',
-            'IT' => 'Italy',
-            'NL' => 'Netherlands',
-            'MX' => 'Mexico',
-            'BR' => 'Brazil',
-            'JP' => 'Japan',
-            'CN' => 'China',
-            'IN' => 'India',
-            // Add more as needed
-        ];
-
         $select = Html::select()
             ->id($id)
             ->class('field-address__input', 'field-address__select')
@@ -230,7 +239,8 @@ final class AddressWidget extends AbstractWidget
 
     protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
-        return "CmsAddress.init('{$elementId}');";
+        // Using _wrapper ID for init to scope events correctly
+        return "CmsAddress.init('{$elementId}_wrapper');";
     }
 
     public function prepareValue(FieldDefinition $field, mixed $value): mixed
@@ -254,6 +264,10 @@ final class AddressWidget extends AbstractWidget
             return parent::renderDisplay($field, null, $context);
         }
 
+        $countries = \App\Cms\Data\Countries::getAll();
+        $countryCode = $value['country'] ?? '';
+        $countryName = $countries[$countryCode] ?? $countryCode;
+
         $parts = array_filter([
             $value['street1'] ?? '',
             $value['street2'] ?? '',
@@ -262,10 +276,10 @@ final class AddressWidget extends AbstractWidget
                 $value['state'] ?? '',
                 $value['postal_code'] ?? '',
             ])),
-            $value['country'] ?? '',
+            $countryName,
         ]);
 
-        $html = Html::address()
+        $html = Html::element('address')
             ->class('field-display', 'field-display--address')
             ->html(implode('<br>', array_map('htmlspecialchars', $parts)))
             ->render();
@@ -275,10 +289,38 @@ final class AddressWidget extends AbstractWidget
 
     public function getSettingsSchema(): array
     {
+        $countries = \App\Cms\Data\Countries::getAll();
+
         return [
-            'show_country' => ['type' => 'boolean', 'label' => 'Show Country', 'default' => true],
-            'default_country' => ['type' => 'string', 'label' => 'Default Country', 'default' => 'US'],
-            'autocomplete' => ['type' => 'boolean', 'label' => 'Enable Autocomplete', 'default' => false],
+            'country_mode' => [
+                'type' => 'select',
+                'label' => 'Country Selection',
+                'options' => [
+                    'all' => 'All Countries',
+                    'specific' => 'Specific Countries',
+                    'single' => 'Single Country'
+                ],
+                'default' => 'all'
+            ],
+            'allowed_countries' => [
+                'type' => 'multiselect',
+                'label' => 'Allowed Countries',
+                'options' => $countries,
+                'depends_on' => ['country_mode' => 'specific']
+            ],
+            'single_country' => [
+                'type' => 'select',
+                'label' => 'Country',
+                'options' => $countries,
+                'depends_on' => ['country_mode' => 'single']
+            ],
+            'default_country' => [
+                'type' => 'select',
+                'label' => 'Default Country', 
+                'options' => $countries,
+                'default' => 'US',
+                'depends_on' => ['country_mode' => ['all', 'specific']]
+            ],
         ];
     }
 }

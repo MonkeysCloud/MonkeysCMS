@@ -49,6 +49,11 @@ final class GeolocationWidget extends AbstractWidget
 
     protected function initializeAssets(): void
     {
+        // Leaflet library for OpenStreetMap
+        $this->assets->addCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+        $this->assets->addJs('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+        
+        // Custom styling and functionality
         $this->assets->addCss('/css/fields/geolocation.css');
         $this->assets->addJs('/js/fields/geolocation.js');
     }

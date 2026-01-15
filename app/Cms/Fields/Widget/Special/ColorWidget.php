@@ -46,11 +46,15 @@ final class ColorWidget extends AbstractWidget
         return ['color', 'string'];
     }
 
+    protected function initializeAssets(): void
+    {
+        $this->assets->addCss('/css/fields/color.css');
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
         $fieldId = $this->getFieldId($field, $context);
-        $showPreview = $settings->getBool('show_preview', true);
         $showHex = $settings->getBool('show_hex', true);
         $currentValue = $value ?: '#000000';
 
@@ -72,16 +76,6 @@ final class ColorWidget extends AbstractWidget
                     ->attr('pattern', '^#[0-9A-Fa-f]{6}$')
                     ->attr('maxlength', '7')
                     ->value($currentValue)
-            );
-        }
-
-        // Preview
-        if ($showPreview) {
-            $wrapper->child(
-                Html::div()
-                    ->class('field-color__preview')
-                    ->id($fieldId . '_preview')
-                    ->attr('style', "background-color: {$currentValue};")
             );
         }
 

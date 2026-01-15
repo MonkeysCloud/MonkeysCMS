@@ -90,7 +90,36 @@
                             {{ $field['type'] }}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {{ $field['widget'] ?? 'Default' }}
+                            <div class="font-medium text-gray-900">{{ $field['widget'] ?? 'Default' }}</div>
+                            @php
+                                $allSettings = array_merge(
+                                    $field['settings'] ?? [],
+                                    $field['widget_settings'] ?? []
+                                );
+                                // Filter out fields that shouldn't be displayed
+                                $displaySettings = array_filter($allSettings, function($value, $key) {
+                                    if (in_array($key, ['fields'])) return false;
+                                    if (is_array($value) && empty($value)) return false;
+                                    if ($value === null || $value === '') return false;
+                                    return true;
+                                }, ARRAY_FILTER_USE_BOTH);
+                            @endphp
+                            @if(!empty($displaySettings))
+                                <div class="mt-1 text-xs text-gray-500 space-y-0.5">
+                                    @foreach($displaySettings as $key => $value)
+                                        <div>
+                                            <span class="font-medium">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
+                                            @if(is_array($value))
+                                                {{ count($value) > 3 ? count($value) . ' selected' : implode(', ', $value) }}
+                                            @elseif(is_bool($value))
+                                                {{ $value ? 'Yes' : 'No' }}
+                                            @else
+                                                {{ mb_strimwidth((string)$value, 0, 30, '...') }}
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </td>
                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                             <a href="{{ $base_url }}/fields/{{ $machineName }}/edit" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>

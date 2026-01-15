@@ -1,0 +1,107 @@
+/**
+ * MonkeysCMS Email Field Widget CSS
+ * Consistent styling for email input with validation states
+ */
+
+.field-email {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-email__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-email__input {
+  flex: 1;
+  padding: 0.625rem 2.5rem 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  transition: all 0.15s ease;
+}
+
+.field-email__input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-email__input::placeholder {
+  color: #9ca3af;
+}
+
+/* Validation states */
+.field-email__input.is-valid {
+  border-color: #10b981;
+  padding-right: 2.5rem;
+}
+
+.field-email__input.is-valid:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.field-email__input.is-invalid {
+  border-color: #ef4444;
+  padding-right: 2.5rem;
+}
+
+.field-email__input.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Validation icon */
+.field-email__icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.field-email__input.is-valid ~ .field-email__icon--valid,
+.field-email__input.is-invalid ~ .field-email__icon--invalid {
+  opacity: 1;
+}
+
+.field-email__icon--valid {
+  color: #10b981;
+}
+
+.field-email__icon--invalid {
+  color: #ef4444;
+}
+
+/* Validation message */
+.field-email__message {
+  font-size: 0.75rem;
+  min-height: 1rem;
+  transition: color 0.15s;
+}
+
+.field-email__message--valid {
+  color: #10b981;
+}
+
+.field-email__message--invalid {
+  color: #ef4444;
+}
+
+/* Display mode */
+.field-display--email {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.field-display--email:hover {
+  text-decoration: underline;
+}

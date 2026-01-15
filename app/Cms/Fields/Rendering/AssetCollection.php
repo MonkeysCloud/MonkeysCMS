@@ -143,6 +143,26 @@ final class AssetCollection
     }
 
     /**
+     * Alias for getCssFiles (for compatibility with FieldManager)
+     *
+     * @return array<string>
+     */
+    public function getCss(): array
+    {
+        return $this->getCssFiles();
+    }
+
+    /**
+     * Alias for getJsFiles (for compatibility with FieldManager)
+     *
+     * @return array<string>
+     */
+    public function getJs(): array
+    {
+        return $this->getJsFiles();
+    }
+
+    /**
      * Get all initialization scripts
      *
      * @return array<string>

@@ -49,6 +49,11 @@ interface WidgetInterface
     public function renderDisplay(FieldDefinition $field, mixed $value, RenderContext $context): RenderResult;
 
     /**
+     * Get the widget's settings schema
+     */
+    public function getSettingsSchema(): array;
+    
+    /**
      * Validate a field value
      */
     public function validate(FieldDefinition $field, mixed $value): ValidationResult;

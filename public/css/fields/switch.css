@@ -1,0 +1,181 @@
+/**
+ * MonkeysCMS Switch (Toggle) Widget CSS
+ * Beautiful toggle switch styling
+ */
+
+.field-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Hide the default checkbox */
+.field-switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Track (the sliding background) */
+.field-switch__track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #d1d5db;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Thumb (the sliding circle) */
+.field-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+/* Checked state */
+.field-switch input:checked + .field-switch__track {
+  background: #3b82f6;
+}
+
+.field-switch input:checked + .field-switch__track .field-switch__thumb {
+  transform: translateX(20px);
+}
+
+/* Focus state */
+.field-switch input:focus + .field-switch__track {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Hover state */
+.field-switch:hover .field-switch__track {
+  background: #9ca3af;
+}
+
+.field-switch:hover input:checked + .field-switch__track {
+  background: #2563eb;
+}
+
+/* Labels container */
+.field-switch__labels {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.field-switch__on,
+.field-switch__off {
+  transition: color 0.2s, font-weight 0.2s;
+}
+
+.field-switch__on {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.field-switch__off {
+  color: #374151;
+  font-weight: 500;
+}
+
+/* When checked, swap label emphasis */
+.field-switch input:checked ~ .field-switch__labels .field-switch__on {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.field-switch input:checked ~ .field-switch__labels .field-switch__off {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* Disabled state */
+.field-switch input:disabled + .field-switch__track {
+  background: #e5e7eb;
+  cursor: not-allowed;
+}
+
+.field-switch input:disabled + .field-switch__track .field-switch__thumb {
+  background: #f3f4f6;
+  box-shadow: none;
+}
+
+.field-switch input:disabled ~ .field-switch__labels {
+  opacity: 0.5;
+}
+
+/* Display mode */
+.field-display--switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+}
+
+.field-display--on {
+  color: #059669;
+  background: #d1fae5;
+}
+
+.field-display--off {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
+/* Size variants */
+.field-switch--small .field-switch__track {
+  width: 36px;
+  height: 20px;
+}
+
+.field-switch--small .field-switch__thumb {
+  width: 16px;
+  height: 16px;
+}
+
+.field-switch--small input:checked + .field-switch__track .field-switch__thumb {
+  transform: translateX(16px);
+}
+
+.field-switch--large .field-switch__track {
+  width: 56px;
+  height: 30px;
+  border-radius: 15px;
+}
+
+.field-switch--large .field-switch__thumb {
+  width: 26px;
+  height: 26px;
+}
+
+.field-switch--large input:checked + .field-switch__track .field-switch__thumb {
+  transform: translateX(26px);
+}
+
+/* Color variants */
+.field-switch--success input:checked + .field-switch__track {
+  background: #10b981;
+}
+
+.field-switch--danger input:checked + .field-switch__track {
+  background: #ef4444;
+}
+
+.field-switch--warning input:checked + .field-switch__track {
+  background: #f59e0b;
+}

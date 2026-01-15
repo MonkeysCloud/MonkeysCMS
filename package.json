@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "alpinejs": "^3.14.3",
+    "codemirror": "^5.65.20",
     "htmx.org": "^1.9.10",
     "quill": "^2.0.3",
     "sortablejs": "^1.15.2",

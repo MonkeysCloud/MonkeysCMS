@@ -46,13 +46,36 @@ final class DateTimeWidget extends AbstractWidget
         return ['datetime'];
     }
 
+    protected function initializeAssets(): void
+    {
+        // Flatpickr library
+        $this->assets->addCss('https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css');
+        $this->assets->addJs('https://cdn.jsdelivr.net/npm/flatpickr');
+        
+        // Custom styling
+        $this->assets->addCss('/css/fields/date.css');
+        $this->assets->addJs('/js/fields/date.js');
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
+        $fieldId = $this->getFieldId($field, $context);
+        $fieldName = $this->getFieldName($field, $context);
         $formattedValue = $this->formatValue($field, $value);
 
+        // Main wrapper
+        $wrapper = Html::div()
+            ->class('field-datetime')
+            ->data('field-id', $fieldId);
+
+        // Input wrapper
+        $inputWrapper = Html::div()->class('field-datetime__input-wrapper');
+
         $input = Html::input('datetime-local')
-            ->attrs($this->buildCommonAttributes($field, $context))
+            ->id($fieldId)
+            ->name($fieldName)
+            ->class('field-datetime__input')
             ->value($formattedValue);
 
         if ($min = $settings->getString('min_datetime')) {
@@ -67,7 +90,33 @@ final class DateTimeWidget extends AbstractWidget
             $input->attr('step', $step);
         }
 
-        return $input;
+        $inputWrapper->child($input);
+        $wrapper->child($inputWrapper);
+
+        return $wrapper;
+    }
+
+    protected function getInitScript(FieldDefinition $field, string $elementId): ?string
+    {
+        $settings = $this->getSettings($field);
+        $minDate = $settings->getString('min_datetime');
+        $maxDate = $settings->getString('max_datetime');
+
+        $options = [
+            'enableTime' => true,
+            'dateFormat' => 'Y-m-d H:i',
+            'altFormat' => 'F j, Y h:i K', // Standard datetime format
+        ];
+        
+        if ($minDate) {
+            $options['minDate'] = $minDate;
+        }
+        if ($maxDate) {
+            $options['maxDate'] = $maxDate;
+        }
+
+        $optionsJson = json_encode($options);
+        return "CmsDate.init('{$elementId}', {$optionsJson});";
     }
 
     public function formatValue(FieldDefinition $field, mixed $value): mixed

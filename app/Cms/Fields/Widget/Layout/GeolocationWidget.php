@@ -49,6 +49,11 @@ final class GeolocationWidget extends AbstractWidget
 
     protected function initializeAssets(): void
     {
+        // Leaflet library for OpenStreetMap
+        $this->assets->addCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+        $this->assets->addJs('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+        
+        // Custom styling and functionality
         $this->assets->addCss('/css/fields/geolocation.css');
         $this->assets->addJs('/js/fields/geolocation.js');
     }
@@ -71,6 +76,13 @@ final class GeolocationWidget extends AbstractWidget
             ->data('default-lng', $defaultLng)
             ->data('default-zoom', $defaultZoom);
 
+        // Hidden input for JSON value (used by JS)
+        $wrapper->child(
+            Html::hidden($fieldName, json_encode($value ?: ['lat' => $defaultLat, 'lng' => $defaultLng]))
+                ->id($fieldId)
+                ->class('field-geolocation__value')
+        );
+
         // Coordinate inputs
         $coords = Html::div()->class('field-geolocation__coords');
 
@@ -86,6 +98,7 @@ final class GeolocationWidget extends AbstractWidget
                         ->attr('step', '0.000001')
                         ->attr('min', '-90')
                         ->attr('max', '90')
+                        ->data('field', 'lat')
                         ->class('field-geolocation__input')
                         ->when($context->isDisabled(), fn($el) => $el->disabled())
                 )
@@ -103,6 +116,7 @@ final class GeolocationWidget extends AbstractWidget
                         ->attr('step', '0.000001')
                         ->attr('min', '-180')
                         ->attr('max', '180')
+                        ->data('field', 'lng')
                         ->class('field-geolocation__input')
                         ->when($context->isDisabled(), fn($el) => $el->disabled())
                 )
@@ -136,6 +150,7 @@ final class GeolocationWidget extends AbstractWidget
                 Html::div()
                     ->class('field-geolocation__map')
                     ->id($fieldId . '_map')
+                    ->attr('style', 'height: 300px;')
             );
         }
 
@@ -152,7 +167,7 @@ final class GeolocationWidget extends AbstractWidget
 
         $apiKey = $settings->getString('maps_api_key', '');
 
-        return "CmsGeolocation.init('{$elementId}', '{$apiKey}');";
+        return "CmsGeolocation.initWithMap('{$elementId}');";
     }
 
     public function validate(FieldDefinition $field, mixed $value): ValidationResult

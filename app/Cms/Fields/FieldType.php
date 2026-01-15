@@ -140,7 +140,7 @@ enum FieldType: string
             self::COLOR => 'colorpicker',
             self::JSON => 'json_editor',
             self::LINK => 'link_field',
-            self::ADDRESS => 'address_field',
+            self::ADDRESS => 'address',
             self::GEOLOCATION => 'map_field',
         };
     }

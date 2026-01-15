@@ -19,7 +19,7 @@ final class LinkWidget extends AbstractWidget
 {
     public function getId(): string
     {
-        return 'link';
+        return 'link_field';
     }
 
     public function getLabel(): string
@@ -47,6 +47,12 @@ final class LinkWidget extends AbstractWidget
         return ['link', 'url', 'json', 'object'];
     }
 
+    protected function initializeAssets(): void
+    {
+        $this->assets->addCss('/css/fields/link.css');
+        $this->assets->addJs('/js/fields/link.js');
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
@@ -69,55 +75,45 @@ final class LinkWidget extends AbstractWidget
                 ->class('field-link__value')
         );
 
-        // URL input
+        // URL input (full width, no label)
         $wrapper->child(
-            Html::div()
-                ->class('field-link__field')
-                ->child(Html::label()->attr('for', $fieldId . '_url')->text('URL'))
-                ->child(
-                    Html::input('url')
-                        ->id($fieldId . '_url')
-                        ->class('field-link__input')
-                        ->data('field', 'url')
-                        ->value($link['url'] ?? '')
-                        ->attr('placeholder', 'https://example.com')
-                )
+            Html::input('url')
+                ->id($fieldId . '_url')
+                ->class('field-link__input')
+                ->data('field', 'url')
+                ->value($link['url'] ?? '')
+                ->attr('placeholder', 'https://...')
         );
 
         // Title input
         if ($showTitle) {
             $wrapper->child(
-                Html::div()
-                    ->class('field-link__field')
-                    ->child(Html::label()->attr('for', $fieldId . '_title')->text('Link Text'))
-                    ->child(
-                        Html::input('text')
-                            ->id($fieldId . '_title')
-                            ->class('field-link__input')
-                            ->data('field', 'title')
-                            ->value($link['title'] ?? '')
-                            ->attr('placeholder', 'Link text (optional)')
-                    )
+                Html::input('text')
+                    ->id($fieldId . '_title')
+                    ->class('field-link__input')
+                    ->data('field', 'title')
+                    ->value($link['title'] ?? '')
+                    ->attr('placeholder', 'Link text')
             );
         }
 
-        // Target select
+        // Target select as dropdown
         if ($showTarget) {
-            $wrapper->child(
-                Html::div()
-                    ->class('field-link__field', 'field-link__field--inline')
-                    ->child(
-                        Html::element('label')
-                            ->child(
-                                Html::input('checkbox')
-                                    ->id($fieldId . '_external')
-                                    ->class('field-link__checkbox')
-                                    ->data('field', 'external')
-                                    ->when(($link['target'] ?? '_self') === '_blank', fn($el) => $el->attr('checked', true))
-                            )
-                            ->child(Html::span()->text(' Open in new tab'))
-                    )
+            $select = Html::element('select')
+                ->id($fieldId . '_target')
+                ->class('field-link__select')
+                ->data('field', 'target');
+            
+            $select->child(
+                Html::option('_self', 'Open in Same window')
+                    ->when(($link['target'] ?? '_self') === '_self', fn($el) => $el->attr('selected', true))
             );
+            $select->child(
+                Html::option('_blank', 'Open in New window')
+                    ->when(($link['target'] ?? '_self') === '_blank', fn($el) => $el->attr('selected', true))
+            );
+            
+            $wrapper->child($select);
         }
 
         return $wrapper;

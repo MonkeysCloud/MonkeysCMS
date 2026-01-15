@@ -15,6 +15,8 @@ namespace App\Cms\Auth;
  */
 class SessionManager
 {
+    private static bool $globalsConfigured = false;
+    private static array $globalConfig = [];
     private bool $started = false;
     private array $config;
 
@@ -24,6 +26,7 @@ class SessionManager
             'name' => 'cms_session',
             'lifetime' => 7200,              // 2 hours
             'path' => '/',
+            'save_path' => null,             // Custom save path
             'domain' => null,
             'secure' => true,
             'httponly' => true,
@@ -46,25 +49,46 @@ class SessionManager
             return;
         }
         
-        // Configure session settings before session starts
-        ini_set('session.use_strict_mode', '1');
-        ini_set('session.use_only_cookies', '1');
-        ini_set('session.cookie_httponly', '1');
-        ini_set('session.cookie_secure', ($config['secure'] ?? true) ? '1' : '0');
-        ini_set('session.cookie_samesite', $config['samesite'] ?? 'Lax');
-        ini_set('session.gc_maxlifetime', (string) ($config['lifetime'] ?? 7200));
-        
-        // Set cookie params globally - will apply to session_start() when called
-        session_set_cookie_params([
+        // Store global config so start() can use it
+        self::$globalConfig = [
+            'name' => $config['name'] ?? 'cms_session',
             'lifetime' => $config['lifetime'] ?? 7200,
             'path' => $config['path'] ?? '/',
+            'save_path' => $config['save_path'] ?? null,
             'domain' => $config['domain'] ?? null,
             'secure' => $config['secure'] ?? true,
             'httponly' => $config['httponly'] ?? true,
             'samesite' => $config['samesite'] ?? 'Lax',
+        ];
+        self::$globalsConfigured = true;
+        
+        // Configure session save path if set
+        if (!empty(self::$globalConfig['save_path'])) {
+            if (!is_dir(self::$globalConfig['save_path'])) {
+                @mkdir(self::$globalConfig['save_path'], 0755, true);
+            }
+            session_save_path(self::$globalConfig['save_path']);
+        }
+
+        // Configure session settings before session starts
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.cookie_secure', self::$globalConfig['secure'] ? '1' : '0');
+        ini_set('session.cookie_samesite', self::$globalConfig['samesite']);
+        ini_set('session.gc_maxlifetime', (string) self::$globalConfig['lifetime']);
+        
+        // Set cookie params globally - will apply to session_start() when called
+        session_set_cookie_params([
+            'lifetime' => self::$globalConfig['lifetime'],
+            'path' => self::$globalConfig['path'],
+            'domain' => self::$globalConfig['domain'],
+            'secure' => self::$globalConfig['secure'],
+            'httponly' => self::$globalConfig['httponly'],
+            'samesite' => self::$globalConfig['samesite'],
         ]);
         
-        session_name($config['name'] ?? 'cms_session');
+        session_name(self::$globalConfig['name']);
     }
 
     /**
@@ -77,22 +101,34 @@ class SessionManager
             return;
         }
 
+        // Use global config if it was set (from database via CmsServiceProvider::boot()),
+        // otherwise fall back to instance config
+        $config = self::$globalsConfigured ? self::$globalConfig : $this->config;
+
+        // Configure session save path if set (and not configured globally)
+        if (!self::$globalsConfigured && !empty($config['save_path'])) {
+            if (!is_dir($config['save_path'])) {
+                @mkdir($config['save_path'], 0755, true);
+            }
+            session_save_path($config['save_path']);
+        }
+
         // Configure session
         ini_set('session.use_strict_mode', '1');
         ini_set('session.use_only_cookies', '1');
         ini_set('session.cookie_httponly', '1');
-        ini_set('session.cookie_secure', $this->config['secure'] ? '1' : '0');
-        ini_set('session.cookie_samesite', $this->config['samesite']);
-        ini_set('session.gc_maxlifetime', (string) $this->config['lifetime']);
+        ini_set('session.cookie_secure', $config['secure'] ? '1' : '0');
+        ini_set('session.cookie_samesite', $config['samesite']);
+        ini_set('session.gc_maxlifetime', (string) $config['lifetime']);
 
-        session_name($this->config['name']);
+        session_name($config['name']);
         session_set_cookie_params([
-            'lifetime' => $this->config['lifetime'],
-            'path' => $this->config['path'],
-            'domain' => $this->config['domain'],
-            'secure' => $this->config['secure'],
-            'httponly' => $this->config['httponly'],
-            'samesite' => $this->config['samesite'],
+            'lifetime' => $config['lifetime'],
+            'path' => $config['path'],
+            'domain' => $config['domain'],
+            'secure' => $config['secure'],
+            'httponly' => $config['httponly'],
+            'samesite' => $config['samesite'],
         ]);
 
         session_start();
