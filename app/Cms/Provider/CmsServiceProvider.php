@@ -90,6 +90,13 @@ final class CmsServiceProvider
                     $config['session_secure'] = (bool) $row['value'];
                 }
             }
+            
+            error_log(sprintf(
+                '[CmsServiceProvider] Encoded Auth Config: Lifetime=%s, Secure=%s, SavePath=%s',
+                $config['session_lifetime'] ?? 'NOT_SET',
+                isset($config['session_secure']) ? ($config['session_secure'] ? 'true' : 'false') : 'NOT_SET',
+                $config['session_save_path'] ?? 'NOT_SET'
+            ));
         } catch (\Throwable $e) {
             // Ignore DB errors during auth boot (e.g. during installation)
             error_log('Failed to load auth settings: ' . $e->getMessage());
@@ -196,7 +203,8 @@ final class CmsServiceProvider
                 \App\Cms\Auth\Middleware\AuthenticationMiddlewareAdapter::class => function (ContainerInterface $c) {
                     return new \App\Cms\Auth\Middleware\AuthenticationMiddlewareAdapter(
                         $c->get(\MonkeysLegion\Auth\Middleware\AuthenticationMiddleware::class),
-                        $c->get(\App\Cms\Security\PermissionService::class)
+                        $c->get(\App\Cms\Security\PermissionService::class),
+                        $c->get(\App\Cms\Auth\CmsAuthService::class)
                     );
                 },
                 // File Storage
@@ -323,6 +331,16 @@ final class CmsServiceProvider
                     
                     // Register all discovered widgets
                     $registry->registerMany($discoveredWidgets);
+
+                    // Inject TaxonomyService into TaxonomyWidget
+                    $taxonomyWidget = $registry->get('taxonomy');
+                    if ($taxonomyWidget instanceof \App\Cms\Fields\Widget\Reference\TaxonomyWidget) {
+                        if ($c->has(\App\Modules\Core\Services\TaxonomyService::class)) {
+                            $taxonomyWidget->setTaxonomyService(
+                                $c->get(\App\Modules\Core\Services\TaxonomyService::class)
+                            );
+                        }
+                    }
 
                     // Set Defaults
                     $registry->setTypeDefault('string', 'text_input');

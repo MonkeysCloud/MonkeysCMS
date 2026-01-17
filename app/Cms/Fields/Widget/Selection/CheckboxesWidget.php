@@ -43,12 +43,18 @@ final class CheckboxesWidget extends AbstractWidget
 
     public function getSupportedTypes(): array
     {
-        return ['checkbox', 'multiselect', 'taxonomy_reference'];
+        return ['checkbox', 'multiselect'];
     }
 
     public function supportsMultiple(): bool
     {
         return true;
+    }
+
+    protected function initializeAssets(): void
+    {
+        $this->assets->addCss('/css/fields/checkboxes.css');
+        $this->assets->addJs('/js/fields/checkboxes.js');
     }
 
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
@@ -59,19 +65,41 @@ final class CheckboxesWidget extends AbstractWidget
         $fieldId = $this->getFieldId($field, $context);
         $fieldName = $this->getFieldName($field, $context);
         $layout = $settings->getString('layout', 'vertical');
-        $columns = $settings->getInt('columns');
+        $showSelectAll = $settings->getBool('select_all', false);
+
+        $wrapper = Html::div()->id($fieldId . '_wrapper');
+        
+        // Select All / Deselect All Controls
+        if ($showSelectAll) {
+            $actions = Html::div()->class('field-checkbox-actions');
+            $actions->child(
+                Html::button()
+                    ->attr('type', 'button')
+                    ->class('field-checkbox-action')
+                    ->data('action', 'select-all')
+                    ->text('Select All')
+            );
+            $actions->child(Html::span()->text('|')->attr('style', 'color: #d1d5db; font-size: 0.75rem;'));
+            $actions->child(
+                Html::button()
+                    ->attr('type', 'button')
+                    ->class('field-checkbox-action')
+                    ->data('action', 'deselect-all')
+                    ->text('Deselect All')
+            );
+            $wrapper->child($actions);
+        }
 
         $container = Html::div()
             ->class('field-checkbox-group', "field-checkbox-group--{$layout}");
 
-        if ($columns > 0) {
-            $container->attr('style', "column-count: {$columns};");
-        }
+        // Columns logic replaced by Grid layout in CSS, but keeping basic support if desired
+        // If layout is grid, we rely on CSS Grid. If layout is vertical/horizontal, flex works.
 
         $index = 0;
         foreach ($options as $optValue => $optLabel) {
             $checkboxId = $fieldId . '_' . $index;
-            $checked = in_array($optValue, $values, true);
+            $checked = in_array($optValue, $values, false); // Loose comparison often better for form values
 
             $container->child(
                 Html::element('label')
@@ -81,7 +109,8 @@ final class CheckboxesWidget extends AbstractWidget
                             ->id($checkboxId)
                             ->name($fieldName . '[]')
                             ->value((string) $optValue)
-                            ->when($checked, fn($el) => $el->attr('checked', true))
+                            ->class('field-checkbox__input')
+                            ->when($checked, fn($el) => $el->attr('checked', 'checked'))
                             ->when($context->isDisabled(), fn($el) => $el->disabled())
                     )
                     ->child(Html::span()->class('field-checkbox__mark'))
@@ -94,8 +123,17 @@ final class CheckboxesWidget extends AbstractWidget
 
             $index++;
         }
+        
+        $wrapper->child($container);
 
-        return $container;
+        return $wrapper;
+    }
+    
+    protected function getInitScript(FieldDefinition $field, string $elementId): ?string
+    {
+        // Initialize JS helper for the wrapper ID
+        $wrapperId = $elementId . '_wrapper';
+        return "CmsCheckboxes.init('{$wrapperId}');";
     }
 
     public function prepareValue(FieldDefinition $field, mixed $value): mixed
@@ -135,13 +173,13 @@ final class CheckboxesWidget extends AbstractWidget
                 'type' => 'select',
                 'label' => 'Layout',
                 'options' => [
-                    'vertical' => 'Vertical',
-                    'horizontal' => 'Horizontal',
+                    'vertical' => 'Vertical (Stack)',
+                    'grid' => 'Grid (Auto-fill)',
                 ],
                 'default' => 'vertical',
             ],
-            'columns' => ['type' => 'integer', 'label' => 'Columns', 'default' => 0],
-            'options' => ['type' => 'json', 'label' => 'Options (JSON)'],
+            'select_all' => ['type' => 'boolean', 'label' => 'Show Select All / Deselect All', 'default' => false],
+            'options' => ['type' => 'key_value', 'label' => 'Options'],
         ];
     }
 }

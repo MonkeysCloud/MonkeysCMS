@@ -46,14 +46,28 @@ final class TextareaWidget extends AbstractWidget
         return ['text', 'textarea', 'string'];
     }
 
+    protected function initializeAssets(): void
+    {
+        $this->assets->addCss('/css/fields/textarea.css');
+        $this->assets->addJs('/js/fields/textarea.js');
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
+        $fieldId = $this->getFieldId($field, $context);
+        
+        // Wrapper
+        $wrapper = Html::div()
+            ->class('field-textarea')
+            ->data('field-id', $fieldId);
 
         $textarea = Html::textarea()
-            ->attrs($this->buildCommonAttributes($field, $context))
-            ->attr('rows', $settings->getInt('rows', 5))
-            ->text($value ?? '');
+            ->id($fieldId)
+            ->name($this->getFieldName($field, $context))
+            ->class('field-textarea__input block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 disabled:bg-gray-50 disabled:text-gray-500 transition-colors duration-200')
+            ->text($value ?? '')
+            ->attr('rows', $settings->getInt('rows', 5));
 
         if ($cols = $settings->getInt('cols')) {
             $textarea->attr('cols', $cols);
@@ -62,44 +76,48 @@ final class TextareaWidget extends AbstractWidget
         if ($maxLength = $settings->getInt('max_length')) {
             $textarea->attr('maxlength', $maxLength);
         }
-
+        
+        // Manual resize style if not using auto-resize
         if ($resize = $settings->getString('resize', 'vertical')) {
-            $textarea->attr('style', "resize: {$resize};");
+            // Auto resize usually implies overflow hidden and handle height manually
+            if ($resize === 'auto') {
+                $textarea->attr('style', 'resize: none; overflow-y: hidden;');
+            } else {
+                $textarea->attr('style', "resize: {$resize};");
+            }
         }
 
-        // Character counter
+        $wrapper->child($textarea);
+
+        // Counter placeholder (will be filled by JS if needed, or PHP fallback)
         if ($settings->getBool('show_counter') && $maxLength) {
-            return Html::div()
-                ->child($textarea)
-                ->child(
-                    Html::div()
-                        ->class('field-textarea__counter')
-                        ->html('<span class="field-textarea__count">' . strlen($value ?? '') . '</span> / ' . $maxLength)
-                );
+             $wrapper->child(
+                Html::div()
+                    ->class('field-textarea__counter')
+                    ->text(strlen($value ?? '') . ' / ' . $maxLength)
+            );
         }
 
-        return $textarea;
+        return $wrapper;
     }
 
     protected function getInitScript(FieldDefinition $field, string $elementId): ?string
     {
         $settings = $this->getSettings($field);
-
-        if (!$settings->getBool('show_counter') || !$settings->getInt('max_length')) {
+        
+        $options = [
+            'autoResize' => $settings->getString('resize') === 'auto',
+            'showCounter' => $settings->getBool('show_counter', false),
+            'maxLength' => $settings->getInt('max_length'),
+        ];
+        
+        // Only output script if we have dynamic features
+        if (!$options['autoResize'] && !$options['showCounter']) {
             return null;
         }
 
-        return <<<JS
-(function() {
-    var textarea = document.getElementById('{$elementId}');
-    var counter = document.querySelector('#{$elementId} + .field-textarea__counter .field-textarea__count, #{$elementId}_wrapper .field-textarea__count');
-    if (textarea && counter) {
-        textarea.addEventListener('input', function() {
-            counter.textContent = this.value.length;
-        });
-    }
-})();
-JS;
+        $optionsJson = json_encode($options);
+        return "CmsTextarea.init('{$elementId}', {$optionsJson});";
     }
 
     public function getSettingsSchema(): array
@@ -116,6 +134,7 @@ JS;
                     'vertical' => 'Vertical',
                     'horizontal' => 'Horizontal',
                     'both' => 'Both',
+                    'auto' => 'Auto Resize (Dynamic Height)',
                 ],
                 'default' => 'vertical',
             ],

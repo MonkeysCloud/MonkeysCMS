@@ -10,6 +10,10 @@
         }
     ],
     "keywords": ["cms", "content-management", "monkeyslegion", "php", "framework"],
+    "support": {
+        "issues": "https://github.com/MonkeysCloud/MonkeysCMS/issues",
+        "source": "https://github.com/MonkeysCloud/MonkeysCMS"
+    },
     "require": {
         "php": "^8.4",
         "ext-pdo": "*",
@@ -76,6 +80,10 @@
             "@cs",
             "@phpstan",
             "@test"
+        ],
+        "post-create-project-cmd": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "chmod +x monkeys"
         ]
     },
     "config": {

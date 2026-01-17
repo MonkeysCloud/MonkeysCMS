@@ -352,12 +352,30 @@ final class ContentTypeManager
         $entity->id = (int) $this->connection->pdo()->lastInsertId();
 
         // Add fields if provided
+        $hasBody = false;
         if (!empty($data['fields'])) {
             foreach ($data['fields'] as $fieldData) {
+                if (($fieldData['machine_name'] ?? '') === 'body') {
+                    $hasBody = true;
+                }
                 $this->addFieldToType($entity->id, $fieldData);
             }
-            $entity->fields = $this->loadTypeFields($entity->id);
         }
+
+        // Add default Body field if not present
+        if (!$hasBody) {
+             $this->addFieldToType($entity->id, [
+                'name' => 'Body',
+                'machine_name' => 'body',
+                'field_type' => 'html',
+                'description' => 'The main content of the item',
+                'required' => false,
+                'widget' => 'wysiwyg',
+                'weight' => 0,
+            ]);
+        }
+        
+        $entity->fields = $this->loadTypeFields($entity->id);
 
         // Create the content table
         $this->createContentTable($entity);

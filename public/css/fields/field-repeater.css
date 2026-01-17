@@ -1,0 +1,56 @@
+/**
+ * Field Repeater Styling
+ */
+.field-repeater-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.field-repeater-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.field-repeater-item__content {
+  flex-grow: 1;
+  /* Ensure widgets take full width inside the repeater item */
+  min-width: 0;
+}
+
+.field-repeater-item__remove {
+  flex-shrink: 0;
+  margin-top: 0.5rem; /* Optical alignment with input height */
+  color: #ef4444; /* red-500 */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.15s;
+}
+
+.field-repeater-item__remove:hover {
+  background-color: #fee2e2; /* red-100 */
+  color: #dc2626; /* red-600 */
+}
+
+.field-repeater-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2563eb; /* blue-600 */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.field-repeater-add:hover {
+  text-decoration: underline;
+  color: #1d4ed8; /* blue-700 */
+}

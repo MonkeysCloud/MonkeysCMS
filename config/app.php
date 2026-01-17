@@ -287,15 +287,15 @@ return [
     // ─────────────────────────────────────────────────────────────
     
     TaxonomyService::class => function (Connection $conn, CacheManager $cache): TaxonomyService {
-        return new TaxonomyService($conn, $cache);
+        return new TaxonomyService($conn->pdo(), $cache);
     },
     
     MenuService::class => function (Connection $conn, CacheManager $cache): MenuService {
-        return new MenuService($conn, $cache);
+        return new MenuService($conn->pdo(), $cache);
     },
     
     SettingsService::class => function (Connection $conn, CacheManager $cache): SettingsService {
-        return new SettingsService($conn, $cache);
+        return new SettingsService($conn->pdo(), $cache);
     },
     
     // ─────────────────────────────────────────────────────────────

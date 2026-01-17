@@ -128,8 +128,9 @@
         formatSelect.addEventListener('change', toggle);
     }
 
-    function initAll() {
-        var textareas = document.querySelectorAll('[data-quill]');
+    function initAll(context) {
+        context = context || document;
+        var textareas = context.querySelectorAll('[data-quill]');
         textareas.forEach(function(textarea) {
             if (textarea.dataset.quillFormatSelect) {
                 setupFormatToggle(textarea);
@@ -140,10 +141,17 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAll);
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
     } else {
-        initAll();
+        initAll(document);
     }
+
+    // Handle dynamically added repeater items
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
 
     window.MonkeysEditor = {
         initQuill: initQuill,
@@ -153,5 +161,21 @@
     };
     // Alias for backward compatibility
     window.MonkeysQuill = window.MonkeysEditor;
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('quill', {
+            selector: '[data-quill]',
+            attach: function(context) {
+                context.querySelectorAll(this.selector).forEach(function(textarea) {
+                    if (textarea.dataset.quillFormatSelect) {
+                        setupFormatToggle(textarea);
+                    } else {
+                        initQuill(textarea);
+                    }
+                });
+            }
+        });
+    }
 
 })();

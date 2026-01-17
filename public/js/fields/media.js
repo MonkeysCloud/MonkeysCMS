@@ -586,4 +586,58 @@
         });
     };
 
+    // Initialize all media fields in a context
+    function initAll(context) {
+        context = context || document;
+        
+        // Image fields
+        context.querySelectorAll('.field-image[data-field-id]').forEach(function(wrapper) {
+            if (wrapper.dataset.initialized) return;
+            wrapper.dataset.initialized = 'true';
+            window.CmsMedia.initImage(wrapper.dataset.fieldId);
+        });
+        
+        // Gallery fields
+        context.querySelectorAll('.field-gallery[data-field-id]').forEach(function(wrapper) {
+            if (wrapper.dataset.initialized) return;
+            wrapper.dataset.initialized = 'true';
+            window.CmsMedia.initGallery(wrapper.dataset.fieldId);
+        });
+        
+        // Video fields
+        context.querySelectorAll('.field-video[data-field-id]').forEach(function(wrapper) {
+            if (wrapper.dataset.initialized) return;
+            wrapper.dataset.initialized = 'true';
+            window.CmsMedia.initVideo(wrapper.dataset.fieldId);
+        });
+        
+        // File fields
+        context.querySelectorAll('.field-file[data-field-id]').forEach(function(wrapper) {
+            if (wrapper.dataset.initialized) return;
+            wrapper.dataset.initialized = 'true';
+            window.CmsMedia.initFile(wrapper.dataset.fieldId);
+        });
+    }
+
+    // Self-initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
+    } else {
+        initAll(document);
+    }
+
+    // Handle dynamically added repeater items
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('media', {
+            selector: '.field-image, .field-gallery, .field-video, .field-file',
+            attach: initAll
+        });
+    }
 })();

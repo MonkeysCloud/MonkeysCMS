@@ -51,6 +51,14 @@ final class CodeWidget extends AbstractWidget
         $this->assets->addCss('/vendor/codemirror/codemirror.min.css');
         $this->assets->addCss('/vendor/codemirror/theme/dracula.css');
         $this->assets->addJs('/vendor/codemirror/codemirror.min.js');
+        
+        // Mode scripts
+        $modes = ['javascript', 'css', 'xml', 'htmlmixed', 'clike', 'php', 'python'];
+        foreach ($modes as $mode) {
+            $this->assets->addJs("/vendor/codemirror/mode/{$mode}.min.js");
+        }
+
+        $this->assets->addCss('/css/fields/code.css');
         $this->assets->addJs('/js/fields/code.js');
     }
 

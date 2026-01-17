@@ -28,13 +28,16 @@
             const wrapper = hiddenInput.closest('.field-geolocation');
             if (!wrapper) return;
 
-            // Initialize inputs first
+            // Initialize inputs first (idempotent setup)
             this.setupCoordinateInputs(wrapper, hiddenInput);
             this.setupLocateButton(wrapper, hiddenInput);
 
             // Initialize map - wait for Leaflet if needed
             const mapContainer = wrapper.querySelector('.field-geolocation__map');
             if (mapContainer) {
+                // Check if already initialized
+                if (mapContainer._leaflet_id) return;
+
                 if (typeof L !== 'undefined') {
                     this.initLeafletMap(wrapper, hiddenInput, mapContainer);
                 } else {
@@ -301,4 +304,37 @@
                 });
         }
     };
+
+    // Initialize all geolocation fields in a context
+    function initAll(context) {
+        context = context || document;
+        context.querySelectorAll('.field-geolocation').forEach(function(wrapper) {
+            var hiddenInput = wrapper.querySelector('input[type="hidden"]');
+            if (hiddenInput && hiddenInput.id) {
+                window.CmsGeolocation.initWithMap(hiddenInput.id);
+            }
+        });
+    }
+
+    // Self-initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
+    } else {
+        initAll(document);
+    }
+
+    // Handle dynamically added repeater items 
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('geolocation', {
+            selector: '.field-geolocation',
+            attach: initAll
+        });
+    }
 })();

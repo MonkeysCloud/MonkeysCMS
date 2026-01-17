@@ -1,0 +1,99 @@
+/**
+ * MonkeysCMS Checkboxes Field Widget CSS
+ */
+
+.field-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Grid Layout */
+.field-checkbox-group--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.field-checkbox {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+/* Hide the actual checkbox input - use high specificity */
+.field-checkbox input[type="checkbox"].field-checkbox__input,
+.field-checkbox .field-checkbox__input {
+  position: absolute !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none;
+}
+
+/* Custom Checkmark */
+.field-checkbox__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: #fff;
+  border: 2px solid #9ca3af;
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+  transition: all 0.15s ease-in-out;
+  flex-shrink: 0;
+}
+
+.field-checkbox:hover .field-checkbox__mark {
+  border-color: #3b82f6;
+}
+
+/* Checked State */
+.field-checkbox__input:checked + .field-checkbox__mark {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.field-checkbox__input:checked + .field-checkbox__mark::after {
+  content: "✓";
+  font-size: 0.875rem;
+  line-height: 1;
+  font-weight: bold;
+}
+
+/* Focus State */
+.field-checkbox__input:focus + .field-checkbox__mark {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+}
+
+.field-checkbox__label {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+/* Helper Actions (Select All) */
+.field-checkbox-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.field-checkbox-action {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.field-checkbox-action:hover {
+  color: #2563eb;
+}

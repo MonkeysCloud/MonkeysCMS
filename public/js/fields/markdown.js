@@ -190,3 +190,30 @@ if (document.readyState === 'loading') {
 } else {
     CmsMarkdown.init();
 }
+
+// Handle dynamically added repeater items
+document.addEventListener('cms:content-changed', function(e) {
+    if (e.detail && e.detail.target) {
+        e.detail.target.querySelectorAll('.field-markdown').forEach(editor => {
+            if (editor.dataset.initialized !== 'true') {
+                CmsMarkdown.initializeEditor(editor);
+                editor.dataset.initialized = 'true';
+            }
+        });
+    }
+});
+
+// Register with global behaviors system (if available)
+if (window.CmsBehaviors) {
+    window.CmsBehaviors.register('markdown', {
+        selector: '.field-markdown',
+        attach: function(context) {
+            context.querySelectorAll(this.selector).forEach(function(editor) {
+                if (editor.dataset.initialized !== 'true') {
+                    CmsMarkdown.initializeEditor(editor);
+                    editor.dataset.initialized = 'true';
+                }
+            });
+        }
+    });
+}

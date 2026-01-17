@@ -186,6 +186,21 @@ final class RenderContext
         );
     }
 
+    public function withHideLabel(bool $hide = true): self
+    {
+        return new self(
+            $this->formId,
+            $this->namePrefix,
+            $this->index,
+            $this->disabled,
+            $this->readonly,
+            $hide,
+            $this->hideHelp,
+            $this->errors,
+            $this->customData,
+        );
+    }
+
     public function withCustomData(string $key, mixed $value): self
     {
         $customData = $this->customData;
