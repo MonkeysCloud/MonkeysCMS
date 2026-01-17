@@ -313,3 +313,55 @@ window.CmsDate = {
         return !isNaN(date.getTime());
     }
 };
+
+// Initialize all date fields in a context
+(function() {
+    'use strict';
+
+    function initAll(context) {
+        context = context || document;
+        context.querySelectorAll('.field-date, .field-datetime, .field-time').forEach(function(wrapper) {
+            var input = wrapper.querySelector('input');
+            if (input && input.id && !input._flatpickr) {
+                // Read config from data attributes
+                var options = {};
+                if (wrapper.dataset.minDate) options.minDate = wrapper.dataset.minDate;
+                if (wrapper.dataset.maxDate) options.maxDate = wrapper.dataset.maxDate;
+                if (wrapper.classList.contains('field-datetime')) {
+                    options.enableTime = true;
+                    options.dateFormat = 'Y-m-d H:i';
+                    options.altFormat = 'F j, Y h:i K';
+                }
+                if (wrapper.classList.contains('field-time')) {
+                    options.noCalendar = true;
+                    options.enableTime = true;
+                    options.dateFormat = 'H:i';
+                    options.altFormat = 'h:i K';
+                }
+                window.CmsDate.init(input.id, options);
+            }
+        });
+    }
+
+    // Self-initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
+    } else {
+        initAll(document);
+    }
+
+    // Handle dynamically added repeater items
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('date', {
+            selector: '.field-date, .field-datetime, .field-time',
+            attach: initAll
+        });
+    }
+})();

@@ -116,6 +116,8 @@ class BlockController extends BaseAdminController
                  // Add other properties as needed
                  $field->settings = $fieldData['settings'] ?? [];
                  $field->widget_settings = $fieldData['widget_settings'] ?? [];
+                 $field->multiple = $fieldData['multiple'] ?? false;
+                 $field->widget = $fieldData['widget'] ?? null;
              } else {
                  $field = $fieldData;
              }
@@ -187,8 +189,9 @@ class BlockController extends BaseAdminController
         $fields = $this->blockManager->getFieldsForType($block->block_type);
         $settings = [];
         foreach ($fields as $field) {
-            if (isset($data[$field->machine_name])) {
-                $settings[$field->machine_name] = $data[$field->machine_name];
+            $machineName = is_array($field) ? ($field['machine_name'] ?? null) : $field->machine_name;
+            if ($machineName && isset($data[$machineName])) {
+                $settings[$machineName] = $data[$machineName];
             }
         }
         $block->settings = $settings;
@@ -298,6 +301,8 @@ class BlockController extends BaseAdminController
                  $field->required = $fieldData['required'] ?? false;
                  $field->settings = $fieldData['settings'] ?? [];
                  $field->widget_settings = $fieldData['widget_settings'] ?? [];
+                 $field->multiple = $fieldData['multiple'] ?? false;
+                 $field->widget = $fieldData['widget'] ?? null;
              } else {
                  $field = $fieldData;
              }
@@ -336,6 +341,7 @@ class BlockController extends BaseAdminController
             return $this->destroy($request, $id);
         }
 
+
         $stmt = $this->connection->pdo()->prepare("SELECT * FROM blocks WHERE id = :id");
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -353,7 +359,7 @@ class BlockController extends BaseAdminController
         if (!empty($data['machine_name'])) {
             $block->machine_name = $data['machine_name'];
         }
-        $block->block_type = $data['block_type'] ?? 'content';
+        $block->block_type = $data['block_type'] ?? $block->block_type;
         $block->body = $data['body'] ?? null;
         $block->body_format = $data['body_format'] ?? 'html';
         $block->region = $data['region'] ?? null;
@@ -368,9 +374,10 @@ class BlockController extends BaseAdminController
         // Handle dynamic fields
         $fields = $this->blockManager->getFieldsForType($block->block_type);
         $settings = $block->settings; // Start with existing
-        foreach ($fields as $field) {
-            if (isset($data[$field->machine_name])) {
-                $settings[$field->machine_name] = $data[$field->machine_name];
+        foreach ($fields as $key => $field) {
+            $machineName = is_array($field) ? ($field['machine_name'] ?? $key) : $field->machine_name;
+            if ($machineName && isset($data[$machineName])) {
+                $settings[$machineName] = $data[$machineName];
             }
         }
         $block->settings = $settings;

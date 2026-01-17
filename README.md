@@ -21,6 +21,16 @@ A modern, code-first CMS built on the MonkeysLegion framework. MonkeysCMS combin
 
 ## Installation
 
+### Via Composer (Recommended)
+
+```bash
+composer create-project monkeyscloud/monkeyscms my-project
+cd my-project
+./monkeys serve
+```
+
+### Manual Installation (Git)
+
 ```bash
 # Clone the repository
 git clone https://github.com/MonkeysCloud/MonkeysCMS.git
@@ -29,7 +39,7 @@ cd monkeyscms
 # Install dependencies
 composer install
 
-# Copy environment file and configure
+# Copy environment file and configure (Managed automatically in create-project)
 cp .env.example .env
 
 # Edit .env with your database credentials
@@ -39,9 +49,7 @@ cp .env.example .env
 # DB_PASSWORD=
 
 # Start the development server
-composer serve
-# or
-php cms serve
+./monkeys serve
 ```
 
 ## Quick Start
@@ -51,7 +59,7 @@ php cms serve
 Via CLI:
 
 ```bash
-php cms cms:module:enable Custom/Ecommerce
+./monkeys cms:module:enable Custom/Ecommerce
 ```
 
 Via API:
@@ -250,7 +258,7 @@ class Loader
 ### 5. Enable Your Module
 
 ```bash
-php cms cms:module:enable Custom/YourModule
+./monkeys cms:module:enable Custom/YourModule
 ```
 
 ## Architecture
@@ -518,38 +526,38 @@ $terms = $taxonomyService->getEntityTerms('products', $product->id);
 
 ## CLI Commands
 
-MonkeysCMS includes a unified CLI tool `cms` (or `bin/cms`) that provides access to all framework and application commands.
+MonkeysCMS includes a unified CLI tool `./monkeys` (or `bin/cms`) that provides access to all framework and application commands.
 
 ```bash
 # List all available commands
-php cms list
+./monkeys list
 
 # Core CMS Commands
-php cms cms:module:list           # List all modules
-php cms cms:module:enable <name>  # Enable a module
-php cms cms:module:disable <name> # Disable a module
-php cms menu:seed                 # Seed default admin menus (Admin Dashboard)
+./monkeys cms:module:list           # List all modules
+./monkeys cms:module:enable <name>  # Enable a module
+./monkeys cms:module:disable <name> # Disable a module
+./monkeys menu:seed                 # Seed default admin menus (Admin Dashboard)
 
 # Cache Management
-php cms cache:clear               # Clear default cache store
-php cms cache:clear --store=redis # Clear specific store
-php cms cache:config              # Display cache configuration
-php cms cache:flush-all           # Flush all configured cache stores
-php cms cache:set key val         # Set a cache value
-php cms cache:get key             # Get a cache value
-php cms cache:forget key          # Remove a cache key
-php cms cache:monitor             # Monitor cache performance
+./monkeys cache:clear               # Clear default cache store
+./monkeys cache:clear --store=redis # Clear specific store
+./monkeys cache:config              # Display cache configuration
+./monkeys cache:flush-all           # Flush all configured cache stores
+./monkeys cache:set key val         # Set a cache value
+./monkeys cache:get key             # Get a cache value
+./monkeys cache:forget key          # Remove a cache key
+./monkeys cache:monitor             # Monitor cache performance
 
 # Database & Schema
-php cms migrate                   # Run pending migrations
-php cms rollback                  # Rollback migrations
-php cms db:seed                   # Run database seeders
-php cms schema:update             # Update database schema from entities
+./monkeys migrate                   # Run pending migrations
+./monkeys rollback                  # Rollback migrations
+./monkeys db:seed                   # Run database seeders
+./monkeys schema:update             # Update database schema from entities
 
 # Generators (Make)
-php cms make:controller Name      # Create a new controller
-php cms make:entity Name          # Create a new entity
-php cms make:migration            # Create a migration from entities
+./monkeys make:controller Name      # Create a new controller
+./monkeys make:entity Name          # Create a new entity
+./monkeys make:migration            # Create a migration from entities
 ```
 
 ## Admin Interface
@@ -560,7 +568,7 @@ MonkeysCMS now features a fully functional Admin UI with a dynamic menu system.
 - **Menu Management**: Manage Admin and Frontend menus via UI (`/admin/menus`)
 - **Admin Theme**: Custom admin theme located in `themes/custom/admin`
 
-The Admin Sidebar is dynamically populated from the 'admin' menu, which can be seeded using `php cms menu:seed`.
+The Admin Sidebar is dynamically populated from the 'admin' menu, which can be seeded using `./monkeys menu:seed`.
 
 ## Caching (MonkeysLegion-Cache)
 

@@ -10,6 +10,93 @@
     const taxonomyFields = {};
 
     /**
+     * CmsTaxonomy - Global namespace for taxonomy widget
+     */
+    window.CmsTaxonomy = {
+        /**
+         * Initialize a taxonomy field (checkboxes/select)
+         */
+        init: function(elementId) {
+            const wrapper = document.getElementById(elementId)?.closest('.field-taxonomy') 
+                || document.querySelector(`[data-field-id="${elementId}"]`);
+            
+            if (!wrapper || wrapper.dataset.initialized) return;
+            wrapper.dataset.initialized = 'true';
+
+            const hiddenInput = document.getElementById(elementId);
+            const displayStyle = wrapper.classList.contains('field-taxonomy--select') ? 'select' : 'checkboxes';
+
+            if (displayStyle === 'select') {
+                this.initSelect(elementId, wrapper, hiddenInput);
+            } else {
+                this.initCheckboxes(elementId, wrapper, hiddenInput);
+            }
+        },
+
+        /**
+         * Initialize checkboxes
+         */
+        initCheckboxes: function(elementId, wrapper, hiddenInput) {
+            const checkboxes = wrapper.querySelectorAll('.field-taxonomy__checkbox-input, .field-taxonomy__tree-checkbox');
+            
+            const updateValue = () => {
+                const checked = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => parseInt(cb.dataset.termId));
+                hiddenInput.value = JSON.stringify(checked);
+            };
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', updateValue);
+            });
+
+            // Set initial values from hidden input
+            try {
+                const values = JSON.parse(hiddenInput.value || '[]');
+                checkboxes.forEach(cb => {
+                    cb.checked = values.includes(parseInt(cb.dataset.termId));
+                });
+            } catch (e) {}
+        },
+
+        /**
+         * Initialize select dropdown
+         */
+        initSelect: function(elementId, wrapper, hiddenInput) {
+            const select = wrapper.querySelector('.field-taxonomy__select');
+            if (!select) return;
+
+            const updateValue = () => {
+                const multiple = select.multiple;
+                if (multiple) {
+                    const values = Array.from(select.selectedOptions).map(opt => parseInt(opt.value)).filter(v => !isNaN(v));
+                    hiddenInput.value = JSON.stringify(values);
+                } else {
+                    const value = parseInt(select.value);
+                    hiddenInput.value = isNaN(value) ? '[]' : JSON.stringify([value]);
+                }
+            };
+
+            select.addEventListener('change', updateValue);
+
+            // Set initial values from hidden input
+            try {
+                const values = JSON.parse(hiddenInput.value || '[]');
+                Array.from(select.options).forEach(opt => {
+                    opt.selected = values.includes(parseInt(opt.value));
+                });
+            } catch (e) {}
+        },
+
+        /**
+         * Initialize tags/autocomplete mode
+         */
+        initTags: function(elementId, apiUrl) {
+            initTaxonomyAutocomplete(elementId, '', [], { multiple: true, allowCreate: false });
+        }
+    };
+
+    /**
      * Initialize Taxonomy Tree
      */
     window.initTaxonomyTree = function(fieldId, vocabulary, selectedIds, multiple) {
@@ -153,12 +240,12 @@
         if (!container || !hidden) return;
 
         const checked = container.querySelectorAll('input:checked');
-        const ids = Array.from(checked).map(input => input.value);
-        hidden.value = ids.join(',');
+        const ids = Array.from(checked).map(input => parseInt(input.value));
+        hidden.value = JSON.stringify(ids);
 
         // Update config
         if (taxonomyFields[fieldId]) {
-            taxonomyFields[fieldId].selectedIds = ids.map(id => parseInt(id));
+            taxonomyFields[fieldId].selectedIds = ids;
         }
     };
 
@@ -231,9 +318,7 @@
 
         if (filtered.length) {
             html = filtered.map(term => `
-                <div class="field-taxonomy-autocomplete__result" onclick="window.selectTaxonomyTerm('${fieldId}', ${term.id}, '${term.name.replace(/'/g, "\\'")}')">
-                    ${term.name}
-                </div>
+                <div class="field-taxonomy-autocomplete__result" onclick="window.selectTaxonomyTerm('${fieldId}', ${term.id}, '${term.name.replace(/'/g, "\\'")}')">${term.name}</div>
             `).join('');
         }
 
@@ -294,7 +379,7 @@
         }
 
         // Update hidden input
-        hidden.value = config.selectedIds.join(',');
+        hidden.value = JSON.stringify(config.selectedIds);
 
         // Clear search
         if (searchInput) searchInput.value = '';
@@ -319,7 +404,7 @@
         if (tag) tag.remove();
 
         // Update hidden input
-        hidden.value = config.selectedIds.join(',');
+        hidden.value = JSON.stringify(config.selectedIds);
     };
 
     /**
@@ -351,5 +436,54 @@
             alert('Failed to create term');
         });
     };
+
+    // ─────────────────────────────────────────────────────────────
+    // Self-Initialization Pattern
+    // ─────────────────────────────────────────────────────────────
+
+    function initAll(context) {
+        context = context || document;
+        
+        // Initialize all taxonomy fields in context
+        context.querySelectorAll('.field-taxonomy[data-field-id]').forEach(function(wrapper) {
+            if (wrapper.dataset.initialized) return;
+            
+            const fieldId = wrapper.dataset.fieldId;
+            const displayStyle = wrapper.className.match(/field-taxonomy--(\w+)/)?.[1] || 'checkboxes';
+            
+            if (displayStyle === 'tree') {
+                // Tree mode - handled by initTaxonomyTree if needed
+                wrapper.dataset.initialized = 'true';
+            } else if (displayStyle === 'tags' || displayStyle === 'autocomplete') {
+                // Tags/Autocomplete mode - handled by initTaxonomyAutocomplete if needed
+                wrapper.dataset.initialized = 'true';
+            } else {
+                // Checkboxes or select mode
+                window.CmsTaxonomy.init(fieldId);
+            }
+        });
+    }
+
+    // Self-initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
+    } else {
+        initAll(document);
+    }
+
+    // Handle dynamically added repeater items
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('taxonomy', {
+            selector: '.field-taxonomy',
+            attach: initAll
+        });
+    }
 
 })();

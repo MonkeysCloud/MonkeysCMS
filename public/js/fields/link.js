@@ -36,4 +36,39 @@
             }
         }
     };
+
+    // Initialize all link fields in a context
+    function initAll(context) {
+        context = context || document;
+        context.querySelectorAll('.field-link[data-field-id]').forEach(function(wrapper) {
+            if (wrapper.dataset.initialized) return;
+            wrapper.dataset.initialized = 'true';
+            var fieldId = wrapper.dataset.fieldId;
+            if (fieldId) {
+                window.CmsLink.init(fieldId);
+            }
+        });
+    }
+
+    // Self-initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
+    } else {
+        initAll(document);
+    }
+
+    // Handle dynamically added repeater items
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('link', {
+            selector: '.field-link',
+            attach: initAll
+        });
+    }
 })();

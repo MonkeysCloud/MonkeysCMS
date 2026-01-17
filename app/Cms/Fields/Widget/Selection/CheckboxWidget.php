@@ -46,6 +46,11 @@ final class CheckboxWidget extends AbstractWidget
         return ['boolean', 'checkbox'];
     }
 
+    protected function initializeAssets(): void
+    {
+        $this->assets->addCss('/css/fields/checkboxes.css');
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);
@@ -66,6 +71,7 @@ final class CheckboxWidget extends AbstractWidget
                             ->id($fieldId)
                             ->name($fieldName)
                             ->value('1')
+                            ->class('field-checkbox__input')
                             ->when((bool) $value, fn($el) => $el->attr('checked', true))
                             ->when($context->isDisabled(), fn($el) => $el->disabled())
                     )

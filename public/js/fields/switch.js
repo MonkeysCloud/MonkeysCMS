@@ -70,4 +70,38 @@
             return checkbox ? checkbox.checked : null;
         }
     };
+
+    // Initialize all switch fields in a context
+    function initAll(context) {
+        context = context || document;
+        context.querySelectorAll('.field-switch').forEach(function(label) {
+            var checkbox = label.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.id && !checkbox.dataset.initialized) {
+                checkbox.dataset.initialized = 'true';
+                window.CmsSwitch.init(checkbox.id);
+            }
+        });
+    }
+
+    // Self-initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
+    } else {
+        initAll(document);
+    }
+
+    // Handle dynamically added repeater items
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('switch', {
+            selector: '.field-switch',
+            attach: initAll
+        });
+    }
 })();

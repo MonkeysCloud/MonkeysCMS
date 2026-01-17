@@ -220,6 +220,9 @@ class CmsAuthService
             $this->session->set('access_token', $tokens->accessToken);
             $this->session->set('refresh_token', $tokens->refreshToken);
             $this->session->set('token_expires', $tokens->accessExpiresAt);
+            
+            // CRITICAL: Update the cookie so the vendor middleware sees the new token
+            $this->session->setCookie('auth_token', $tokens->accessToken, (int) ($tokens->accessExpiresAt - time()));
 
             return new TokenPair(
                 accessToken: $tokens->accessToken,

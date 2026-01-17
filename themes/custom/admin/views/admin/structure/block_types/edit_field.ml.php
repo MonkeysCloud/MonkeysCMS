@@ -128,6 +128,58 @@
                                 </select>
                                 <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple.</p>
 
+                            @elseif($schema['type'] === 'key_value')
+                                <div x-data="{
+                                    rows: [],
+                                    init() {
+                                        try {
+                                            const raw = document.getElementById('settings_{{ $key }}').value;
+                                            const data = raw ? JSON.parse(raw) : {};
+                                            this.rows = Object.entries(data).map(([k, v]) => ({ key: k, value: v }));
+                                        } catch(e) {
+                                            this.rows = [];
+                                        }
+                                        if (this.rows.length === 0) this.addRow();
+                                        this.$watch('rows', () => this.updateJson());
+                                    },
+                                    addRow() {
+                                        this.rows.push({ key: '', value: '' });
+                                        this.updateJson();
+                                    },
+                                    removeRow(index) {
+                                        this.rows.splice(index, 1);
+                                        this.updateJson();
+                                    },
+                                    updateJson() {
+                                        const obj = {};
+                                        this.rows.forEach(r => {
+                                            if(r.key) obj[r.key] = r.value;
+                                        });
+                                        document.getElementById('settings_{{ $key }}').value = JSON.stringify(obj);
+                                    }
+                                }">
+                                    <div class="space-y-2 mb-2">
+                                        <template x-for="(row, index) in rows" :key="index">
+                                            <div class="flex gap-2 items-center">
+                                                <input type="text" x-model="row.key" placeholder="Value (Key)" 
+                                                    class="block w-1/3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
+                                                <input type="text" x-model="row.value" placeholder="Label (Text)" 
+                                                    class="block w-2/3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
+                                                <button type="button" @click="removeRow(index)" class="text-red-500 hover:text-red-700 p-2">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <button type="button" @click="addRow()" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Add Option
+                                    </button>
+                                    <!-- Hidden input stores the actual JSON string -->
+                                    <input type="hidden" name="settings[{{ $key }}]" id="settings_{{ $key }}"
+                                        value="{{ $widget_settings[$key] ?? json_encode($schema['default'] ?? []) }}">
+                                </div>
+
                             @else
                                 <input type="text" name="settings[{{ $key }}]" id="settings_{{ $key }}"
                                     value="{{ $widget_settings[$key] ?? $schema['default'] ?? '' }}"

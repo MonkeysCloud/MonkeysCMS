@@ -43,7 +43,7 @@ final class SelectWidget extends AbstractWidget
 
     public function getSupportedTypes(): array
     {
-        return ['select', 'string', 'integer', 'entity_reference', 'taxonomy_reference'];
+        return ['select', 'string', 'integer', 'entity_reference'];
     }
 
     public function supportsMultiple(): bool
@@ -134,7 +134,7 @@ final class SelectWidget extends AbstractWidget
         return [
             'empty_option' => ['type' => 'string', 'label' => 'Empty Option Text', 'default' => '- Select -'],
             'searchable' => ['type' => 'boolean', 'label' => 'Searchable', 'default' => false],
-            'options' => ['type' => 'json', 'label' => 'Options (JSON)'],
+            'options' => ['type' => 'key_value', 'label' => 'Options'],
         ];
     }
 }

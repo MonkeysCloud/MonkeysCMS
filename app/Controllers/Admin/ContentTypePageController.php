@@ -87,38 +87,40 @@ class ContentTypePageController extends BaseAdminController
         }
 
         // Get fields for this content type
-        $fields = $contentType['fields'] ?? [];
+        $fieldsData = $contentType['fields'] ?? [];
         
-        // Render body field dynamically based on body_format
-        $bodyFormat = $request->getQueryParams()['body_format'] ?? 'html';
-        $bodyField = new FieldDefinition();
-        $bodyField->name = 'Body';
-        $bodyField->machine_name = 'body';
-        $bodyField->field_type = match($bodyFormat) {
-            'markdown' => 'markdown',
-            'plain' => 'textarea',
-            default => 'html'
-        };
+        // Render all fields
+        $renderedFields = [];
+        foreach ($fieldsData as $fieldData) {
+            $fieldDef = FieldDefinition::fromArray($fieldData);
+            
+            // Get value from old input if validation failed (to implement)
+            // For now, default value
+            $value = $fieldDef->default_value;
+            
+            $result = $this->widgetRegistry->renderField($fieldDef, $value, RenderContext::create());
+            $this->assets->mergeCollection($result->getAssets());
+            
+            $renderedFields[$fieldDef->machine_name] = [
+                'label' => $fieldDef->name,
+                'machine_name' => $fieldDef->machine_name,
+                'html' => $result->getHtml(),
+                'weight' => $fieldDef->weight
+            ];
+        }
         
-        $bodyResult = $this->widgetRegistry->renderField($bodyField, '', RenderContext::create());
-        $this->assets->mergeCollection($bodyResult->getAssets());
-        
-        $renderedBodyField = [
-            'label' => 'Body',
-            'machine_name' => 'body',
-            'html' => $bodyResult->getHtml()
-        ];
+        // Sort by weight
+        uasort($renderedFields, fn($a, $b) => $a['weight'] <=> $b['weight']);
 
         return $this->render('admin/content/create', [
             'type' => $contentType,
             'type_id' => $type,
-            'fields' => $fields,
-            'body_format' => $bodyFormat,
-            'renderedBodyField' => $renderedBodyField,
+            'renderedFields' => $renderedFields,
             'title' => 'Create ' . $contentType['label'],
             'action' => '/admin/content/' . $type,
             'cancel_url' => '/admin/content',
         ]);
+
     }
 
     /**
@@ -273,13 +275,7 @@ class ContentTypePageController extends BaseAdminController
         $fields = $type['fields'];
         $weights = $type['entity']->settings['form_weights'] ?? [];
 
-        // Add 'body' (main content)
-        $fields['body'] = [
-            'label' => 'Body',
-            'widget' => 'wysiwyg',
-            'weight' => $weights['body'] ?? -5,
-            'machine_name' => 'body'
-        ];
+
 
         // Prepare fields for sorting
         foreach ($fields as $key => &$field) {
@@ -356,12 +352,7 @@ class ContentTypePageController extends BaseAdminController
             'machine_name' => 'title'
         ];
 
-        $fields['body'] = [
-            'label' => 'Body',
-            'widget' => 'html',
-            'weight' => $weights['body'] ?? -5,
-            'machine_name' => 'body'
-        ];
+
 
         foreach ($fields as $key => &$field) {
             $field['machine_name'] = $field['machine_name'] ?? $key;

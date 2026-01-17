@@ -91,3 +91,42 @@ window.CmsEmail = {
         return emailPattern.test(email.trim());
     }
 };
+
+// Initialize all email fields in a context
+(function() {
+    'use strict';
+
+    function initAll(context) {
+        context = context || document;
+        context.querySelectorAll('.field-email[data-field-id]').forEach(function(wrapper) {
+            if (wrapper.dataset.initialized) return;
+            wrapper.dataset.initialized = 'true';
+            var input = wrapper.querySelector('input[type="email"]');
+            if (input && input.id) {
+                window.CmsEmail.init(input.id);
+            }
+        });
+    }
+
+    // Self-initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
+    } else {
+        initAll(document);
+    }
+
+    // Handle dynamically added repeater items
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('email', {
+            selector: '.field-email',
+            attach: initAll
+        });
+    }
+})();

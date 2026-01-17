@@ -57,4 +57,14 @@ interface WidgetInterface
      * Validate a field value
      */
     public function validate(FieldDefinition $field, mixed $value): ValidationResult;
+
+    /**
+     * Prepare value for storage
+     */
+    public function prepareValue(FieldDefinition $field, mixed $value): mixed;
+
+    /**
+     * Format value for form display
+     */
+    public function formatValue(FieldDefinition $field, mixed $value): mixed;
 }

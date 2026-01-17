@@ -1,0 +1,49 @@
+/**
+ * MonkeysCMS Code Field Widget CSS
+ */
+
+.field-code {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background: #282a36; /* Dracula bg matches */
+}
+
+.field-code__language-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.field-code__language-wrapper label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.field-code__language {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #374151;
+}
+
+/* Ensure CodeMirror fits well */
+.CodeMirror {
+  height: auto !important;
+  min-height: 300px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.field-code__textarea {
+  display: none;
+}

@@ -77,6 +77,11 @@ class SessionManager
         ini_set('session.cookie_secure', self::$globalConfig['secure'] ? '1' : '0');
         ini_set('session.cookie_samesite', self::$globalConfig['samesite']);
         ini_set('session.gc_maxlifetime', (string) self::$globalConfig['lifetime']);
+
+        // Force GC probability to ensure our custom maxlifetime is respected
+        // especially important for custom save paths
+        ini_set('session.gc_probability', '1');
+        ini_set('session.gc_divisor', '100');
         
         // Set cookie params globally - will apply to session_start() when called
         session_set_cookie_params([
@@ -106,6 +111,7 @@ class SessionManager
         $config = self::$globalsConfigured ? self::$globalConfig : $this->config;
 
         // Configure session save path if set (and not configured globally)
+        // We do this to ensure that if we are using the fallback config, the path is created
         if (!self::$globalsConfigured && !empty($config['save_path'])) {
             if (!is_dir($config['save_path'])) {
                 @mkdir($config['save_path'], 0755, true);
@@ -120,6 +126,17 @@ class SessionManager
         ini_set('session.cookie_secure', $config['secure'] ? '1' : '0');
         ini_set('session.cookie_samesite', $config['samesite']);
         ini_set('session.gc_maxlifetime', (string) $config['lifetime']);
+        
+        // Force GC
+        ini_set('session.gc_probability', '1');
+        ini_set('session.gc_divisor', '100');
+
+        error_log(sprintf(
+            '[SessionManager] Starting session. Lifetime: %s, GC MaxLifetime: %s, SavePath: %s',
+            $config['lifetime'],
+            ini_get('session.gc_maxlifetime'),
+            session_save_path()
+        ));
 
         session_name($config['name']);
         session_set_cookie_params([

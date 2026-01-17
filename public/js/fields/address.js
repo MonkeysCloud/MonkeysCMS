@@ -31,4 +31,36 @@
             });
         }
     };
+
+    // Initialize all address fields in a context
+    function initAll(context) {
+        context = context || document;
+        context.querySelectorAll('.field-address[data-field-id]').forEach(function(wrapper) {
+            if (wrapper.dataset.initialized) return;
+            wrapper.dataset.initialized = 'true';
+            window.CmsAddress.init(wrapper.id);
+        });
+    }
+
+    // Self-initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initAll(document); });
+    } else {
+        initAll(document);
+    }
+
+    // Handle dynamically added repeater items
+    document.addEventListener('cms:content-changed', function(e) {
+        if (e.detail && e.detail.target) {
+            initAll(e.detail.target);
+        }
+    });
+
+    // Register with global behaviors system (if available)
+    if (window.CmsBehaviors) {
+        window.CmsBehaviors.register('address', {
+            selector: '.field-address',
+            attach: initAll
+        });
+    }
 })();

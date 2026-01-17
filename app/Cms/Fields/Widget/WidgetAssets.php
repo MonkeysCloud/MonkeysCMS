@@ -62,6 +62,14 @@ final class WidgetAssets
 
     public function getJs(): array
     {
+        // Always include cms-behaviors.js first if there are any JS assets
+        // This provides the global widget registration system
+        if (!empty($this->js)) {
+            $coreJs = '/js/cms-behaviors.js';
+            if (!in_array($coreJs, $this->js)) {
+                return array_merge([$coreJs], $this->js);
+            }
+        }
         return $this->js;
     }
 

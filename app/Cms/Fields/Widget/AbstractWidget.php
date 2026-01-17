@@ -398,7 +398,7 @@ abstract class AbstractWidget implements WidgetInterface
         $attrs = [
             'id' => $this->getFieldId($field, $context),
             'name' => $this->getFieldName($field, $context),
-            'class' => 'field-widget__control',
+            'class' => 'field-widget__control block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 disabled:bg-gray-50 disabled:text-gray-500 transition-colors duration-200',
         ];
 
         if ($field->required) {
