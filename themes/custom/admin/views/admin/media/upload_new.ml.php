@@ -121,22 +121,22 @@
 
                         <!-- Metadata Inputs (Only when pending) -->
                         <div x-show="file.status === 'pending' || file.status === 'error'" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Title</label>
+                            <label class="sm:col-span-2 block">
+                                <span class="block text-xs font-medium text-gray-700 mb-1">Title</span>
                                 <input type="text" x-model="file.title" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-xs px-3 py-1.5 bg-gray-50">
-                            </div>
+                            </label>
                             
                             <template x-if="file.isImage">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Alt Text</label>
+                                <label class="block">
+                                    <span class="block text-xs font-medium text-gray-700 mb-1">Alt Text</span>
                                     <input type="text" x-model="file.alt" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-xs px-3 py-1.5 bg-gray-50" placeholder="Describe image...">
-                                </div>
+                                </label>
                             </template>
                             
-                            <div {!! $descColSpanBind !!}>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                            <label class="block" {!! $descColSpanBind !!}>
+                                <span class="block text-xs font-medium text-gray-700 mb-1">Description</span>
                                 <textarea x-model="file.description" rows="1" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-xs px-3 py-1.5 bg-gray-50" placeholder="Optional description..."></textarea>
-                            </div>
+                            </label>
                         </div>
                     </div>
                 </div>

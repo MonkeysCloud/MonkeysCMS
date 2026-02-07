@@ -76,17 +76,17 @@
                         </tr>
                     @else
                         @foreach($fields as $machineName => $field)
-                        <tr class="bg-white" data-field="{{ $machineName }}">
+                        <tr class="bg-white" data-field="{{ $field['machine_name'] }}">
                             <td class="pl-4 sm:pl-0 py-4 cursor-move handle">
                                 <svg class="w-5 h-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                                 </svg>
                             </td>
                             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                                {{ $field['label'] }} <span class="text-gray-400 text-xs">({{ $machineName }})</span>
+                                {{ $field['label'] }} <span class="text-gray-400 text-xs">({{ $field['machine_name'] }})</span>
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                <input type="number" name="weights[{{ $machineName }}]" value="{{ $loop->index }}" class="block w-20 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 weight-input">
+                                <input type="number" name="weights[{{ $field['machine_name'] }}]" value="{{ $loop->index }}" class="block w-20 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 weight-input">
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {{ $field['widget'] ?? 'Default' }}
@@ -105,7 +105,7 @@
 </form>
 
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script src="/js/sortable.min.js"></script>
 <script src="/themes/custom/admin/assets/js/field-sortable.js"></script>
 @endpush
 @endsection

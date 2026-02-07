@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script src="/js/sortable.min.js"></script>
 <script src="/js/menu-tree.js"></script>
 @endpush
 
@@ -91,7 +91,6 @@
     @endif
 
     @push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="/themes/custom/admin/assets/js/menu-tree.js"></script>
     @endpush
 @endsection

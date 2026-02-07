@@ -178,6 +178,11 @@ final class ContentTypeManager
                 'publishable' => $type->publishable,
                 'revisionable' => $type->revisionable,
                 'translatable' => $type->translatable,
+                'has_author' => $type->has_author ?? true,
+                'has_taxonomy' => $type->has_taxonomy ?? true,
+                'has_media' => $type->has_media ?? true,
+                'composer_enabled' => $type->composer_enabled ?? false,
+                'composer_default' => $type->composer_default ?? false,
                 'source' => 'database',
                 'fields' => $this->getFieldsArray($type),
                 'entity' => $type,
@@ -293,19 +298,21 @@ final class ContentTypeManager
         $entity->label_plural = $data['label_plural'] ?? $data['label'] . 's';
         $entity->description = $data['description'] ?? null;
         $entity->icon = $data['icon'] ?? '📄';
-        $entity->publishable = $data['publishable'] ?? true;
-        $entity->revisionable = $data['revisionable'] ?? false;
-        $entity->translatable = $data['translatable'] ?? false;
-        $entity->has_author = $data['has_author'] ?? true;
-        $entity->has_taxonomy = $data['has_taxonomy'] ?? true;
-        $entity->has_media = $data['has_media'] ?? true;
+        $entity->publishable = (bool) ($data['publishable'] ?? true);
+        $entity->revisionable = (bool) ($data['revisionable'] ?? false);
+        $entity->translatable = (bool) ($data['translatable'] ?? false);
+        $entity->has_author = (bool) ($data['has_author'] ?? true);
+        $entity->has_taxonomy = (bool) ($data['has_taxonomy'] ?? true);
+        $entity->has_media = (bool) ($data['has_media'] ?? true);
         $entity->title_field = $data['title_field'] ?? 'title';
         $entity->slug_field = $data['slug_field'] ?? 'slug';
         $entity->url_pattern = $data['url_pattern'] ?? null;
         $entity->default_values = $data['default_values'] ?? [];
         $entity->settings = $data['settings'] ?? [];
         $entity->allowed_vocabularies = $data['allowed_vocabularies'] ?? [];
-        $entity->enabled = $data['enabled'] ?? true;
+        $entity->enabled = (bool) ($data['enabled'] ?? true);
+        $entity->composer_enabled = (bool) ($data['composer_enabled'] ?? false);
+        $entity->composer_default = (bool) ($data['composer_default'] ?? false);
 
         $entity->prePersist();
 
@@ -315,12 +322,14 @@ final class ContentTypeManager
                 type_id, label, label_plural, description, icon, is_system, enabled,
                 publishable, revisionable, translatable, has_author, has_taxonomy, has_media,
                 title_field, slug_field, url_pattern, default_values, settings,
-                allowed_vocabularies, weight, created_at, updated_at
+                allowed_vocabularies, weight, composer_enabled, composer_default,
+                created_at, updated_at
             ) VALUES (
                 :type_id, :label, :label_plural, :description, :icon, :is_system, :enabled,
                 :publishable, :revisionable, :translatable, :has_author, :has_taxonomy, :has_media,
                 :title_field, :slug_field, :url_pattern, :default_values, :settings,
-                :allowed_vocabularies, :weight, :created_at, :updated_at
+                :allowed_vocabularies, :weight, :composer_enabled, :composer_default,
+                :created_at, :updated_at
             )
         ");
 
@@ -345,6 +354,8 @@ final class ContentTypeManager
             'settings' => json_encode($entity->settings),
             'allowed_vocabularies' => json_encode($entity->allowed_vocabularies),
             'weight' => $entity->weight,
+            'composer_enabled' => ($entity->composer_enabled ?? false) ? 1 : 0,
+            'composer_default' => ($entity->composer_default ?? false) ? 1 : 0,
             'created_at' => $entity->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $entity->updated_at->format('Y-m-d H:i:s'),
         ]);
@@ -372,6 +383,24 @@ final class ContentTypeManager
                 'required' => false,
                 'widget' => 'wysiwyg',
                 'weight' => 0,
+            ]);
+
+            $this->addFieldToType($entity->id, [
+                'name' => 'Body Format',
+                'machine_name' => 'body_format',
+                'field_type' => 'string',
+                'description' => 'Text format for the body field',
+                'required' => false,
+                'default_value' => 'html',
+                'widget' => 'select',
+                'settings' => [
+                    'options' => [
+                        'html' => 'HTML',
+                        'markdown' => 'Markdown',
+                        'plain' => 'Plain Text'
+                    ]
+                ],
+                'weight' => 1,
             ]);
         }
         
@@ -410,13 +439,13 @@ final class ContentTypeManager
             $entity->icon = $data['icon'];
         }
         if (isset($data['publishable'])) {
-            $entity->publishable = $data['publishable'];
+            $entity->publishable = (bool) $data['publishable'];
         }
         if (isset($data['revisionable'])) {
-            $entity->revisionable = $data['revisionable'];
+            $entity->revisionable = (bool) $data['revisionable'];
         }
         if (isset($data['translatable'])) {
-            $entity->translatable = $data['translatable'];
+            $entity->translatable = (bool) $data['translatable'];
         }
         if (isset($data['url_pattern'])) {
             $entity->url_pattern = $data['url_pattern'];
@@ -425,7 +454,13 @@ final class ContentTypeManager
             $entity->settings = $data['settings'];
         }
         if (isset($data['enabled'])) {
-            $entity->enabled = $data['enabled'];
+            $entity->enabled = (bool) $data['enabled'];
+        }
+        if (isset($data['composer_enabled'])) {
+            $entity->composer_enabled = (bool) $data['composer_enabled'];
+        }
+        if (isset($data['composer_default'])) {
+            $entity->composer_default = (bool) $data['composer_default'];
         }
 
         $entity->updated_at = new \DateTimeImmutable();
@@ -435,7 +470,8 @@ final class ContentTypeManager
                 label = :label, label_plural = :label_plural, description = :description,
                 icon = :icon, publishable = :publishable, revisionable = :revisionable,
                 translatable = :translatable, url_pattern = :url_pattern, settings = :settings,
-                enabled = :enabled, updated_at = :updated_at
+                enabled = :enabled, composer_enabled = :composer_enabled,
+                composer_default = :composer_default, updated_at = :updated_at
             WHERE id = :id
         ");
 
@@ -451,6 +487,8 @@ final class ContentTypeManager
             'url_pattern' => $entity->url_pattern,
             'settings' => json_encode($entity->settings),
             'enabled' => $entity->enabled ? 1 : 0,
+            'composer_enabled' => ($entity->composer_enabled ?? false) ? 1 : 0,
+            'composer_default' => ($entity->composer_default ?? false) ? 1 : 0,
             'updated_at' => $entity->updated_at->format('Y-m-d H:i:s'),
         ]);
 
@@ -508,16 +546,16 @@ final class ContentTypeManager
         $field->description = $fieldData['description'] ?? null;
         $field->help_text = $fieldData['help_text'] ?? null;
         $field->widget = $fieldData['widget'] ?? null;
-        $field->required = $fieldData['required'] ?? false;
-        $field->multiple = $fieldData['multiple'] ?? false;
-        $field->cardinality = $fieldData['cardinality'] ?? 1;
+        $field->required = (bool) ($fieldData['required'] ?? false);
+        $field->multiple = (bool) ($fieldData['multiple'] ?? false);
+        $field->cardinality = (int) ($fieldData['cardinality'] ?? 1);
         $field->default_value = $fieldData['default'] ?? null;
         $field->settings = $fieldData['settings'] ?? [];
         $field->validation = $fieldData['validation'] ?? [];
         $field->widget_settings = $fieldData['widget_settings'] ?? [];
-        $field->weight = $fieldData['weight'] ?? 0;
-        $field->searchable = $fieldData['searchable'] ?? false;
-        $field->translatable = $fieldData['translatable'] ?? false;
+        $field->weight = (int) ($fieldData['weight'] ?? 0);
+        $field->searchable = (bool) ($fieldData['searchable'] ?? false);
+        $field->translatable = (bool) ($fieldData['translatable'] ?? false);
 
         $field->prePersist();
 
@@ -909,6 +947,7 @@ final class ContentTypeManager
         $fields = [];
         foreach ($type->fields as $field) {
             $fields[$field->machine_name] = [
+                'machine_name' => $field->machine_name,
                 'type' => $field->field_type,
                 'label' => $field->name,
                 'required' => $field->required,

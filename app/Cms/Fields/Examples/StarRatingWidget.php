@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace App\Cms\Fields\Examples;
 
-use App\Cms\Fields\Definition\Field;
 use App\Cms\Fields\FieldDefinition;
 use App\Cms\Fields\Rendering\Html;
 use App\Cms\Fields\Rendering\HtmlBuilder;
 use App\Cms\Fields\Rendering\RenderContext;
 use App\Cms\Fields\Widget\AbstractWidget;
-use App\Cms\Fields\Widget\WidgetOutput;
-use App\Cms\Fields\Value\FieldValue;
 
 /**
  * Custom Star Rating Widget

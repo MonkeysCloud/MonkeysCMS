@@ -12,7 +12,7 @@
         </div>
         <div class="ml-3 text-sm">
             @if($label)
-                <label for="{{ $name }}" class="font-medium text-gray-700">{{ $label }}</label>
+                <label for="{{ $id ?? $name }}" class="font-medium text-gray-700">{{ $label }}</label>
             @endif
             @if($help)
                 <p class="text-gray-500">{{ $help }}</p>

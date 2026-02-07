@@ -84,7 +84,7 @@
                             @endif
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            <code class="bg-gray-100 px-2 py-0.5 rounded text-xs">{{ $machineName }}</code>
+                            <span class="bg-gray-100 px-2 py-0.5 rounded text-xs font-mono">{{ $field['machine_name'] }}</span>
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                             {{ $field['type'] }}
@@ -93,8 +93,8 @@
                             {{ $field['widget'] ?? 'Default' }}
                         </td>
                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-                            <a href="{{ $base_url }}/fields/{{ $machineName }}/edit" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                            <form action="{{ $base_url }}/fields/{{ $machineName }}/delete" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this field? Data in this field will be lost.');">
+                            <a href="{{ $base_url }}/fields/{{ $field['machine_name'] }}/edit" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                            <form action="{{ $base_url }}/fields/{{ $field['machine_name'] }}/delete" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this field? Data in this field will be lost.');">
                                 <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
                             </form>
                         </td>

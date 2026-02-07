@@ -10,12 +10,18 @@ declare(strict_types=1);
  */
 
 use App\Cms\Fields\FieldDefinition;
-use App\Cms\Fields\FieldRepository;
 use App\Cms\Fields\FieldServiceProvider;
 use App\Cms\Fields\Form\FormBuilder;
 use App\Cms\Fields\Rendering\RenderContext;
 use App\Cms\Fields\Rendering\Html;
 use App\Cms\Fields\Rendering\HtmlBuilder;
+use App\Cms\Fields\Rendering\AssetCollection;
+use App\Cms\Fields\Widget\WidgetFactory;
+use App\Cms\Fields\Widget\WidgetRegistry;
+use App\Cms\Fields\Validation\FieldValidator;
+use App\Cms\Fields\Validation\ValidationRuleInterface;
+use App\Cms\Fields\Validation\ValidationContext;
+use App\Cms\Fields\Validation\ValidationResult;
 use App\Cms\Fields\Examples\StarRatingWidget;
 
 // =============================================================================
@@ -23,16 +29,18 @@ use App\Cms\Fields\Examples\StarRatingWidget;
 // =============================================================================
 
 /**
- * Option A: Use the service provider (recommended for DI containers)
+ * Option A: Use the factory (recommended)
  */
-$registry = FieldServiceProvider::createWidgetRegistry();
-$formBuilder = FieldServiceProvider::createFormBuilder($registry);
+$registry = WidgetFactory::create();
+$formBuilder = new FormBuilder($registry);
 
 /**
  * Option B: Manual setup with more control
  */
 $validator = new FieldValidator();
-$registry = WidgetFactory::create($validator);
+$registry = new WidgetRegistry($validator);
+WidgetFactory::registerCoreWidgets($registry);
+WidgetFactory::setTypeDefaults($registry);
 $formBuilder = new FormBuilder($registry);
 
 // =============================================================================
@@ -278,7 +286,7 @@ $allErrors = $registry->validateFields($fields, $submittedValues);
 $validator = new FieldValidator();
 
 // Register a custom rule
-$validator->registerRule(new class implements \App\Cms\Fields\Validation\ValidationRuleInterface {
+$validator->registerRule(new class implements ValidationRuleInterface {
     public function getName(): string
     {
         return 'profanity';
@@ -287,19 +295,19 @@ $validator->registerRule(new class implements \App\Cms\Fields\Validation\Validat
     public function validate(
         mixed $value,
         mixed $parameter,
-        \App\Cms\Fields\Validation\ValidationContext $context
-    ): \App\Cms\Fields\Validation\ValidationResult {
+        ValidationContext $context
+    ): ValidationResult {
         $badWords = ['spam', 'test'];
 
         foreach ($badWords as $word) {
             if (stripos($value, $word) !== false) {
-                return \App\Cms\Fields\Validation\ValidationResult::failure(
+                return ValidationResult::failure(
                     "{$context->fieldLabel} contains prohibited content"
                 );
             }
         }
 
-        return \App\Cms\Fields\Validation\ValidationResult::success();
+        return ValidationResult::success();
     }
 });
 
@@ -365,60 +373,18 @@ if ($registry->has('custom_widget')) {
 // 8. CREATING CUSTOM WIDGETS
 // =============================================================================
 
-use App\Cms\Fields\Widget\AbstractWidget;
-use App\Cms\Fields\Rendering\Html;
-use App\Cms\Fields\Rendering\HtmlBuilder;
-
 /**
  * Custom Star Rating Widget
- * Note: See app/Cms/Fields/Examples/StarRatingWidget.php
+ * See: app/Cms/Fields/Examples/StarRatingWidget.php
  */
-// use App\Cms\Fields\Examples\StarRatingWidget;
 
 // Register custom widget
 $registry->register(new StarRatingWidget());
 $registry->setTypeDefault('rating', 'star_rating');
 
 // =============================================================================
-// 9. WORKING WITH THE REPOSITORY
+// 9. ASSET MANAGEMENT
 // =============================================================================
-
-/**
- * Save and retrieve fields from database
- */
-$pdo = new \PDO('mysql:host=localhost;dbname=cms', 'user', 'password');
-$repository = new FieldRepository($pdo);
-
-// Save a field
-$repository->save($titleField);
-echo "Field saved with ID: " . $titleField->id;
-
-// Find by ID
-$field = $repository->find(1);
-
-// Find by machine name
-$field = $repository->findByMachineName('field_title');
-
-// Find all fields
-$allFields = $repository->findAll();
-
-// Find fields for an entity type
-$articleFields = $repository->findByEntityType('article');
-
-// Attach a field to an entity type
-$repository->attachToEntity($titleField, 'article', bundleId: 1, weight: 0);
-
-// Detach a field
-$repository->detachFromEntity($titleField, 'article', bundleId: 1);
-
-// Delete a field
-$repository->delete($titleField);
-
-// =============================================================================
-// 10. ASSET MANAGEMENT
-// =============================================================================
-
-use App\Cms\Fields\Rendering\AssetCollection;
 
 /**
  * Collect all assets from rendered fields
@@ -442,7 +408,7 @@ echo $assets->renderInitScripts();
 echo $assets->render();
 
 // =============================================================================
-// 11. RENDER CONTEXT OPTIONS
+// 10. RENDER CONTEXT OPTIONS
 // =============================================================================
 
 /**
@@ -471,11 +437,8 @@ $itemContext = $context
     ->withIndex(0);
 
 // =============================================================================
-// 12. HTML BUILDER UTILITIES
+// 11. HTML BUILDER UTILITIES
 // =============================================================================
-
-use App\Cms\Fields\Rendering\Html;
-use App\Cms\Fields\Rendering\HtmlBuilder;
 
 /**
  * Build HTML elements programmatically
@@ -499,6 +462,8 @@ $div = Html::div()
 echo $div->render();
 
 // Conditional attributes
+$isDisabled = false;
+$isLoading = true;
 $button = Html::button()
     ->class('btn')
     ->when($isDisabled, fn($b) => $b->disabled())
@@ -506,6 +471,8 @@ $button = Html::button()
     ->text('Submit');
 
 // Building select options
+$countries = ['US' => 'United States', 'CA' => 'Canada', 'MX' => 'Mexico'];
+$selectedCountry = 'US';
 $select = Html::select()->name('country');
 foreach ($countries as $code => $name) {
     $select->child(

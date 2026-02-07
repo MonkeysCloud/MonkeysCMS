@@ -32,13 +32,13 @@
 
                 <div>
                     <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">URL Slug</label>
-                    <div class="flex items-center">
-                        <span class="text-sm text-gray-500 mr-2">/{{ $type_id }}/</span>
-                        <input type="text" name="slug" id="slug"
-                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"
-                            placeholder="url-slug">
-                    </div>
-                    <p class="mt-1 text-xs text-gray-500">Leave blank to auto-generate from title</p>
+                    <input type="text" name="slug" id="slug"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"
+                        placeholder="url-slug">
+                    <p id="url-preview" class="mt-2 text-sm text-gray-600">
+                        URL: <span id="url-preview-full" class="font-mono text-blue-600">{{ $type['url_pattern'] ?? '/{type}/{slug}' }}</span>
+                    </p>
+                    <p class="mt-1 text-xs text-gray-400">Leave blank to auto-generate from title</p>
                 </div>
             </div>
         </x-ui.card>
@@ -95,6 +95,57 @@
             </x-ui.card>
         @endif
 
+        {{-- Author Selection with Search --}}
+        @if($type['has_author'] ?? true)
+            <x-ui.card class="overflow-visible">
+                <div class="p-6 space-y-4 overflow-visible">
+                    <h2 class="text-lg font-semibold text-gray-900 border-b pb-2">Author</h2>
+                    
+                    <div class="field-entity-reference overflow-visible" id="author_id_wrapper" data-field-id="author_id" data-multiple="false" style="overflow: visible;">
+                        <label for="author_id_search" class="block text-sm font-medium text-gray-700 mb-1">Author</label>
+                        
+                        {{-- Hidden input for form submission --}}
+                        <input type="hidden" name="author_id" id="author_id" class="field-entity-reference__value" value="{{ $current_user_id ?? '' }}">
+                        
+                        {{-- Selected user display --}}
+                        <div id="author_id_selected" class="field-entity-reference__selected mb-2">
+                            @if(!empty($current_user_id) && !empty($current_user_name))
+                                <div class="field-entity-reference__item" data-id="{{ $current_user_id }}">
+                                    <span class="field-entity-reference__item-label">{{ $current_user_name }}</span>
+                                    <button type="button" class="field-entity-reference__item-remove" onclick="window.removeEntityReference('author_id', {{ $current_user_id }})">&times;</button>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        {{-- Search input --}}
+                        <div class="field-entity-reference__search">
+                            <input type="text" 
+                                id="author_id_search"
+                                class="field-entity-reference__input block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"
+                                placeholder="Search users by name or email..."
+                                autocomplete="off">
+                        </div>
+                        
+                        {{-- Results dropdown --}}
+                        <div class="field-entity-reference__dropdown" id="author_id_results"></div>
+                        
+                        <p class="mt-1 text-xs text-gray-500">The author of this content</p>
+                    </div>
+                </div>
+            </x-ui.card>
+            
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                window.initEntityReference('author_id', null, {
+                    targetType: 'user',
+                    multiple: false,
+                    searchEndpoint: '/api/users/search',
+                    lookupEndpoint: '/api/users/lookup'
+                });
+            });
+            </script>
+        @endif
+
         {{-- Actions --}}
         <div class="flex justify-end gap-3">
             <a href="{{ $cancel_url }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
@@ -108,7 +159,55 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const formatSelect = document.getElementById('body_format');
+        const titleInput = document.getElementById('title');
+        const slugInput = document.getElementById('slug');
+        const urlPreviewFull = document.getElementById('url-preview-full');
+        const formatSelect = document.querySelector('select[name="body_format"]');
+        
+        // URL pattern from content type (passed from PHP)
+        const urlPattern = '{{ $type["url_pattern"] ?? "/{type}/{slug}" }}';
+        const typeId = '{{ $type_id }}';
+        
+        // Slugify function
+        function slugify(text) {
+            return text.toString().toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+                .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+                .replace(/^-+|-+$/g, ''); // Trim hyphens
+        }
+        
+        // Update URL preview
+        function updateUrlPreview() {
+            let slug = slugInput.value || slugify(titleInput.value) || 'your-slug';
+            let preview = urlPattern
+                .replace('{type}', typeId)
+                .replace('{slug}', slug)
+                .replace('{title}', slugify(titleInput.value || 'title'))
+                .replace(/\{created\|format:[^}]+\}/g, new Date().getFullYear().toString())
+                .replace('{id}', 'ID');
+            urlPreviewFull.textContent = preview;
+        }
+        
+        // Auto-generate slug from title
+        let slugManuallyEdited = false;
+        
+        titleInput?.addEventListener('input', function() {
+            if (!slugManuallyEdited) {
+                slugInput.value = slugify(this.value);
+            }
+            updateUrlPreview();
+        });
+        
+        slugInput?.addEventListener('input', function() {
+            if (this.value) {
+                slugManuallyEdited = true;
+            } else {
+                slugManuallyEdited = false;
+            }
+            updateUrlPreview();
+        });
+        
+        // Body format switcher
         if (formatSelect) {
             formatSelect.addEventListener('change', function() {
                 const newFormat = this.value;
@@ -117,6 +216,9 @@
                 window.location.href = currentUrl.toString();
             });
         }
+        
+        // Initial preview
+        updateUrlPreview();
     });
     </script>
 </div>

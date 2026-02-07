@@ -277,7 +277,7 @@
     }
 
     /**
-     * Load Media Items
+     * Load Media Items using XHR with HTMX headers
      */
     function loadMediaItems(type) {
         const grid = document.getElementById('media-browser-grid');
@@ -289,21 +289,30 @@
             ? '/admin/media?type=image' 
             : '/admin/media';
 
-        fetch(endpoint, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                renderMediaItems(grid, data.data);
-            } else {
-                grid.innerHTML = '<div class="media-browser__empty">No media found</div>';
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', endpoint, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('HX-Request', 'true');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success && data.data) {
+                            renderMediaItems(grid, data.data);
+                        } else {
+                            grid.innerHTML = '<div class="media-browser__empty">No media found</div>';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing media:', e);
+                        grid.innerHTML = '<div class="media-browser__error">Error loading media</div>';
+                    }
+                } else {
+                    grid.innerHTML = '<div class="media-browser__error">Error loading media</div>';
+                }
             }
-        })
-        .catch(error => {
-            console.error('Error loading media:', error);
-            grid.innerHTML = '<div class="media-browser__error">Error loading media</div>';
-        });
+        };
+        xhr.send();
     }
 
     /**
@@ -371,7 +380,7 @@
     };
 
     /**
-     * Search Media
+     * Search Media using XHR with HTMX headers
      */
     window.searchMedia = function(query) {
         clearTimeout(window.mediaSearchTimeout);
@@ -380,59 +389,77 @@
                 ? `/admin/media?type=image&search=${encodeURIComponent(query)}`
                 : `/admin/media?search=${encodeURIComponent(query)}`;
 
-            fetch(endpoint, { headers: { 'Accept': 'application/json' } })
-                .then(response => response.json())
-                .then(data => {
-                    const grid = document.getElementById('media-browser-grid');
-                    if (data.success && data.data) {
-                        renderMediaItems(grid, data.data);
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', endpoint, true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('HX-Request', 'true');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        const grid = document.getElementById('media-browser-grid');
+                        if (data.success && data.data) {
+                            renderMediaItems(grid, data.data);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing search results:', e);
                     }
-                });
+                }
+            };
+            xhr.send();
         }, 300);
     };
 
     /**
-     * Upload Files from Media Browser
+     * Upload Files from Media Browser using XHR with HTMX headers
      */
     window.uploadMediaBrowserFiles = function(files) {
         if (!files.length) return;
 
         const formData = new FormData();
-        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        const token = document.querySelector('meta[name="csrf-token"]')?.content ||
+                      document.querySelector('input[name="csrf_token"]')?.value || '';
         
         for (let i = 0; i < files.length; i++) {
             formData.append('files[]', files[i]);
         }
 
-        fetch('/admin/media/upload', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': token || ''
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/admin/media/upload', true);
+        xhr.setRequestHeader('HX-Request', 'true');
+        xhr.setRequestHeader('X-CSRF-TOKEN', token);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success) {
+                            loadMediaItems(currentMediaType);
+                        } else {
+                            alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (e) {
+                        console.error('Upload parse error:', e);
+                        alert('Upload failed');
+                    }
+                } else {
+                    console.error('Upload error:', xhr.status);
+                    alert('Upload failed');
+                }
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                loadMediaItems(currentMediaType);
-            } else {
-                alert('Upload failed: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Upload error:', error);
-            alert('Upload failed');
-        });
+        };
+        xhr.send(formData);
     };
 
     /**
-     * Upload Media for a Specific Field
+     * Upload Media for a Specific Field using XHR with HTMX headers
      */
     window.uploadMediaField = function(fieldId, file) {
         if (!file) return;
 
         const formData = new FormData();
-        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        const token = document.querySelector('meta[name="csrf-token"]')?.content ||
+                      document.querySelector('input[name="csrf_token"]')?.value || '';
         formData.append('file', file);
 
         const wrapper = document.querySelector(`[data-field-id="${fieldId}"]`);
@@ -440,30 +467,34 @@
             wrapper.classList.add('field-media--uploading');
         }
 
-        fetch('/admin/media/upload', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': token || ''
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/admin/media/upload', true);
+        xhr.setRequestHeader('HX-Request', 'true');
+        xhr.setRequestHeader('X-CSRF-TOKEN', token);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (wrapper) {
+                    wrapper.classList.remove('field-media--uploading');
+                }
+                if (xhr.status === 200 || xhr.status === 201) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success && data.data) {
+                            setFieldValue(fieldId, data.data.id, data.data.url);
+                        } else {
+                            alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (e) {
+                        console.error('Upload parse error:', e);
+                        alert('Upload failed');
+                    }
+                } else {
+                    console.error('Upload error:', xhr.status);
+                    alert('Upload failed');
+                }
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                setFieldValue(fieldId, data.data.id, data.data.url);
-            } else {
-                alert('Upload failed: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Upload error:', error);
-            alert('Upload failed');
-        })
-        .finally(() => {
-            if (wrapper) {
-                wrapper.classList.remove('field-media--uploading');
-            }
-        });
+        };
+        xhr.send(formData);
     };
 
     /**
@@ -558,7 +589,7 @@
     };
 
     /**
-     * Upload a file to gallery
+     * Upload a file to gallery using XHR with HTMX headers
      */
     window.uploadGalleryImage = function(fieldId, file) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content 
@@ -569,21 +600,29 @@
         formData.append('file', file);
         formData.append('csrf_token', csrfToken);
 
-        fetch('/admin/media/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                window.addGalleryItem(fieldId, data.data.id, data.data.url);
-            } else {
-                console.error('Gallery upload failed:', data.error || 'Unknown error');
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/admin/media/upload', true);
+        xhr.setRequestHeader('HX-Request', 'true');
+        xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success && data.data) {
+                            window.addGalleryItem(fieldId, data.data.id, data.data.url);
+                        } else {
+                            console.error('Gallery upload failed:', data.error || 'Unknown error');
+                        }
+                    } catch (e) {
+                        console.error('Gallery upload parse error:', e);
+                    }
+                } else {
+                    console.error('Gallery upload error:', xhr.status);
+                }
             }
-        })
-        .catch(error => {
-            console.error('Gallery upload error:', error);
-        });
+        };
+        xhr.send(formData);
     };
 
     // Initialize all media fields in a context

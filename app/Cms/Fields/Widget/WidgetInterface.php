@@ -29,6 +29,14 @@ interface WidgetInterface
     public function supportsMultiple(): bool;
 
     /**
+     * Whether this widget renders a single labelable input element.
+     * 
+     * When true, the field's label will use a `for` attribute pointing to the input.
+     * When false (for widgets with multiple inputs), the label won't have a `for` attribute.
+     */
+    public function usesLabelableInput(): bool;
+
+    /**
      * Render the widget for editing (new Field-based API)
      */
     public function render(Field $field, FieldValue $value, RenderContext $context): WidgetOutput;

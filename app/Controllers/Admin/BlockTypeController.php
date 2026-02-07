@@ -243,12 +243,12 @@ class BlockTypeController extends BaseAdminController
             try {
                 $this->blockManager->saveFieldWeights($type['entity']->id, $params['weights'], 'form');
                 
-                // Return JSON if AJAX request
-                if ($this->isAjax($request)) {
+                // Return JSON if XHR request
+                if ($this->isXhrRequest($request)) {
                     return new JsonResponse(['status' => 'success', 'message' => 'Weights saved']);
                 }
             } catch (\Exception $e) {
-                if ($this->isAjax($request)) {
+                if ($this->isXhrRequest($request)) {
                     return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
                 }
             }
@@ -257,9 +257,14 @@ class BlockTypeController extends BaseAdminController
         return new RedirectResponse('/admin/structure/block-types/' . $id . '/form-display');
     }
 
-    private function isAjax(ServerRequestInterface $request): bool
+    /**
+     * Check if request is HTMX/XHR
+     * Detects: HX-Request header (HTMX), X-Requested-With (XHR), or JSON Content-Type
+     */
+    private function isXhrRequest(ServerRequestInterface $request): bool
     {
-        return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest' 
+        return $request->hasHeader('HX-Request')
+            || strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest' 
             || str_contains($request->getHeaderLine('Content-Type'), 'application/json');
     }
 
@@ -333,11 +338,11 @@ class BlockTypeController extends BaseAdminController
             try {
                 $this->blockManager->saveFieldWeights($type['entity']->id, $params['weights'], 'display');
                 
-                if ($this->isAjax($request)) {
+                if ($this->isXhrRequest($request)) {
                     return new JsonResponse(['status' => 'success', 'message' => 'Weights saved']);
                 }
             } catch (\Exception $e) {
-                if ($this->isAjax($request)) {
+                if ($this->isXhrRequest($request)) {
                     return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
                 }
             }

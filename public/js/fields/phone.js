@@ -27,10 +27,24 @@ var CmsPhone = {
             initialCountry: "auto",
             dropdownContainer: document.body,
             geoIpLookup: function(callback) {
-                fetch("https://ipapi.co/json")
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) { callback(data.country_code); })
-                    .catch(function() { callback("US"); });
+                // Use XHR instead of fetch for consistency
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://ipapi.co/json', true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                callback(data.country_code);
+                            } catch (e) {
+                                callback("US");
+                            }
+                        } else {
+                            callback("US");
+                        }
+                    }
+                };
+                xhr.send();
             },
             preferredCountries: ["us", "gb", "ca"],
         };

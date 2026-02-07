@@ -96,6 +96,147 @@ class FieldDefinition extends BaseEntity
         }
     }
 
+    // =========================================================================
+    // FLUENT BUILDER API
+    // =========================================================================
+
+    /**
+     * Create a new FieldDefinition with fluent interface
+     *
+     * @param string $name Human-readable field name
+     * @param string $machineName Machine name (e.g., 'field_title')
+     * @param string $fieldType Field type (e.g., 'string', 'text', 'boolean')
+     */
+    public static function create(string $name, string $machineName, string $fieldType): static
+    {
+        $instance = new static();
+        $instance->name = $name;
+        $instance->machine_name = $machineName;
+        $instance->field_type = $fieldType;
+        return $instance;
+    }
+
+    /**
+     * Mark field as required
+     */
+    public function required(bool $required = true): static
+    {
+        $this->required = $required;
+        return $this;
+    }
+
+    /**
+     * Set help text for the field
+     */
+    public function withHelpText(string $helpText): static
+    {
+        $this->help_text = $helpText;
+        return $this;
+    }
+
+    /**
+     * Set the widget to use for this field
+     */
+    public function withWidget(string $widget): static
+    {
+        $this->widget = $widget;
+        return $this;
+    }
+
+    /**
+     * Set field settings
+     */
+    public function withSettings(array $settings): static
+    {
+        $this->settings = array_merge($this->settings, $settings);
+        return $this;
+    }
+
+    /**
+     * Set widget-specific settings
+     */
+    public function withWidgetSettings(array $settings): static
+    {
+        $this->widget_settings = array_merge($this->widget_settings, $settings);
+        return $this;
+    }
+
+    /**
+     * Set validation rules
+     */
+    public function withValidation(array $validation): static
+    {
+        $this->validation = array_merge($this->validation, $validation);
+        return $this;
+    }
+
+    /**
+     * Set display weight (order)
+     */
+    public function withWeight(int $weight): static
+    {
+        $this->weight = $weight;
+        return $this;
+    }
+
+    /**
+     * Mark field as accepting multiple values
+     */
+    public function multiple(bool $multiple = true): static
+    {
+        $this->multiple = $multiple;
+        return $this;
+    }
+
+    /**
+     * Set default value for the field
+     */
+    public function withDefault(mixed $default): static
+    {
+        $this->default_value = is_scalar($default) ? (string) $default : json_encode($default);
+        return $this;
+    }
+
+    /**
+     * Set cardinality (max number of values, -1 for unlimited)
+     */
+    public function withCardinality(int $cardinality): static
+    {
+        $this->cardinality = $cardinality;
+        return $this;
+    }
+
+    /**
+     * Set field description
+     */
+    public function withDescription(string $description): static
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    /**
+     * Mark field as searchable
+     */
+    public function searchable(bool $searchable = true): static
+    {
+        $this->searchable = $searchable;
+        return $this;
+    }
+
+    /**
+     * Mark field as translatable
+     */
+    public function translatable(bool $translatable = true): static
+    {
+        $this->translatable = $translatable;
+        return $this;
+    }
+
+    // =========================================================================
+    // ACCESSORS
+    // =========================================================================
+
     /**
      * Get the FieldType enum
      */

@@ -47,6 +47,11 @@ final class DimensionsWidget extends AbstractWidget
         return ['dimensions', 'json', 'array'];
     }
 
+    public function usesLabelableInput(): bool
+    {
+        return false;
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);

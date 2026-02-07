@@ -1,7 +1,12 @@
+/**
+ * Media Bulk Actions - Alpine.js Component
+ * Uses XHR for bulk delete operations
+ */
 function mediaBulkActions() {
     return {
         selected: [],
         items: [],
+        isDeleting: false,
         
         init() {
             // Find all media items in the DOM and populate items array
@@ -67,31 +72,34 @@ function mediaBulkActions() {
             }));
         },
 
-        async executeBulkDelete() {
-            try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
-                                  document.querySelector('input[name="csrf_token"]')?.value;
-                
-                const response = await fetch('/admin/media/bulk-delete', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({ ids: this.selected })
-                });
-
-                if (response.ok) {
-                    // Reload to reflect changes
-                    window.location.reload();
-                } else {
-                    const data = await response.json();
-                    alert('Failed to delete items: ' + (data.error || 'Unknown error'));
+        executeBulkDelete() {
+            if (this.isDeleting) return;
+            this.isDeleting = true;
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                              document.querySelector('input[name="csrf_token"]')?.value || '';
+            
+            // Use XHR for bulk delete
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/admin/media/bulk-delete', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('HX-Request', 'true');
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+            
+            const self = this;
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        // Reload to reflect changes
+                        window.location.reload();
+                    } else {
+                        console.error('Bulk delete error:', xhr.status);
+                        alert('An error occurred while deleting items.');
+                        self.isDeleting = false;
+                    }
                 }
-            } catch (error) {
-                console.error('Bulk delete error:', error);
-                alert('An error occurred while deleting items.');
-            }
+            };
+            xhr.send(JSON.stringify({ ids: this.selected }));
         }
     }
 }

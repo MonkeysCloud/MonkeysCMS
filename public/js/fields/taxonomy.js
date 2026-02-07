@@ -179,18 +179,29 @@
     };
 
     /**
-     * Load Terms from API
+     * Load Terms from API using XHR with HTMX headers
      */
     function loadTerms(vocabulary) {
-        return fetch(`/admin/taxonomies/${vocabulary}/terms?format=tree`, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                return data.data;
-            }
-            return [];
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `/admin/taxonomies/${vocabulary}/terms?format=tree`, true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('HX-Request', 'true');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            resolve(data.success && data.data ? data.data : []);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    } else {
+                        reject(new Error('Failed to load terms'));
+                    }
+                }
+            };
+            xhr.send();
         });
     }
 
@@ -256,15 +267,24 @@
         const selectedContainer = document.getElementById(fieldId + '_selected');
         if (!selectedContainer) return;
 
-        fetch(`/admin/taxonomies/${vocabulary}/terms?ids=${termIds.join(',')}`, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                renderSelectedTags(fieldId, data.data);
+        // Use XHR with HTMX headers
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/admin/taxonomies/${vocabulary}/terms?ids=${termIds.join(',')}`, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('HX-Request', 'true');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.success && data.data) {
+                        renderSelectedTags(fieldId, data.data);
+                    }
+                } catch (e) {
+                    console.error('Error parsing terms:', e);
+                }
             }
-        });
+        };
+        xhr.send();
     }
 
     /**
@@ -289,18 +309,27 @@
         const config = taxonomyFields[fieldId];
         const resultsContainer = document.getElementById(fieldId + '_results');
 
-        fetch(`/admin/taxonomies/${vocabulary}/terms?search=${encodeURIComponent(query)}`, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                renderAutocompleteResults(fieldId, data.data, query);
-            } else {
-                renderAutocompleteResults(fieldId, [], query);
+        // Use XHR with HTMX headers
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/admin/taxonomies/${vocabulary}/terms?search=${encodeURIComponent(query)}`, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('HX-Request', 'true');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.success && data.data) {
+                        renderAutocompleteResults(fieldId, data.data, query);
+                    } else {
+                        renderAutocompleteResults(fieldId, [], query);
+                    }
+                    resultsContainer.style.display = '';
+                } catch (e) {
+                    console.error('Error parsing search results:', e);
+                }
             }
-            resultsContainer.style.display = '';
-        });
+        };
+        xhr.send();
     }
 
     /**
@@ -415,26 +444,38 @@
         const resultsContainer = document.getElementById(fieldId + '_results');
         const searchInput = document.getElementById(fieldId + '_search');
 
-        fetch(`/admin/taxonomies/${vocabulary}/terms`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ name: name })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                window.selectTaxonomyTerm(fieldId, data.data.id, data.data.name);
-            } else {
-                alert('Failed to create term: ' + (data.error || 'Unknown error'));
+        // Use XHR with HTMX headers for POST
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/admin/taxonomies/${vocabulary}/terms`, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('HX-Request', 'true');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                          document.querySelector('input[name="csrf_token"]')?.value || '';
+        if (csrfToken) {
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+        }
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success && data.data) {
+                            window.selectTaxonomyTerm(fieldId, data.data.id, data.data.name);
+                        } else {
+                            alert('Failed to create term: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (e) {
+                        console.error('Error parsing create response:', e);
+                        alert('Failed to create term');
+                    }
+                } else {
+                    console.error('Error creating term:', xhr.status);
+                    alert('Failed to create term');
+                }
             }
-        })
-        .catch(error => {
-            console.error('Error creating term:', error);
-            alert('Failed to create term');
-        });
+        };
+        xhr.send(JSON.stringify({ name: name }));
     };
 
     // ─────────────────────────────────────────────────────────────

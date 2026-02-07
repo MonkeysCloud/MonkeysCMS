@@ -51,7 +51,7 @@
                     <div class="sm:col-span-6 bg-gray-50 -mx-4 px-4 py-4 sm:-mx-6 sm:px-6 border-b border-gray-200 mb-2">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Block Type</label>
+                                <span class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Block Type</span>
                                 <div class="mt-1 flex items-center gap-3">
                                     <span class="text-base font-medium text-gray-900">
                                         <?php 
@@ -116,7 +116,6 @@
                     </div>
 
                     <div class="sm:col-span-6">
-                        <label for="body" class="block text-sm font-medium text-gray-700">Content</label>
                         <div class="mt-1">
                             <?= $renderedBodyField['html'] ?? '' ?>
                         </div>
@@ -194,7 +193,7 @@
                             </div>
 
                             <div class="sm:col-span-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Roles</label>
+                                <span class="block text-sm font-medium text-gray-700 mb-2">Roles</span>
                                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                                     <div class="flex items-start">
                                         <div class="flex h-5 items-center">

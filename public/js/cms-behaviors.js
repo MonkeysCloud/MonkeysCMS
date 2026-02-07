@@ -91,7 +91,7 @@
             // Attach behaviors to entire document on page load
             this.attach(document);
 
-            // Listen for dynamically added content (from repeaters, AJAX, etc.)
+            // Listen for dynamically added content (from repeaters, HTMX, etc.)
             document.addEventListener('cms:content-changed', function(e) {
                 if (e.detail && e.detail.target) {
                     CmsBehaviors.attach(e.detail.target);

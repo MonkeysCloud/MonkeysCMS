@@ -289,19 +289,35 @@
             }, 3000);
         },
 
-        // Geocode an address to coordinates (requires Nominatim)
+        // Geocode an address to coordinates (requires Nominatim) - uses XHR for consistency
         geocode: function(address) {
-            return fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address))
-                .then(function(response) { return response.json(); })
-                .then(function(data) {
-                    if (data && data.length > 0) {
-                        return {
-                            lat: parseFloat(data[0].lat),
-                            lng: parseFloat(data[0].lon)
-                        };
+            return new Promise(function(resolve, reject) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address), true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data && data.length > 0) {
+                                    resolve({
+                                        lat: parseFloat(data[0].lat),
+                                        lng: parseFloat(data[0].lon)
+                                    });
+                                } else {
+                                    reject(new Error('Address not found'));
+                                }
+                            } catch (e) {
+                                reject(new Error('Failed to parse response'));
+                            }
+                        } else {
+                            reject(new Error('Geocoding request failed'));
+                        }
                     }
-                    throw new Error('Address not found');
-                });
+                };
+                xhr.send();
+            });
         }
     };
 

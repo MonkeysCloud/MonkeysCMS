@@ -125,7 +125,7 @@
 
                 {{-- Avatar --}}
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Avatar</label>
+                    <span class="block text-sm font-medium text-gray-700 mb-1">Avatar</span>
                     <div class="field-image" data-field-id="avatar">
                         <input type="hidden" 
                                name="avatar" 

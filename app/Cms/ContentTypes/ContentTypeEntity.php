@@ -86,6 +86,12 @@ class ContentTypeEntity extends BaseEntity
     #[Field(type: 'int', label: 'Weight', default: 0)]
     public int $weight = 0;
 
+    #[Field(type: 'boolean', label: 'Composer Enabled', default: false)]
+    public bool $composer_enabled = false;
+
+    #[Field(type: 'boolean', label: 'Composer Default', default: false)]
+    public bool $composer_default = false;
+
     #[Field(type: 'datetime')]
     public ?\DateTimeImmutable $created_at = null;
 
@@ -136,13 +142,21 @@ class ContentTypeEntity extends BaseEntity
     /**
      * Get URL for a content item of this type
      */
-    public function getUrl(array $content): string
+    public function getUrl(array $content, ?\App\Cms\Url\TokenResolver $tokenResolver = null): string
     {
-        if (!$this->url_pattern) {
-            return '/' . $this->type_id . '/' . ($content[$this->slug_field] ?? $content['id']);
+        // Default pattern if none specified
+        $pattern = $this->url_pattern ?: '/{type}/{slug}';
+        
+        // Add type to context if not present
+        $content['type'] = $content['type'] ?? $this->type_id;
+        
+        // Use TokenResolver if available
+        if ($tokenResolver) {
+            return $tokenResolver->resolve($pattern, $content);
         }
-
-        $url = $this->url_pattern;
+        
+        // Fallback: simple replacement for basic patterns
+        $url = $pattern;
         foreach ($content as $key => $value) {
             if (is_scalar($value)) {
                 $url = str_replace('{' . $key . '}', (string) $value, $url);
@@ -186,6 +200,8 @@ class ContentTypeEntity extends BaseEntity
             'default_values' => $this->default_values,
             'settings' => $this->settings,
             'allowed_vocabularies' => $this->allowed_vocabularies,
+            'composer_enabled' => $this->composer_enabled,
+            'composer_default' => $this->composer_default,
             'fields' => array_map(fn($f) => $f->toArray(), $this->fields),
         ];
     }
