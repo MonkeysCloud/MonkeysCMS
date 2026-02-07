@@ -152,15 +152,15 @@
                 <template x-if="isEditing">
                     <div class="space-y-4">
                         @if($media->isImage())
-                        <div>
-                             <label class="block text-sm font-medium text-gray-700 mb-1">Alt Text</label>
+                        <label class="block">
+                             <span class="block text-sm font-medium text-gray-700 mb-1">Alt Text</span>
                              <input type="text" x-model="form.alt" class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2 bg-gray-50" placeholder="Alternative text for accessibility">
-                        </div>
+                        </label>
                         @endif
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <label class="block">
+                            <span class="block text-sm font-medium text-gray-700 mb-1">Description</span>
                             <textarea x-model="form.description" rows="4" class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2 bg-gray-50" placeholder="Enter a detailed description..."></textarea>
-                        </div>
+                        </label>
                     </div>
                 </template>
             </div>

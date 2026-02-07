@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script src="/js/sortable.min.js"></script>
 <script src="/js/taxonomy-tree.js"></script>
 @endpush
 

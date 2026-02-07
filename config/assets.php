@@ -26,7 +26,7 @@ return [
         
         'sortable' => [
             'version' => '1.15.2',
-            'url' => 'https://cdnjs.cloudflare.com/ajax/libs/Sortable/{version}/Sortable.min.js',
+            'url' => '/js/sortable.min.js',
             'filename' => 'sortable.min.js',
             'description' => 'Reorderable drag-and-drop lists',
             'homepage' => 'https://sortablejs.github.io/Sortable/',

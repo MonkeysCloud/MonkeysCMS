@@ -51,6 +51,11 @@ final class CheckboxesWidget extends AbstractWidget
         return true;
     }
 
+    public function usesLabelableInput(): bool
+    {
+        return false;
+    }
+
     protected function initializeAssets(): void
     {
         $this->assets->addCss('/css/fields/checkboxes.css');

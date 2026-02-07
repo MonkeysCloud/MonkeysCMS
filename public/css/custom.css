@@ -1,0 +1,85 @@
+:root {
+  /* Branding Colors */
+  --primary: #ea8a0a;
+  --primary-hover: #cf7a09;
+  --secondary: #15225a;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --bg-body: #ffffff; /* White background for clean look */
+}
+body {
+  background-color: var(--bg-body);
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+/* Top Gradient Bar */
+.gradient-top {
+  background: linear-gradient(90deg, var(--secondary) 0%, #1e40af 100%);
+  height: 4px; /* Thinner, more subtle */
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--secondary);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Prose Overrides */
+.prose h1,
+.prose h2,
+.prose h3 {
+  color: var(--secondary);
+}
+.prose a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+.prose a:hover {
+  text-decoration: underline;
+  color: var(--primary-hover);
+}
+.prose blockquote {
+  border-left-color: var(--primary);
+  background-color: #f9fafb;
+  padding: 1rem;
+  font-style: italic;
+}
+.prose code {
+  color: #db2777;
+  background-color: #fce7f3;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+.prose pre {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  border-radius: 0.5rem;
+}

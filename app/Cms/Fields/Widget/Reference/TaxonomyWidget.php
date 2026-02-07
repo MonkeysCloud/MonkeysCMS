@@ -61,6 +61,11 @@ final class TaxonomyWidget extends AbstractWidget
         return true;
     }
 
+    public function usesLabelableInput(): bool
+    {
+        return false;
+    }
+
     /**
      * Set taxonomy service (called by WidgetRegistry)
      */

@@ -47,6 +47,11 @@ final class GeolocationWidget extends AbstractWidget
         return ['geolocation', 'coordinates', 'json', 'object'];
     }
 
+    public function usesLabelableInput(): bool
+    {
+        return false;
+    }
+
     protected function initializeAssets(): void
     {
         // Leaflet library for OpenStreetMap

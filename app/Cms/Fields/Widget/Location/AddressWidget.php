@@ -47,6 +47,11 @@ final class AddressWidget extends AbstractWidget
         return ['address', 'json', 'object'];
     }
 
+    public function usesLabelableInput(): bool
+    {
+        return false;
+    }
+
     protected function initializeAssets(): void
     {
         $this->assets->addCss('/css/fields/address.css');

@@ -1,7 +1,12 @@
+/**
+ * Media Edit - Alpine.js Component
+ * Uses XHR for save operations
+ */
 function mediaEdit(initialData) {
     return {
         isEditing: false,
         isSaving: false,
+        saveError: null,
         originalData: { ...initialData },
         form: { ...initialData },
 
@@ -15,46 +20,51 @@ function mediaEdit(initialData) {
                 // Cancel: revert
                 this.form = { ...this.originalData };
                 this.isEditing = false;
+                this.saveError = null;
             } else {
                 // Start editing
                 this.isEditing = true;
             }
         },
 
-        async save() {
+        save() {
             this.isSaving = true;
-
-            try {
-                const response = await fetch(`/admin/media/${this.originalData.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="csrf_token"]')?.value || '',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(this.form)
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to update media');
+            this.saveError = null;
+            
+            const csrfToken = document.querySelector('input[name="csrf_token"]')?.value || 
+                              document.querySelector('meta[name="csrf-token"]')?.content || '';
+            
+            // Use XHR for the PUT request
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', `/admin/media/${this.originalData.id}`, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('HX-Request', 'true');
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+            
+            const self = this;
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        self.onSaveSuccess();
+                    } else {
+                        self.onSaveError(xhr.responseText || 'Failed to update media');
+                    }
                 }
+            };
+            xhr.send(JSON.stringify(this.form));
+        },
 
-                const result = await response.json();
-                
-                // Update success
-                this.originalData = { ...this.form };
-                this.isEditing = false;
-                
-                // Optional: Show notification
-                // alert('Saved successfully'); 
+        onSaveSuccess() {
+            this.originalData = { ...this.form };
+            this.isEditing = false;
+            this.isSaving = false;
+            this.saveError = null;
+        },
 
-            } catch (error) {
-                console.error('Error saving media:', error);
-                alert('Error: ' + error.message);
-            } finally {
-                this.isSaving = false;
-            }
+        onSaveError(message) {
+            console.error('Error saving media:', message);
+            this.saveError = message;
+            this.isSaving = false;
         }
     }
 }

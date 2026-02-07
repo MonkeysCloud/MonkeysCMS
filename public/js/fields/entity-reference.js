@@ -1,6 +1,7 @@
 /**
  * Entity Reference Field Widget
  * MonkeysCMS Field Widget System
+ * Uses HTMX for server-side search operations
  */
 
 (function () {
@@ -83,7 +84,7 @@
   };
 
   /**
-   * Load Selected Entities
+   * Load Selected Entities using HTMX
    */
   function loadSelectedEntities(fieldId) {
     const config = entityReferences[fieldId];
@@ -92,16 +93,24 @@
     const { targetType, targetBundle } = config.options;
     const endpoint = (config.options.lookupEndpoint || `/admin/${targetType}s/lookup`) + `?ids=${config.selectedIds.join(',')}`;
 
-    fetch(endpoint, { headers: { Accept: "application/json" } })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success && data.data) {
-          renderSelectedEntities(fieldId, data.data);
+    // Use XHR with HTMX headers for JSON API responses
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', endpoint, true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('HX-Request', 'true');
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (data.success && data.data) {
+            renderSelectedEntities(fieldId, data.data);
+          }
+        } catch (e) {
+          console.error("Error parsing lookup response:", e);
         }
-      })
-      .catch((error) => {
-        console.error("Error loading entities:", error);
-      });
+      }
+    };
+    xhr.send();
   }
 
   /**
@@ -116,7 +125,7 @@
         (entity) => `
             <div class="field-entity-reference__item" data-id="${entity.id}">
                 <span class="field-entity-reference__item-label">${
-                  entity.title || entity.name || "Item #" + entity.id
+                  entity.title || entity.name || entity.display_name || entity.email || "Item #" + entity.id
                 }</span>
                 <button type="button" class="field-entity-reference__item-remove" onclick="window.removeEntityReference('${fieldId}', ${
           entity.id
@@ -128,7 +137,7 @@
   }
 
   /**
-   * Search Entities
+   * Search Entities using HTMX-style XHR
    */
   function searchEntities(fieldId, query) {
     const config = entityReferences[fieldId];
@@ -145,24 +154,38 @@
       endpoint += `&type=${encodeURIComponent(targetBundle)}`;
     }
 
-    fetch(endpoint, { headers: { Accept: "application/json" } })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success && data.data) {
-          renderSearchResults(fieldId, data.data);
-          resultsContainer.style.display = "block";
+    // Use XHR with HTMX headers for JSON API responses
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', endpoint, true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('HX-Request', 'true');
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.success && data.data) {
+              renderSearchResults(fieldId, data.data);
+              resultsContainer.style.display = "block";
+            } else {
+              resultsContainer.innerHTML =
+                '<div class="field-entity-reference__no-results">No results found</div>';
+              resultsContainer.style.display = "block";
+            }
+          } catch (e) {
+            console.error("Search parse error:", e);
+            resultsContainer.innerHTML =
+              '<div class="field-entity-reference__error">Search error</div>';
+            resultsContainer.style.display = "block";
+          }
         } else {
           resultsContainer.innerHTML =
-            '<div class="field-entity-reference__no-results">No results found</div>';
+            '<div class="field-entity-reference__error">Search error</div>';
           resultsContainer.style.display = "block";
         }
-      })
-      .catch((error) => {
-        console.error("Search error:", error);
-        resultsContainer.innerHTML =
-          '<div class="field-entity-reference__error">Search error</div>';
-        resultsContainer.style.display = "block";
-      });
+      }
+    };
+    xhr.send();
   }
 
   /**
@@ -189,12 +212,14 @@
         (entity) => `
             <div class="field-entity-reference__result" onclick="window.selectEntityReference('${fieldId}', ${
           entity.id
-        }, '${(entity.title || entity.name || "").replace(/'/g, "\\'")}')">
+        }, '${(entity.title || entity.name || entity.display_name || entity.email || "").replace(/'/g, "\\'")}')"${entity.email ? ` data-email="${entity.email}"` : ''}>
                 <span class="field-entity-reference__result-label">${
-                  entity.title || entity.name || "Item #" + entity.id
+                  entity.title || entity.name || entity.display_name || "Item #" + entity.id
                 }</span>
                 ${
-                  entity.type
+                  entity.email
+                    ? `<span class="field-entity-reference__result-type">${entity.email}</span>`
+                    : entity.type
                     ? `<span class="field-entity-reference__result-type">${entity.type}</span>`
                     : ""
                 }

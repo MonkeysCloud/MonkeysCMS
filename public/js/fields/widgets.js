@@ -509,21 +509,33 @@
           return;
         }
 
-        // Upload file (implement your upload logic here)
+        // Upload file using XHR with HTMX headers
         const formData = new FormData();
         formData.append("file", file);
 
-        try {
-          const response = await fetch("/api/media/upload", {
-            method: "POST",
-            body: formData,
-          });
-          const data = await response.json();
-          updatePreview(data.url);
-        } catch (error) {
-          console.error("Upload failed:", error);
-          alert("Upload failed. Please try again.");
-        }
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/media/upload', true);
+        xhr.setRequestHeader('HX-Request', 'true');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                          document.querySelector('input[name="csrf_token"]')?.value || '';
+        if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200 || xhr.status === 201) {
+              try {
+                const data = JSON.parse(xhr.responseText);
+                updatePreview(data.url);
+              } catch (e) {
+                console.error("Upload parse failed:", e);
+                alert("Upload failed. Please try again.");
+              }
+            } else {
+              console.error("Upload failed:", xhr.status);
+              alert("Upload failed. Please try again.");
+            }
+          }
+        };
+        xhr.send(formData);
       });
 
       removeBtn?.addEventListener("click", () => {
@@ -728,17 +740,30 @@
       const formData = new FormData();
       formData.append("file", file);
 
-      try {
-        const response = await fetch("/api/media/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await response.json();
-        callback(data.url, file.name);
-      } catch (error) {
-        console.error("Upload failed:", error);
-        alert("Upload failed. Please try again.");
-      }
+      // Use XHR with HTMX headers
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/media/upload', true);
+      xhr.setRequestHeader('HX-Request', 'true');
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                        document.querySelector('input[name="csrf_token"]')?.value || '';
+      if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200 || xhr.status === 201) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              callback(data.url, file.name);
+            } catch (e) {
+              console.error("Upload parse failed:", e);
+              alert("Upload failed. Please try again.");
+            }
+          } else {
+            console.error("Upload failed:", xhr.status);
+            alert("Upload failed. Please try again.");
+          }
+        }
+      };
+      xhr.send(formData);
     },
 
     getFileIcon(filename) {
@@ -875,49 +900,60 @@
             return;
           }
 
-          try {
-            const response = await fetch(
-              `${apiUrl}?q=${encodeURIComponent(query)}`
-            );
-            const data = await response.json();
+          // Use XHR with HTMX headers
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `${apiUrl}?q=${encodeURIComponent(query)}`, true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('HX-Request', 'true');
+            xhr.onreadystatechange = function() {
+              if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                  try {
+                    const data = JSON.parse(xhr.responseText);
 
-            dropdown.innerHTML =
-              data.results
-                .map(
-                  (item) => `
-                            <div class="field-entity-reference__option" data-value="${item.id}" data-label="${item.label}">
-                                ${item.label}
-                            </div>
-                        `
-                )
-                .join("") ||
-              '<div class="field-entity-reference__empty">No results found</div>';
+                    dropdown.innerHTML =
+                      data.results
+                        .map(
+                          (item) => `
+                                    <div class="field-entity-reference__option" data-value="${item.id}" data-label="${item.label}">
+                                        ${item.label}
+                                    </div>
+                                `
+                        )
+                        .join("") ||
+                      '<div class="field-entity-reference__empty">No results found</div>';
 
-            dropdown.classList.add("field-entity-reference__dropdown--open");
+                    dropdown.classList.add("field-entity-reference__dropdown--open");
 
-            dropdown
-              .querySelectorAll(".field-entity-reference__option")
-              .forEach((opt) => {
-                opt.addEventListener("click", () => {
-                  const value = opt.dataset.value;
+                    dropdown
+                      .querySelectorAll(".field-entity-reference__option")
+                      .forEach((opt) => {
+                        opt.addEventListener("click", () => {
+                          const value = opt.dataset.value;
 
-                  if (!multiple) {
-                    values = [value];
-                  } else if (!values.includes(value)) {
-                    values.push(value);
+                          if (!multiple) {
+                            values = [value];
+                          } else if (!values.includes(value)) {
+                            values.push(value);
+                          }
+
+                          updateValue();
+                          renderSelected();
+                          searchInput.value = "";
+                          dropdown.classList.remove(
+                            "field-entity-reference__dropdown--open"
+                          );
+                        });
+                      });
+                  } catch (error) {
+                    console.error("Search parse failed:", error);
                   }
-
-                  updateValue();
-                  renderSelected();
-                  searchInput.value = "";
-                  dropdown.classList.remove(
-                    "field-entity-reference__dropdown--open"
-                  );
-                });
-              });
-          } catch (error) {
-            console.error("Search failed:", error);
-          }
+                } else {
+                  console.error("Search failed:", xhr.status);
+                }
+              }
+            };
+            xhr.send();
         }, 300);
       });
 
@@ -1031,38 +1067,50 @@
             return;
           }
 
-          try {
-            const response = await fetch(
-              `${apiUrl}?q=${encodeURIComponent(query)}`
-            );
-            const data = await response.json();
+          // Use XHR with HTMX headers
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `${apiUrl}?q=${encodeURIComponent(query)}`, true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('HX-Request', 'true');
+            xhr.onreadystatechange = function() {
+              if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                  const data = JSON.parse(xhr.responseText);
 
-            const filtered = data.terms.filter((t) => !tags.includes(t.name));
+                  const filtered = data.terms.filter((t) => !tags.includes(t.name));
 
-            suggestions.innerHTML = filtered
-              .map(
-                (term) => `
-                            <div class="field-taxonomy__suggestion" data-value="${term.name}">
-                                ${term.name}
-                            </div>
-                        `
-              )
-              .join("");
+                  suggestions.innerHTML = filtered
+                    .map(
+                      (term) => `
+                                <div class="field-taxonomy__suggestion" data-value="${term.name}">
+                                    ${term.name}
+                                </div>
+                            `
+                    )
+                    .join("");
 
-            if (filtered.length) {
-              suggestions.classList.add("field-taxonomy__suggestions--open");
-            }
+                  if (filtered.length) {
+                    suggestions.classList.add("field-taxonomy__suggestions--open");
+                  }
 
-            suggestions
-              .querySelectorAll(".field-taxonomy__suggestion")
-              .forEach((opt) => {
-                opt.addEventListener("click", () => {
-                  addTag(opt.dataset.value);
-                });
-              });
-          } catch (error) {
-            console.error("Search failed:", error);
-          }
+                  suggestions
+                    .querySelectorAll(".field-taxonomy__suggestion")
+                    .forEach((opt) => {
+                      opt.addEventListener("click", () => {
+                        addTag(opt.dataset.value);
+                        suggestions.classList.remove(
+                          "field-taxonomy__suggestions--open"
+                        );
+                      });
+                    });
+                } catch (error) {
+                  console.error("Taxonomy search failed:", error);
+                }
+              } else if (xhr.readyState === 4) {
+                console.error("Taxonomy search failed:", xhr.status);
+              }
+            };
+            xhr.send();
         }, 300);
       });
 
@@ -1319,37 +1367,53 @@
       const submitBtn = form.querySelector(".field-form__submit");
 
       form.addEventListener("submit", async (e) => {
-        if (form.dataset.ajax === "true") {
+        if (form.dataset.hxSubmit === "true") {
           e.preventDefault();
 
           submitBtn.disabled = true;
           submitBtn.textContent = "Saving...";
 
-          try {
-            const formData = new FormData(form);
-            const response = await fetch(form.action, {
-              method: form.method || "POST",
-              body: formData,
-            });
+          // Use XHR with HTMX headers
+          const formData = new FormData(form);
+          const xhr = new XMLHttpRequest();
+          xhr.open(form.method || "POST", form.action, true);
+          xhr.setRequestHeader('HX-Request', 'true');
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                            document.querySelector('input[name="csrf_token"]')?.value || '';
+          if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+          
+          const self = this;
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Save";
+              
+              if (xhr.status === 200) {
+                try {
+                  const data = JSON.parse(xhr.responseText);
 
-            const data = await response.json();
-
-            if (data.errors) {
-              this.showErrors(form, data.errors);
-            } else if (data.redirect) {
-              window.location.href = data.redirect;
-            } else {
-              this.showSuccess(form, data.message || "Saved successfully");
+                  if (data.errors) {
+                    self.showErrors(form, data.errors);
+                  } else if (data.redirect) {
+                    window.location.href = data.redirect;
+                  } else {
+                    self.showSuccess(form, data.message || "Saved successfully");
+                  }
+                } catch (error) {
+                  console.error("Form parse failed:", error);
+                  self.showErrors(form, {
+                    _form: ["An error occurred. Please try again."],
+                  });
+                }
+              } else {
+                console.error("Form submission failed:", xhr.status);
+                self.showErrors(form, {
+                  _form: ["An error occurred. Please try again."],
+                });
+              }
             }
-          } catch (error) {
-            console.error("Form submission failed:", error);
-            this.showErrors(form, {
-              _form: ["An error occurred. Please try again."],
-            });
-          } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = "Save";
-          }
+          };
+          xhr.send(formData);
         }
       });
     },

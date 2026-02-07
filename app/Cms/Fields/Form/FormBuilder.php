@@ -24,7 +24,7 @@ final class FormBuilder
     private string $method = 'POST';
     private string $class = 'cms-form';
     private string $enctype = 'multipart/form-data';
-    private bool $ajax = false;
+    private bool $htmxSubmit = false;
     private bool $showRequiredIndicator = true;
     private bool $groupFields = true;
     private string $submitLabel = 'Save';
@@ -76,10 +76,13 @@ final class FormBuilder
         return $clone;
     }
 
-    public function ajax(bool $ajax = true): self
+    /**
+     * Enable HTMX-style form submission (XHR with HX-Request header)
+     */
+    public function htmxSubmit(bool $enabled = true): self
     {
         $clone = clone $this;
-        $clone->ajax = $ajax;
+        $clone->htmxSubmit = $enabled;
         return $clone;
     }
 
@@ -143,7 +146,7 @@ final class FormBuilder
             ->attr('method', $this->method)
             ->class($this->class)
             ->attr('enctype', $this->enctype)
-            ->when($this->ajax, fn($f) => $f->data('ajax', 'true'));
+            ->when($this->htmxSubmit, fn($f) => $f->data('hx-submit', 'true'));
 
         // CSRF token
         if ($this->includeCsrf && $this->method === 'POST') {

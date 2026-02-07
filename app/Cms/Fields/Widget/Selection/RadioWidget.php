@@ -46,6 +46,11 @@ final class RadioWidget extends AbstractWidget
         return ['radio', 'select', 'string', 'integer', 'boolean'];
     }
 
+    public function usesLabelableInput(): bool
+    {
+        return false;
+    }
+
     protected function buildInput(FieldDefinition $field, mixed $value, RenderContext $context): HtmlBuilder|string
     {
         $settings = $this->getSettings($field);

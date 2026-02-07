@@ -63,7 +63,7 @@
                 animation: 150,
                 ghostClass: options.ghostClass || 'bg-blue-50',
                 handle: options.handle || null,
-                onEnd: async function() {
+                onEnd: function() {
                     const ids = Array.from(element.children)
                         .map(el => el.dataset.id)
                         .filter(id => id);
@@ -75,48 +75,51 @@
                         statusEl.classList.add('text-gray-500');
                     }
                     
-                    try {
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'HX-Request': 'true'
-                            },
-                            body: JSON.stringify({ terms: ids })
-                        });
-                        
-                        if (!response.ok) throw new Error('Failed');
-                        
-                        if (statusEl) {
-                            statusEl.dataset.status = 'saved';
-                            statusEl.textContent = 'Saved!';
-                            statusEl.classList.remove('text-gray-500', 'text-red-600');
-                            statusEl.classList.add('text-green-600');
-                            setTimeout(() => {
-                                statusEl.dataset.status = 'idle';
-                                statusEl.textContent = '';
-                            }, 2000);
-                        }
-                        
-                        // Dispatch custom event
-                        element.dispatchEvent(new CustomEvent('sortable:saved', { 
-                            detail: { ids: ids } 
-                        }));
-                        
-                    } catch (e) {
-                        console.error('MonkeysSortable: Save failed:', e);
-                        if (statusEl) {
-                            statusEl.dataset.status = 'error';
-                            statusEl.textContent = 'Error!';
-                            statusEl.classList.remove('text-gray-500', 'text-green-600');
-                            statusEl.classList.add('text-red-600');
-                        }
-                        
-                        // Dispatch error event
-                        element.dispatchEvent(new CustomEvent('sortable:error', { 
-                            detail: { error: e } 
-                        }));
+                    // Use XHR instead of fetch for HTMX compatibility
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', url, true);
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.setRequestHeader('HX-Request', 'true');
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                                       document.querySelector('input[name="csrf_token"]')?.value || '';
+                    if (csrfToken) {
+                        xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
                     }
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status === 200) {
+                                if (statusEl) {
+                                    statusEl.dataset.status = 'saved';
+                                    statusEl.textContent = 'Saved!';
+                                    statusEl.classList.remove('text-gray-500', 'text-red-600');
+                                    statusEl.classList.add('text-green-600');
+                                    setTimeout(() => {
+                                        statusEl.dataset.status = 'idle';
+                                        statusEl.textContent = '';
+                                    }, 2000);
+                                }
+                                
+                                // Dispatch custom event
+                                element.dispatchEvent(new CustomEvent('sortable:saved', { 
+                                    detail: { ids: ids } 
+                                }));
+                            } else {
+                                console.error('MonkeysSortable: Save failed:', xhr.status);
+                                if (statusEl) {
+                                    statusEl.dataset.status = 'error';
+                                    statusEl.textContent = 'Error!';
+                                    statusEl.classList.remove('text-gray-500', 'text-green-600');
+                                    statusEl.classList.add('text-red-600');
+                                }
+                                
+                                // Dispatch error event
+                                element.dispatchEvent(new CustomEvent('sortable:error', { 
+                                    detail: { error: new Error('Save failed') } 
+                                }));
+                            }
+                        }
+                    };
+                    xhr.send(JSON.stringify({ terms: ids }));
                 }
             });
             

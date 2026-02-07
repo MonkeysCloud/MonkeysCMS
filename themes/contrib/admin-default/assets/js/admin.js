@@ -296,35 +296,46 @@
     };
 
     /**
-     * API helper
+     * API helper - uses XHR for consistency
      */
     window.adminApi = {
-        request: async function(method, url, data) {
-            const options = {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-            };
-
-            if (data && method !== 'GET') {
-                options.body = JSON.stringify(data);
-            }
-
-            try {
-                const response = await fetch(url, options);
-                const result = await response.json();
+        request: function(method, url, data) {
+            return new Promise(function(resolve, reject) {
+                const xhr = new XMLHttpRequest();
+                xhr.open(method, url, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('HX-Request', 'true');
                 
-                if (!response.ok) {
-                    throw new Error(result.error || 'Request failed');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                                  document.querySelector('input[name="csrf_token"]')?.value || '';
+                if (csrfToken && method !== 'GET') {
+                    xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
                 }
-                
-                return result;
-            } catch (error) {
-                showToast(error.message, 'danger');
-                throw error;
-            }
+
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        try {
+                            const result = JSON.parse(xhr.responseText);
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve(result);
+                            } else {
+                                showToast(result.error || 'Request failed', 'danger');
+                                reject(new Error(result.error || 'Request failed'));
+                            }
+                        } catch (error) {
+                            showToast('Request failed', 'danger');
+                            reject(error);
+                        }
+                    }
+                };
+
+                if (data && method !== 'GET') {
+                    xhr.send(JSON.stringify(data));
+                } else {
+                    xhr.send();
+                }
+            });
         },
 
         get: function(url) {

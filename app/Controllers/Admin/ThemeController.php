@@ -23,7 +23,7 @@ final class ThemeController
     /**
      * List all available themes
      */
-    #[Route('GET', '/admin/themes')]
+    #[Route('GET', '/api/admin/themes')]
     public function index(): ResponseInterface
     {
         $themes = $this->themeManager->discoverThemes();
@@ -46,7 +46,7 @@ final class ThemeController
     /**
      * Get contrib themes only
      */
-    #[Route('GET', '/admin/themes/contrib')]
+    #[Route('GET', '/api/admin/themes/contrib')]
     public function contribThemes(): ResponseInterface
     {
         $themes = $this->themeManager->getContribThemes();
@@ -60,7 +60,7 @@ final class ThemeController
     /**
      * Get custom themes only
      */
-    #[Route('GET', '/admin/themes/custom')]
+    #[Route('GET', '/api/admin/themes/custom')]
     public function customThemes(): ResponseInterface
     {
         $themes = $this->themeManager->getCustomThemes();
@@ -74,7 +74,7 @@ final class ThemeController
     /**
      * Get theme details
      */
-    #[Route('GET', '/admin/themes/{theme}')]
+    #[Route('GET', '/api/admin/themes/{theme}')]
     public function show(string $theme): ResponseInterface
     {
         if (!$this->themeManager->themeExists($theme)) {
@@ -104,7 +104,7 @@ final class ThemeController
     /**
      * Activate a theme
      */
-    #[Route('POST', '/admin/themes/{theme}/activate')]
+    #[Route('POST', '/api/admin/themes/{theme}/activate')]
     public function activate(string $theme): ResponseInterface
     {
         if (!$this->themeManager->themeExists($theme)) {
@@ -140,7 +140,7 @@ final class ThemeController
     /**
      * Create a new custom theme
      */
-    #[Route('POST', '/admin/themes')]
+    #[Route('POST', '/api/admin/themes')]
     public function create(ServerRequestInterface $request): ResponseInterface
     {
         $data = json_decode((string) $request->getBody(), true) ?? [];
@@ -196,7 +196,7 @@ final class ThemeController
     /**
      * Validate a theme
      */
-    #[Route('GET', '/admin/themes/{theme}/validate')]
+    #[Route('GET', '/api/admin/themes/{theme}/validate')]
     public function validate(string $theme): ResponseInterface
     {
         if (!$this->themeManager->themeExists($theme)) {
@@ -217,7 +217,7 @@ final class ThemeController
     /**
      * Get view paths for active theme
      */
-    #[Route('GET', '/admin/themes/paths/views')]
+    #[Route('GET', '/api/admin/themes/paths/views')]
     public function viewPaths(): ResponseInterface
     {
         return json([
@@ -228,7 +228,7 @@ final class ThemeController
     /**
      * Get component paths for active theme
      */
-    #[Route('GET', '/admin/themes/paths/components')]
+    #[Route('GET', '/api/admin/themes/paths/components')]
     public function componentPaths(): ResponseInterface
     {
         return json([
@@ -239,7 +239,7 @@ final class ThemeController
     /**
      * Clear theme cache
      */
-    #[Route('POST', '/admin/themes/cache/clear')]
+    #[Route('POST', '/api/admin/themes/cache/clear')]
     public function clearCache(): ResponseInterface
     {
         $this->themeManager->clearCache();

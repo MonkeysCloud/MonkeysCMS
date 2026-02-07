@@ -116,28 +116,40 @@
     function loadMediaItems(modal, fieldId, type) {
         const body = modal.querySelector('.media-browser-modal__body');
         
-        fetch(`/admin/media?type=${type}&limit=50`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.data.length > 0) {
-                    let html = '<div class="media-browser__grid">';
-                    data.data.forEach(item => {
-                        html += `
-                            <div class="media-browser__item" onclick="selectMediaItem('${fieldId}', ${item.id}, '${escapeHtml(item.url)}')">
-                                <img src="${escapeHtml(item.thumbnail || item.url)}" alt="${escapeHtml(item.filename)}">
-                                <span>${escapeHtml(item.filename)}</span>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    body.innerHTML = html;
+        // Use XHR with HTMX headers
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/admin/media?type=${type}&limit=50`, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('HX-Request', 'true');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success && data.data.length > 0) {
+                            let html = '<div class="media-browser__grid">';
+                            data.data.forEach(item => {
+                                html += `
+                                    <div class="media-browser__item" onclick="selectMediaItem('${fieldId}', ${item.id}, '${escapeHtml(item.url)}')">
+                                        <img src="${escapeHtml(item.thumbnail || item.url)}" alt="${escapeHtml(item.filename)}">
+                                        <span>${escapeHtml(item.filename)}</span>
+                                    </div>
+                                `;
+                            });
+                            html += '</div>';
+                            body.innerHTML = html;
+                        } else {
+                            body.innerHTML = '<div class="media-browser__empty">No media found</div>';
+                        }
+                    } catch (e) {
+                        body.innerHTML = '<div class="media-browser__error">Failed to load media</div>';
+                    }
                 } else {
-                    body.innerHTML = '<div class="media-browser__empty">No media found</div>';
+                    body.innerHTML = '<div class="media-browser__error">Failed to load media</div>';
                 }
-            })
-            .catch(err => {
-                body.innerHTML = '<div class="media-browser__error">Failed to load media</div>';
-            });
+            }
+        };
+        xhr.send();
     }
 
     window.selectMediaItem = function(fieldId, mediaId, url) {
@@ -203,21 +215,34 @@
         const formData = new FormData();
         formData.append('file', file);
         
-        fetch('/admin/media/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                selectMediaItem(fieldId, data.data.id, data.data.url);
-            } else {
-                alert('Upload failed: ' + (data.error || 'Unknown error'));
+        // Use XHR with HTMX headers
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/admin/media/upload', true);
+        xhr.setRequestHeader('HX-Request', 'true');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                          document.querySelector('input[name="csrf_token"]')?.value || '';
+        if (csrfToken) {
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+        }
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success) {
+                            selectMediaItem(fieldId, data.data.id, data.data.url);
+                        } else {
+                            alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (e) {
+                        alert('Upload failed: Parse error');
+                    }
+                } else {
+                    alert('Upload failed: ' + xhr.status);
+                }
             }
-        })
-        .catch(err => {
-            alert('Upload failed: ' + err.message);
-        });
+        };
+        xhr.send(formData);
     };
 
     // =========================================================================
@@ -412,11 +437,28 @@
         });
         
         function searchEntities(query, type, bundle) {
-            const url = `/admin/api/search/${type}?q=${encodeURIComponent(query)}&bundle=${bundle}`;
-            return fetch(url)
-                .then(response => response.json())
-                .then(data => data.success ? data.data : [])
-                .catch(() => []);
+            return new Promise((resolve) => {
+                const url = `/admin/api/search/${type}?q=${encodeURIComponent(query)}&bundle=${bundle}`;
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('HX-Request', 'true');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                resolve(data.success ? data.data : []);
+                            } catch (e) {
+                                resolve([]);
+                            }
+                        } else {
+                            resolve([]);
+                        }
+                    }
+                };
+                xhr.send();
+            });
         }
         
         function renderResults(results) {
@@ -495,18 +537,30 @@
         
         if (!treeDiv) return;
         
-        fetch(`/admin/taxonomies/${vocabulary}/terms?format=tree`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    treeDiv.innerHTML = renderTree(data.data, selected, multiple, fieldId);
+        // Use XHR with HTMX headers
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/admin/taxonomies/${vocabulary}/terms?format=tree`, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('HX-Request', 'true');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success) {
+                            treeDiv.innerHTML = renderTree(data.data, selected, multiple, fieldId);
+                        } else {
+                            treeDiv.innerHTML = '<div class="error">Failed to load terms</div>';
+                        }
+                    } catch (e) {
+                        treeDiv.innerHTML = '<div class="error">Failed to load terms</div>';
+                    }
                 } else {
                     treeDiv.innerHTML = '<div class="error">Failed to load terms</div>';
                 }
-            })
-            .catch(() => {
-                treeDiv.innerHTML = '<div class="error">Failed to load terms</div>';
-            });
+            }
+        };
+        xhr.send();
         
         function renderTree(nodes, selected, multiple, fieldId, level = 0) {
             let html = '<ul class="taxonomy-tree__level taxonomy-tree__level--' + level + '">';

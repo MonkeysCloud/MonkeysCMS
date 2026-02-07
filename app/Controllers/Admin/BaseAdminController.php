@@ -41,6 +41,8 @@ abstract class BaseAdminController
         $this->assets->addFile('/js/confirmation-modal.js');
         $this->assets->addFile('/js/media-edit.js');
         $this->assets->addFile('/js/media-bulk.js');
+        $this->assets->addFile('/css/fields/reference.css');
+        $this->assets->addFile('/js/fields/entity-reference.js');
         
         // Alpine must be loaded after components (or components loaded before Alpine init)
         $this->assets->attach('alpine');

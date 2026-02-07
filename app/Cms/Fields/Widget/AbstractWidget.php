@@ -72,6 +72,17 @@ abstract class AbstractWidget implements WidgetInterface
         return false;
     }
 
+    /**
+     * Whether this widget renders a single input element that the label can point to.
+     * 
+     * Widgets with multiple inputs (checkboxes group, radio buttons, etc.)
+     * should return false so the label won't have a broken `for` attribute.
+     */
+    public function usesLabelableInput(): bool
+    {
+        return true;
+    }
+
     public function getSettingsSchema(): array
     {
         return [];
@@ -283,10 +294,18 @@ abstract class AbstractWidget implements WidgetInterface
      */
     protected function buildLabel(FieldDefinition $field, RenderContext $context): HtmlBuilder
     {
-        $label = Html::label()
-            ->class('field-widget__label')
-            ->attr('for', $this->getFieldId($field, $context))
-            ->text($field->name);
+        // For widgets with a single labelable input, use <label> with for attribute
+        // For multi-input widgets, use <span> to avoid accessibility warnings
+        if ($this->usesLabelableInput()) {
+            $label = Html::label()
+                ->class('field-widget__label')
+                ->attr('for', $this->getFieldId($field, $context))
+                ->text($field->name);
+        } else {
+            $label = Html::span()
+                ->class('field-widget__label')
+                ->text($field->name);
+        }
 
         if ($field->required) {
             $label->child(

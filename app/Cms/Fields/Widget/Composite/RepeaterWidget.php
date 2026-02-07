@@ -58,6 +58,11 @@ final class RepeaterWidget extends AbstractWidget
         return true;
     }
 
+    public function usesLabelableInput(): bool
+    {
+        return false;
+    }
+
     /**
      * Inject the widget registry for rendering sub-fields
      */
