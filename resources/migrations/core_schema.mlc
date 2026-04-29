@@ -1,0 +1,306 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Core Schema Migration
+# resources/migrations/20260100_core_schema.mlc
+#
+# Declarative table definitions. The SchemaBuilder converts these to SQL.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "cms_roles" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    machine_name = { type = "string", length = 64, unique = true }
+    label       = { type = "string", length = 128 }
+    description = { type = "text", nullable = true }
+    permissions = { type = "json", default = "[]" }
+    is_super_admin = { type = "boolean", default = false }
+    is_system   = { type = "boolean", default = false }
+    weight      = { type = "integer", default = 0 }
+    created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+}
+
+table "cms_users" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    name        = { type = "string", length = 100 }
+    email       = { type = "string", length = 255, unique = true }
+    password    = { type = "string", length = 255 }
+    avatar      = { type = "string", length = 255, nullable = true }
+    role_id     = { type = "bigint", references = "cms_roles.id" }
+    permissions = { type = "json", default = "[]" }
+    active      = { type = "boolean", default = true }
+    locale      = { type = "string", length = 10, default = "en" }
+    timezone    = { type = "string", length = 50, nullable = true }
+    preferences = { type = "json", default = "{}" }
+    last_login_at = { type = "timestamp", nullable = true }
+    created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    index "idx_users_role" = ["role_id"]
+}
+
+table "content_types" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    type_id     = { type = "string", length = 64, unique = true }
+    label       = { type = "string", length = 128 }
+    label_plural = { type = "string", length = 128 }
+    description = { type = "text", nullable = true }
+    icon        = { type = "string", length = 10, default = "📄" }
+    is_system   = { type = "boolean", default = false }
+    enabled     = { type = "boolean", default = true }
+    publishable = { type = "boolean", default = true }
+    revisionable = { type = "boolean", default = false }
+    translatable = { type = "boolean", default = false }
+    has_author  = { type = "boolean", default = true }
+    has_taxonomy = { type = "boolean", default = true }
+    has_media   = { type = "boolean", default = true }
+    mosaic_enabled = { type = "boolean", default = false }
+    mosaic_default = { type = "boolean", default = false }
+    title_field = { type = "string", length = 64, default = "title" }
+    slug_field  = { type = "string", length = 64, default = "slug" }
+    url_pattern = { type = "string", length = 255, nullable = true }
+    default_values = { type = "json", default = "[]" }
+    settings    = { type = "json", default = "{}" }
+    allowed_vocabularies = { type = "json", default = "[]" }
+    weight      = { type = "integer", default = 0 }
+    created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+}
+
+table "field_definitions" {
+    id              = { type = "bigint", auto_increment = true, primary = true }
+    content_type_id = { type = "bigint", references = "content_types.id", on_delete = "CASCADE" }
+    name            = { type = "string", length = 100 }
+    machine_name    = { type = "string", length = 100 }
+    field_type      = { type = "string", length = 50, default = "string" }
+    description     = { type = "string", length = 500, nullable = true }
+    help_text       = { type = "string", length = 500, nullable = true }
+    widget          = { type = "string", length = 50, nullable = true }
+    required        = { type = "boolean", default = false }
+    multiple        = { type = "boolean", default = false }
+    cardinality     = { type = "integer", default = 1 }
+    default_value   = { type = "string", length = 255, nullable = true }
+    settings        = { type = "json", default = "{}" }
+    validation      = { type = "json", default = "{}" }
+    widget_settings = { type = "json", default = "{}" }
+    weight          = { type = "integer", default = 0 }
+    searchable      = { type = "boolean", default = false }
+    translatable    = { type = "boolean", default = false }
+    created_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    unique "idx_field_def_unique" = ["content_type_id", "machine_name"]
+    index "idx_field_def_type"    = ["content_type_id"]
+}
+
+table "nodes" {
+    id              = { type = "bigint", auto_increment = true, primary = true }
+    content_type    = { type = "string", length = 64 }
+    title           = { type = "string", length = 255 }
+    slug            = { type = "string", length = 300 }
+    status          = { type = "string", length = 20, default = "draft" }
+    author_id       = { type = "bigint", nullable = true }
+    body            = { type = "longtext", nullable = true }
+    summary         = { type = "text", nullable = true }
+    meta_title      = { type = "string", length = 255, nullable = true }
+    meta_description = { type = "string", length = 500, nullable = true }
+    meta_image      = { type = "string", length = 255, nullable = true }
+    featured_image_id = { type = "bigint", nullable = true }
+    fields          = { type = "json", default = "{}" }
+    mosaic_mode     = { type = "boolean", default = false }
+    revision        = { type = "integer", unsigned = true, default = 1 }
+    language        = { type = "string", length = 10, default = "en" }
+    weight          = { type = "integer", default = 0 }
+    published_at    = { type = "timestamp", nullable = true }
+    created_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+    deleted_at      = { type = "timestamp", nullable = true }
+
+    index "idx_nodes_type"       = ["content_type"]
+    index "idx_nodes_status"     = ["status"]
+    index "idx_nodes_slug"       = ["content_type", "slug"]
+    index "idx_nodes_author"     = ["author_id"]
+    index "idx_nodes_published"  = ["status", "published_at"]
+    index "idx_nodes_deleted"    = ["deleted_at"]
+    fulltext "idx_nodes_search"  = ["title", "body"]
+}
+
+table "node_fields" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    node_id     = { type = "bigint", references = "nodes.id", on_delete = "CASCADE" }
+    field_name  = { type = "string", length = 100 }
+    field_value = { type = "longtext", nullable = true }
+    delta       = { type = "integer", unsigned = true, default = 0 }
+    language    = { type = "string", length = 10, default = "en" }
+
+    index "idx_nf_node"  = ["node_id"]
+    index "idx_nf_field" = ["node_id", "field_name"]
+}
+
+table "node_revisions" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    node_id     = { type = "bigint", references = "nodes.id", on_delete = "CASCADE" }
+    revision    = { type = "integer", unsigned = true }
+    data        = { type = "json" }
+    author_id   = { type = "bigint", nullable = true }
+    message     = { type = "string", length = 500, nullable = true }
+    created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_rev_node" = ["node_id", "revision"]
+}
+
+table "node_mosaic" {
+    id           = { type = "bigint", auto_increment = true, primary = true }
+    node_id      = { type = "bigint", references = "nodes.id", on_delete = "CASCADE" }
+    content_type = { type = "string", length = 64 }
+    sections     = { type = "json", default = "{\"sections\":[]}" }
+    revision     = { type = "integer", unsigned = true, default = 1 }
+    created_at   = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at   = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    unique "idx_mosaic_node" = ["node_id", "content_type"]
+}
+
+table "media" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    filename      = { type = "string", length = 255 }
+    original_name = { type = "string", length = 255 }
+    mime_type     = { type = "string", length = 100 }
+    path          = { type = "string", length = 500 }
+    url           = { type = "string", length = 500, nullable = true }
+    alt           = { type = "string", length = 255, nullable = true }
+    title         = { type = "string", length = 255, nullable = true }
+    description   = { type = "string", length = 500, nullable = true }
+    size          = { type = "bigint", unsigned = true, default = 0 }
+    width         = { type = "integer", unsigned = true, nullable = true }
+    height        = { type = "integer", unsigned = true, nullable = true }
+    metadata      = { type = "json", default = "{}" }
+    uploaded_by   = { type = "bigint", nullable = true }
+    created_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    index "idx_media_type"        = ["mime_type"]
+    index "idx_media_uploaded_by" = ["uploaded_by"]
+}
+
+table "menus" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    machine_name  = { type = "string", length = 64, unique = true }
+    label         = { type = "string", length = 128 }
+    description   = { type = "text", nullable = true }
+    enabled       = { type = "boolean", default = true }
+    created_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+}
+
+table "menu_items" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    menu_id       = { type = "bigint", references = "menus.id", on_delete = "CASCADE" }
+    parent_id     = { type = "bigint", nullable = true, references = "menu_items.id", on_delete = "SET NULL" }
+    title         = { type = "string", length = 255 }
+    url           = { type = "string", length = 500, nullable = true }
+    route_name    = { type = "string", length = 255, nullable = true }
+    route_params  = { type = "json", default = "{}" }
+    target        = { type = "string", length = 50, nullable = true }
+    icon          = { type = "string", length = 50, nullable = true }
+    attributes    = { type = "json", default = "{}" }
+    weight        = { type = "integer", default = 0 }
+    enabled       = { type = "boolean", default = true }
+
+    index "idx_mi_menu"   = ["menu_id"]
+    index "idx_mi_parent" = ["parent_id"]
+}
+
+table "vocabularies" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    machine_name  = { type = "string", length = 64, unique = true }
+    label         = { type = "string", length = 128 }
+    description   = { type = "text", nullable = true }
+    hierarchical  = { type = "boolean", default = false }
+    multiple      = { type = "boolean", default = true }
+    weight        = { type = "integer", default = 0 }
+    created_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+}
+
+table "terms" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    vocabulary_id = { type = "bigint", references = "vocabularies.id", on_delete = "CASCADE" }
+    parent_id     = { type = "bigint", nullable = true, references = "terms.id", on_delete = "SET NULL" }
+    name          = { type = "string", length = 255 }
+    slug          = { type = "string", length = 300 }
+    description   = { type = "text", nullable = true }
+    metadata      = { type = "json", default = "{}" }
+    weight        = { type = "integer", default = 0 }
+    created_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    index "idx_terms_vocab"  = ["vocabulary_id"]
+    index "idx_terms_parent" = ["parent_id"]
+    index "idx_terms_slug"   = ["vocabulary_id", "slug"]
+}
+
+table "node_terms" {
+    node_id = { type = "bigint", references = "nodes.id", on_delete = "CASCADE" }
+    term_id = { type = "bigint", references = "terms.id", on_delete = "CASCADE" }
+
+    primary_key = ["node_id", "term_id"]
+}
+
+table "block_types" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    type_id     = { type = "string", length = 64, unique = true }
+    label       = { type = "string", length = 128 }
+    description = { type = "text", nullable = true }
+    icon        = { type = "string", length = 10, default = "🧱" }
+    category    = { type = "string", length = 50, default = "Content" }
+    fields      = { type = "json", default = "[]" }
+    template    = { type = "text", nullable = true }
+    enabled     = { type = "boolean", default = true }
+    weight      = { type = "integer", default = 0 }
+    created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+}
+
+table "settings" {
+    id       = { type = "bigint", auto_increment = true, primary = true }
+    group    = { type = "string", length = 64, default = "general" }
+    key      = { type = "string", length = 128 }
+    value    = { type = "longtext", nullable = true }
+    type     = { type = "string", length = 20, default = "string" }
+    autoload = { type = "boolean", default = true }
+
+    unique "idx_settings_key" = ["group", "key"]
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Seed Data
+# ═══════════════════════════════════════════════════════════════════════════════
+
+seed "cms_roles" {
+    { machine_name = "admin",  label = "Administrator", permissions = "[\"admin.*\"]", is_super_admin = true, is_system = true }
+    { machine_name = "editor", label = "Editor", permissions = "[\"content.create\",\"content.edit\",\"content.publish\",\"content.delete\",\"media.upload\",\"media.delete\"]", is_super_admin = false, is_system = true }
+    { machine_name = "author", label = "Author", permissions = "[\"content.create\",\"content.edit_own\",\"media.upload\"]", is_super_admin = false, is_system = true }
+}
+
+seed "content_types" {
+    { type_id = "article", label = "Article", label_plural = "Articles", description = "News articles and blog posts", icon = "📰", is_system = false, mosaic_enabled = true, mosaic_default = false }
+    { type_id = "page", label = "Page", label_plural = "Pages", description = "Static pages with optional Mosaic layout", icon = "📄", is_system = true, mosaic_enabled = true, mosaic_default = true }
+}
+
+seed "vocabularies" {
+    { machine_name = "categories", label = "Categories", description = "Content categories", hierarchical = true, multiple = true }
+    { machine_name = "tags", label = "Tags", description = "Content tags", hierarchical = false, multiple = true }
+}
+
+seed "menus" {
+    { machine_name = "main", label = "Main Navigation", description = "Primary navigation menu" }
+    { machine_name = "footer", label = "Footer", description = "Footer navigation links" }
+}
+
+seed "settings" {
+    { group = "general", key = "site_name", value = "MonkeysCMS", type = "string" }
+    { group = "general", key = "site_tagline", value = "A modern CMS powered by MonkeysLegion", type = "string" }
+    { group = "general", key = "site_email", value = "admin@example.com", type = "string" }
+    { group = "general", key = "date_format", value = "Y-m-d", type = "string" }
+    { group = "general", key = "timezone", value = "UTC", type = "string" }
+    { group = "general", key = "items_per_page", value = "25", type = "integer" }
+}

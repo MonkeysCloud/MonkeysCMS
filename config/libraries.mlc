@@ -1,0 +1,162 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Global Libraries
+# config/libraries.mlc
+#
+# Shared CSS/JS libraries that any theme can attach without reproducing them.
+# Themes declare which libraries they use via `libraries = [...]` in theme.mlc.
+#
+# Libraries defined here are available globally — themes inherit them
+# through the base theme chain. A child theme inherits its parent's
+# libraries automatically.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+libraries {
+
+    # ── Core (always loaded) ─────────────────────────────────────────────
+    library "core/base" {
+        description = "Core CSS reset, variables, grid, typography"
+        css = [
+            "resources/css/base/variables.css",
+            "resources/css/base/reset.css",
+            "resources/css/base/grid.css",
+            "resources/css/base/typography.css",
+            "resources/css/base/utilities.css"
+        ]
+        js = []
+        weight = -100
+        required = true
+    }
+
+    library "core/monkeysjs" {
+        description = "MonkeysJS reactive library"
+        js = [
+            "node_modules/monkeysjs/dist/monkeysjs.esm.js"
+        ]
+        css = []
+        weight = -90
+        required = true
+        module = true
+    }
+
+    # ── Components ───────────────────────────────────────────────────────
+    library "core/forms" {
+        description = "Form styling: inputs, selects, buttons, labels"
+        css = [
+            "resources/css/components/forms.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    library "core/buttons" {
+        description = "Button styles and variants"
+        css = [
+            "resources/css/components/buttons.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    library "core/cards" {
+        description = "Card component styles"
+        css = [
+            "resources/css/components/cards.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    library "core/tables" {
+        description = "Table component styles"
+        css = [
+            "resources/css/components/tables.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    library "core/alerts" {
+        description = "Alert and notification styles"
+        css = [
+            "resources/css/components/alerts.css"
+        ]
+        js = [
+            "resources/js/components/alerts.js"
+        ]
+        weight = -50
+    }
+
+    library "core/modals" {
+        description = "Modal dialog component"
+        css = [
+            "resources/css/components/modals.css"
+        ]
+        js = [
+            "resources/js/components/modals.js"
+        ]
+        weight = -40
+    }
+
+    library "core/navigation" {
+        description = "Navigation, breadcrumbs, pagination"
+        css = [
+            "resources/css/components/navigation.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    # ── Media ────────────────────────────────────────────────────────────
+    library "core/media" {
+        description = "Responsive media, image styles, galleries"
+        css = [
+            "resources/css/components/media.css"
+        ]
+        js = []
+        weight = -30
+    }
+
+    # ── Admin-specific ───────────────────────────────────────────────────
+    library "admin/toolbar" {
+        description = "Admin toolbar and sidebar"
+        css = [
+            "resources/css/admin/toolbar.css"
+        ]
+        js = [
+            "resources/js/admin/toolbar.js"
+        ]
+        weight = -60
+    }
+
+    library "admin/editor" {
+        description = "Content editor, WYSIWYG, inline editing"
+        css = [
+            "resources/css/admin/editor.css"
+        ]
+        js = [
+            "resources/js/admin/editor.js"
+        ]
+        weight = -20
+    }
+
+    # ── Frontend-specific ────────────────────────────────────────────────
+    library "front/responsive" {
+        description = "Mobile-first responsive breakpoints and helpers"
+        css = [
+            "resources/css/front/responsive.css"
+        ]
+        js = []
+        weight = -60
+    }
+
+    library "front/animations" {
+        description = "Scroll animations and transitions"
+        css = [
+            "resources/css/front/animations.css"
+        ]
+        js = [
+            "resources/js/front/animations.js"
+        ]
+        weight = -20
+    }
+}

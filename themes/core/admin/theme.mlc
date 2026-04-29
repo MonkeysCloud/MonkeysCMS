@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Core Admin Theme
+# themes/core/admin/theme.mlc
+#
+# This is a BASE THEME for the admin interface. Custom admin themes
+# can extend this by setting:
+#   base_theme = "admin"
+# ═══════════════════════════════════════════════════════════════════════════════
+
+theme {
+    name        = "admin"
+    label       = "MonkeysCMS Admin"
+    description = "Default administration base theme for MonkeysCMS"
+    version     = "2.0.0"
+    type        = "admin"
+
+    # No parent — this is a root base theme
+    base_theme = null
+
+    # Admin regions
+    regions = [
+        "header",
+        "sidebar",
+        "content",
+        "footer",
+        "messages",
+        "breadcrumb",
+        "actions"
+    ]
+
+    # Global libraries this theme attaches
+    libraries = [
+        "core/base",
+        "core/monkeysjs",
+        "core/forms",
+        "core/buttons",
+        "core/cards",
+        "core/tables",
+        "core/alerts",
+        "core/modals",
+        "core/navigation",
+        "core/media",
+        "admin/toolbar",
+        "admin/editor"
+    ]
+
+    # Theme-specific assets
+    assets {
+        css = [
+            "css/admin.css"
+        ]
+        js = [
+            "js/admin.js"
+        ]
+    }
+}

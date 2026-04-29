@@ -1,0 +1,19 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Migration Tracking Table (self-bootstrap)
+# resources/migrations/00000000_migration_tracking.mlc
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "cms_migrations" {
+    id              = { type = "bigint", auto_increment = true, primary = true }
+    migration_id    = { type = "string", length = 128, unique = true }
+    description     = { type = "string", length = 500, nullable = true }
+    module          = { type = "string", length = 64, default = "core" }
+    version         = { type = "string", length = 20, default = "2.0.0" }
+    file            = { type = "string", length = 500 }
+    checksum        = { type = "string", length = 64, nullable = true }
+    batch           = { type = "integer", unsigned = true, default = 1 }
+    executed_at     = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    execution_time_ms = { type = "integer", unsigned = true, nullable = true }
+    status          = { type = "enum", values = ["completed", "failed", "rolled_back"], default = "completed" }
+    error_message   = { type = "text", nullable = true }
+}

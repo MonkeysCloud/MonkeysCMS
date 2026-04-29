@@ -8,9 +8,18 @@
 /*.phar
 
 # Logs and runtime cache
-/logs/
-/cache/
-/tmp/
+/var/cache/*
+!/var/cache/.gitkeep
+/var/log/*
+!/var/log/.gitkeep
+/var/sessions/*
+!/var/sessions/.gitkeep
+/var/migrations/*
+!/var/migrations/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
 /coverage/
 
 # IDE / editor settings
@@ -27,15 +36,12 @@
 .env.testing
 
 # PHPUnit and test artifacts
-/phpunit.xml
+/.phpunit.cache/
 /phpunit.result.cache
+
+# PHPStan cache
+/var/cache/phpstan/
 
 # OS-specific files
 .DS_Store
 Thumbs.db
-node_modules
-package-lock.json
-var
-storage/uploads
-storage/cache
-public/vendor

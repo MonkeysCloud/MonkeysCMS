@@ -1,0 +1,23 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — API Tokens Migration
+# resources/migrations/20260102_api_tokens.mlc
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "api_tokens" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    user_id     = { type = "bigint", references = "cms_users.id", on_delete = "CASCADE" }
+    name        = { type = "string", length = 100 }
+    token       = { type = "string", length = 64, unique = true }
+    abilities   = { type = "json", default = "[\"*\"]" }
+    revoked     = { type = "boolean", default = false }
+    last_used_at = { type = "timestamp", nullable = true }
+    expires_at  = { type = "timestamp", nullable = true }
+    created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_tokens_user" = ["user_id"]
+}
+
+# Rollback
+rollback "api_tokens" {
+    drop_table = "api_tokens"
+}

@@ -1,0 +1,79 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Migration Registry
+# database/migrations.mlc
+#
+# Declares all database migrations in execution order.
+# Each migration has a unique ID, description, and MLC schema file path.
+#
+# Migrations are tracked in the `cms_migrations` table.
+# Only unexecuted migrations will run during `migrate:run`.
+#
+# Migration files use MLC schema syntax (table definitions, seeds, rollbacks).
+# The SchemaBuilder converts these to SQL automatically.
+#
+# Format:
+#   migration "<id>" {
+#       description = "..."
+#       file        = "path/to/schema.mlc"     # MLC schema file relative to project root
+#       module      = "core"                    # Module that owns this migration
+#       version     = "2.0.0"                   # CMS version this was introduced
+#       requires    = ["<other-migration-id>"]  # Dependencies (optional)
+#       reversible  = true                      # Whether rollback is defined (optional)
+#   }
+# ═══════════════════════════════════════════════════════════════════════════════
+
+migrations {
+
+    # ── Migration Tracking (self-bootstrap) ──────────────────────────────
+    # NOTE: This is always executed first by the MigrationManager.
+    migration "migration_tracking" {
+        description = "Migration tracking table (self-bootstrap)"
+        file        = "resources/migrations/migration_tracking.mlc"
+        module      = "system"
+        version     = "2.0.0"
+        requires    = []
+        reversible  = false
+    }
+
+    # ── Core Schema ──────────────────────────────────────────────────────
+    migration "core_schema" {
+        description = "Core CMS tables: roles, users, content types, nodes, fields, media, menus, taxonomy, settings"
+        file        = "resources/migrations/core_schema.mlc"
+        module      = "core"
+        version     = "2.0.0"
+        requires    = []
+        reversible  = false
+    }
+
+    # ── API Tokens ───────────────────────────────────────────────────────
+    migration "api_tokens" {
+        description = "API bearer token storage for the decoupled JSON:API"
+        file        = "resources/migrations/api_tokens.mlc"
+        module      = "api"
+        version     = "2.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Settings
+# ═══════════════════════════════════════════════════════════════════════════════
+
+settings {
+    # Table that tracks executed migrations
+    tracking_table = "cms_migrations"
+
+    # Where SQL migration files live
+    migrations_path = "resources/migrations"
+
+    # Execution order strategy: "dependency" (resolve requires) or "sequential" (by ID sort)
+    order = "dependency"
+
+    # Enable dry-run mode globally (can be overridden per command)
+    dry_run = false
+
+    # Auto-backup before migration (creates a dump)
+    auto_backup = true
+    backup_path = "storage/backups"
+}

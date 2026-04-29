@@ -1,112 +1,32 @@
-# MonkeysCMS File Storage Configuration
-# Uses MonkeysLegion-Files for storage drivers and processing
-
+# Top-level settings for the “files” config
 files {
-    # Default disks
-    default = ${FILES_DISK:local}
-    public_disk = ${FILES_PUBLIC_DISK:public}
+    default_disk = "local"
+    max_bytes    = 20971520
+    mime_allow   = ["image/jpeg","image/png","image/webp","application/pdf"]
 
-    # Storage Disks
+    # All disks grouped under one “disks” object
     disks {
+        # Local filesystem
         local {
-            driver = "local"
-            root = "storage/files"
-            url = null
-            visibility = "private"
-            
-            permissions {
-                file {
-                    public = 0644
-                    private = 0600
-                }
-                dir {
-                    public = 0755
-                    private = 0700
-                }
-            }
+            root             = "public/files"
+            public_base_url  = "files"
         }
 
-        public {
-            driver = "local"
-            root = "storage/uploads"
-            url = "/uploads"
-            visibility = "public"
+        # Uncomment & fill out to enable S3
+        # s3 {
+        #   bucket           = "my-s3-bucket"
+        #   region           = "us-east-1"
+        #   prefix           = "uploads/"
+        #   public_base_url  = "https://my-cloudfront/"
+        # }
 
-            permissions {
-                file {
-                    public = 0644
-                    private = 0600
-                }
-                dir {
-                    public = 0755
-                    private = 0700
-                }
-            }
-        }
-
-        s3 {
-            driver = "s3"
-            key = ${AWS_ACCESS_KEY_ID:}
-            secret = ${AWS_SECRET_ACCESS_KEY:}
-            region = ${AWS_DEFAULT_REGION:us-east-1}
-            bucket = ${AWS_BUCKET:}
-            endpoint = ${AWS_ENDPOINT:}
-            url = ${AWS_URL:}
-            use_path_style_endpoint = ${AWS_USE_PATH_STYLE:false}
-            visibility = "private"
-        }
-    }
-
-    # Upload Settings
-    upload {
-        max_size = ${UPLOAD_MAX_BYTES:52428800}
-        chunk_size = ${UPLOAD_CHUNK_SIZE:5242880}
-        chunk_expiry = ${UPLOAD_CHUNK_EXPIRY:86400}
-        temp_dir = ${UPLOAD_TEMP_DIR:storage/tmp/uploads}
-        verify_mime = true
-        generate_checksum = true
-
-        allowed_mimes = [
-            "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
-            "application/pdf", "text/plain", "text/csv", "application/zip"
-        ]
-        
-        blocked_mimes = [
-            "application/x-php", "text/x-php", "text/html"
-        ]
-        
-        blocked_extensions = [
-            "php", "phtml", "exe", "sh", "htaccess"
-        ]
-    }
-
-    # Image Processing
-    image {
-        driver = ${IMAGE_DRIVER:gd}
-        quality = 85
-        max_dimension = 4096
-        strip_metadata = true
-        auto_orient = true
-
-        variants {
-            thumbnail {
-                width = 150
-                height = 150
-                mode = "cover"
-                quality = 80
-            }
-            medium {
-                width = 800
-                height = 600
-                mode = "fit"
-                quality = 85
-            }
-            large {
-                width = 1920
-                height = 1080
-                mode = "fit"
-                quality = 85
-            }
-        }
+        # Uncomment & fill out to enable GCS
+        # gcs {
+        #   project_id       = "my-gcp-project"
+        #   key_file_path    = "/path/to/key.json"
+        #   bucket           = "my-gcs-bucket"
+        #   prefix           = "uploads/"
+        #   public_base_url  = "https://cdn.example.com"
+        # }
     }
 }

@@ -1,24 +1,18 @@
 {
   "name": "monkeyscms",
-  "version": "1.0.0",
-  "description": "MonkeysCMS - A modern PHP CMS",
+  "version": "2.0.0",
+  "description": "MonkeysCMS — A modern PHP CMS powered by MonkeysLegion v2",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build:css": "npx tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --minify",
-    "build:js": "node scripts/copy-assets.js",
-    "build": "npm run build:css && npm run build:js",
-    "watch:css": "npx tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --watch",
-    "dev": "npm run watch:css"
-  },
-  "devDependencies": {
-    "tailwindcss": "^3.4.5"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "alpinejs": "^3.14.3",
-    "codemirror": "^5.65.20",
-    "htmx.org": "^1.9.10",
-    "quill": "^2.0.3",
-    "sortablejs": "^1.15.2",
-    "tinymce": "^8.3.1"
+    "monkeysjs": "^1.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0"
   }
 }

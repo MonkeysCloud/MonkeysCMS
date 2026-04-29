@@ -1,83 +1,36 @@
-# MonkeysCMS Cache Configuration
-# Uses MonkeysLegion-Cache package (PSR-16 SimpleCache compliant)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Cache Configuration — MonkeysLegion v2
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Application-wide cache and template cache settings.
 
 cache {
-    # Default cache driver (file, redis, memcached, array)
     default = ${CACHE_DRIVER:file}
-
-    # Global cache prefix for all keys
-    prefix = ${CACHE_PREFIX:monkeyscms}
-
-    # Default TTL in seconds (1 hour)
-    ttl = ${CACHE_TTL:3600}
 
     stores {
         file {
-            driver = "file"
-            path = "storage/cache"
-            prefix = ${CACHE_PREFIX:ml_cache}
-            permission = 0755
+            driver    = "file"
+            directory = "storage/cache"
         }
 
         redis {
             driver = "redis"
-            host = ${REDIS_HOST:127.0.0.1}
-            port = ${REDIS_PORT:6379}
-            password = ${REDIS_PASSWORD:}
-            database = ${REDIS_CACHE_DB:1}
-            prefix = ${CACHE_PREFIX:ml_cache}
-            timeout = 2.5
-            persistent = false
+            host   = ${REDIS_HOST:127.0.0.1}
+            port   = ${REDIS_PORT:6379}
+            # auth     = ${REDIS_PASSWORD:}
+            # database = ${REDIS_DATABASE:0}
+            # prefix   = ${CACHE_PREFIX:ml:}
         }
 
         memcached {
             driver = "memcached"
-            persistent_id = ${MEMCACHED_PERSISTENT_ID:monkeyscms}
-            prefix = ${CACHE_PREFIX:ml_cache}
-            
-            # servers configuration removed due to parser limitation
-        }
-
-        array {
-            driver = "array"
-            prefix = ${CACHE_PREFIX:ml_cache}
-            serialize = false
-        }
-
-        null {
-            driver = "null"
         }
     }
-    
-    tags {
-        # Enable cache tagging (requires Redis or Memcached)
-        enabled = true
 
-        # Tag store (defaults to the cache driver)
-        store = ${CACHE_TAGS_STORE:redis}
-    }
-}
-
-session {
-    driver = ${SESSION_DRIVER:file}
-    lifetime = ${SESSION_LIFETIME:120}
-    expire_on_close = false
-    encrypt = false
-    files = "storage/sessions"
-    connection = "session"
-    table = "sessions"
-    
-    cookie {
-        name = ${SESSION_COOKIE:monkeyscms_session}
-        path = "/"
-        domain = ${SESSION_DOMAIN:}
-        secure = ${SESSION_SECURE:false}
-        http_only = true
-        same_site = "lax"
-    }
-    
-    gc {
-        probability = 2
-        divisor = 100
+    # ─── Template Cache ───────────────────────────────────────────────────────
+    # Compiled template caching (MLView engine)
+    views {
+        enabled = ${CACHE_VIEWS:false}
+        path    = "var/cache/views"
     }
 }

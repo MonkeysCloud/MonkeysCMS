@@ -1,0 +1,43 @@
+{
+  "_monkeysjs.esm-Bge2XtfR.js": {
+    "file": "assets/monkeysjs.esm-Bge2XtfR.js",
+    "name": "monkeysjs.esm"
+  },
+  "resources/css/admin.css": {
+    "file": "assets/admin-css-Bk3O0yr-.css",
+    "src": "resources/css/admin.css",
+    "isEntry": true
+  },
+  "resources/css/frontend.css": {
+    "file": "assets/frontend-css-kUP5DoqZ.css",
+    "src": "resources/css/frontend.css",
+    "isEntry": true
+  },
+  "resources/js/admin.js": {
+    "file": "assets/admin-C7CC9g_4.js",
+    "name": "admin",
+    "src": "resources/js/admin.js",
+    "isEntry": true,
+    "imports": [
+      "_monkeysjs.esm-Bge2XtfR.js"
+    ]
+  },
+  "resources/js/frontend.js": {
+    "file": "assets/frontend-CxGcaYqj.js",
+    "name": "frontend",
+    "src": "resources/js/frontend.js",
+    "isEntry": true,
+    "imports": [
+      "_monkeysjs.esm-Bge2XtfR.js"
+    ]
+  },
+  "resources/js/mosaic-editor.js": {
+    "file": "assets/mosaic-editor-Dr0TTXAx.js",
+    "name": "mosaic-editor",
+    "src": "resources/js/mosaic-editor.js",
+    "isEntry": true,
+    "imports": [
+      "_monkeysjs.esm-Bge2XtfR.js"
+    ]
+  }
+}
