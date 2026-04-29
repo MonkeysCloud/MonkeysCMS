@@ -8,7 +8,7 @@ table "cms_migrations" {
     migration_id    = { type = "string", length = 128, unique = true }
     description     = { type = "string", length = 500, nullable = true }
     module          = { type = "string", length = 64, default = "core" }
-    version         = { type = "string", length = 20, default = "2.0.0" }
+    version         = { type = "string", length = 20, default = "1.0.0" }
     file            = { type = "string", length = 500 }
     checksum        = { type = "string", length = 64, nullable = true }
     batch           = { type = "integer", unsigned = true, default = 1 }

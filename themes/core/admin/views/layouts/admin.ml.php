@@ -41,7 +41,7 @@
 
       {{-- Sidebar footer --}}
       <div class="admin-sidebar__footer" $m-show="!sidebarCollapsed">
-        <span class="text-xs text-muted">v2.0.0</span>
+        <span class="text-xs text-muted">v1.0.0</span>
       </div>
     </aside>
 

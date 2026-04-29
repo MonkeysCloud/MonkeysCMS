@@ -11,7 +11,7 @@ theme {
     name        = "admin"
     label       = "MonkeysCMS Admin"
     description = "Default administration base theme for MonkeysCMS"
-    version     = "2.0.0"
+    version     = "1.0.0"
     type        = "admin"
 
     # No parent — this is a root base theme

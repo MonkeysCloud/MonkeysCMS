@@ -1,4 +1,4 @@
-# MonkeysCMS v2.0
+# MonkeysCMS v1.0
 
 [![PHP Version](https://img.shields.io/badge/php-8.4%2B-8892BF.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -222,7 +222,7 @@ schema {
 migration "core_schema" {
     file     = "resources/migrations/core_schema.mlc"
     module   = "core"
-    version  = "2.0.0"
+    version  = "1.0.0"
 }
 ```
 

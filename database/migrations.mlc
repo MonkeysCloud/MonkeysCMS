@@ -16,7 +16,7 @@
 #       description = "..."
 #       file        = "path/to/schema.mlc"     # MLC schema file relative to project root
 #       module      = "core"                    # Module that owns this migration
-#       version     = "2.0.0"                   # CMS version this was introduced
+#       version     = "1.0.0"                   # CMS version this was introduced
 #       requires    = ["<other-migration-id>"]  # Dependencies (optional)
 #       reversible  = true                      # Whether rollback is defined (optional)
 #   }
@@ -30,7 +30,7 @@ migrations {
         description = "Migration tracking table (self-bootstrap)"
         file        = "resources/migrations/migration_tracking.mlc"
         module      = "system"
-        version     = "2.0.0"
+        version     = "1.0.0"
         requires    = []
         reversible  = false
     }
@@ -40,7 +40,7 @@ migrations {
         description = "Core CMS tables: roles, users, content types, nodes, fields, media, menus, taxonomy, settings"
         file        = "resources/migrations/core_schema.mlc"
         module      = "core"
-        version     = "2.0.0"
+        version     = "1.0.0"
         requires    = []
         reversible  = false
     }
@@ -50,7 +50,7 @@ migrations {
         description = "API bearer token storage for the decoupled JSON:API"
         file        = "resources/migrations/api_tokens.mlc"
         module      = "api"
-        version     = "2.0.0"
+        version     = "1.0.0"
         requires    = ["core_schema"]
         reversible  = true
     }

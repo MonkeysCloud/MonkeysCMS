@@ -15,7 +15,7 @@ theme {
     name        = "front"
     label       = "MonkeysCMS Front"
     description = "Default frontend base theme for MonkeysCMS"
-    version     = "2.0.0"
+    version     = "1.0.0"
     type        = "frontend"
 
     # No parent — this is a root base theme
