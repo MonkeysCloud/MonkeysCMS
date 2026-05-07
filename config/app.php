@@ -10,17 +10,17 @@ declare(strict_types=1);
  *
  * @see https://monkeyslegion.com/docs/di
  */
-return [
-    // Example: bind a cache interface to Redis implementation
-    // Psr\SimpleCache\CacheInterface::class
-    //     => fn($c) => $c->get(MonkeysLegion\Cache\Stores\RedisStore::class),
-
-    // Example: bind a custom queue connection
-    // MonkeysLegion\Queue\Contracts\QueueInterface::class
-    //     => fn($c) => new MonkeysLegion\Queue\Driver\DatabaseQueue(
-    //         $c->get(MonkeysLegion\Database\MySQL\Connection::class),
-    //         'jobs',
-    //     ),
-
-    // Add your overrides below:
-];
+return array_merge(
+    [
+        // Bridge CMS PDO injection to framework's connection manager
+        \PDO::class => fn($c): \PDO => $c->get(
+            \MonkeysLegion\Database\Contracts\ConnectionInterface::class
+        )->pdo(),
+    ],
+    \App\Cms\Provider\ContentProvider::getDefinitions(),
+    \App\Cms\Provider\MediaProvider::getDefinitions(),
+    \App\Cms\Provider\FormProvider::getDefinitions(),
+    \App\Cms\Provider\ScheduleProvider::getDefinitions(),
+    \App\Cms\Provider\PluginProvider::getDefinitions(),
+    \App\Cms\Provider\AdminMenuProvider::getDefinitions(),
+);

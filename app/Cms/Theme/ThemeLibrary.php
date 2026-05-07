@@ -17,5 +17,10 @@ final class ThemeLibrary
         public readonly int $weight,
         public readonly bool $required,
         public readonly bool $module,
+        public readonly string $pathPrefix = '',
+        /** @var list<string> Preconnect URLs rendered as <link rel="preconnect"> */
+        public readonly array $preconnect = [],
+        /** @var list<string> Library IDs this library depends on */
+        public readonly array $dependencies = [],
     ) {}
 }

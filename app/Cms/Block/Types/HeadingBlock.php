@@ -14,7 +14,7 @@ final class HeadingBlock implements BlockTypeInterface
     public static function getId(): string { return 'heading'; }
     public static function getLabel(): string { return 'Heading'; }
     public static function getDescription(): string { return 'Section heading (H2–H6)'; }
-    public static function getIcon(): string { return '🔤'; }
+    public static function getIcon(): string { return 'heading'; }
     public static function getCategory(): string { return 'Content'; }
 
     public static function getFields(): array

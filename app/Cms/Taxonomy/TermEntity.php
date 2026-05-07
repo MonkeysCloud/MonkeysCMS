@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cms\Taxonomy;
 
+use App\Cms\I18n\TranslatableInterface;
 use MonkeysLegion\Entity\Attributes\Column;
 use MonkeysLegion\Entity\Attributes\Entity;
 use MonkeysLegion\Entity\Attributes\Id;
@@ -12,7 +13,7 @@ use MonkeysLegion\Entity\Attributes\Id;
  * TermEntity — A taxonomy term within a vocabulary.
  */
 #[Entity(table: 'terms')]
-class TermEntity
+class TermEntity implements TranslatableInterface
 {
     #[Id]
     public ?int $id = null;
@@ -42,6 +43,9 @@ class TermEntity
     #[Column(type: 'integer', default: 0)]
     public int $weight = 0;
 
+    #[Column(type: 'string', length: 10, default: 'en')]
+    public string $language = 'en';
+
     #[Column(type: 'datetime')]
     public ?\DateTimeImmutable $created_at = null;
 
@@ -55,10 +59,11 @@ class TermEntity
     {
         $this->id = isset($data['id']) ? (int) $data['id'] : $this->id;
         $this->vocabulary_id = (int) ($data['vocabulary_id'] ?? $this->vocabulary_id);
-        $this->parent_id = isset($data['parent_id']) ? (int) $data['parent_id'] : $this->parent_id;
+        $this->parent_id = !empty($data['parent_id']) ? (int) $data['parent_id'] : null;
         $this->name = $data['name'] ?? $this->name;
         $this->slug = $data['slug'] ?? $this->slug;
         $this->description = $data['description'] ?? $this->description;
+        $this->language = $data['language'] ?? $this->language;
         $this->weight = (int) ($data['weight'] ?? $this->weight);
 
         $this->metadata = isset($data['metadata'])
@@ -81,6 +86,7 @@ class TermEntity
                 'slug' => $this->slug,
                 'description' => $this->description,
                 'weight' => $this->weight,
+                'language' => $this->language,
             ],
             'relationships' => [
                 'vocabulary' => ['type' => 'vocabulary', 'id' => (string) $this->vocabulary_id],
@@ -88,4 +94,10 @@ class TermEntity
             ],
         ];
     }
+
+    // ── TranslatableInterface ─────────────────────────────────────────
+
+    public function getTranslatableType(): string { return 'term'; }
+    public function getTranslatableId(): int { return $this->id ?? 0; }
+    public function getLanguage(): string { return $this->language; }
 }

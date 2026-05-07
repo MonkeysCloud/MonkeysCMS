@@ -1,0 +1,29 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Apex AI Usage Log Migration
+# resources/migrations/apex_usage_log.mlc
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "apex_usage_log" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    user_id       = { type = "bigint", nullable = true }
+    operation     = { type = "string", length = 64 }
+    provider      = { type = "string", length = 32, default = "openai" }
+    model         = { type = "string", length = 64, default = "gpt-4.1" }
+    input_tokens  = { type = "integer", default = 0 }
+    output_tokens = { type = "integer", default = 0 }
+    cost_usd      = { type = "decimal", precision = 10, scale = 6, default = "0.000000" }
+    content_type  = { type = "string", length = 64, nullable = true }
+    node_id       = { type = "bigint", nullable = true }
+    metadata      = { type = "json", nullable = true }
+    created_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_apex_user"           = ["user_id"]
+    index "idx_apex_created"        = ["created_at"]
+    index "idx_apex_operation"      = ["operation"]
+    index "idx_apex_provider_model" = ["provider", "model"]
+}
+
+# Rollback
+rollback "apex_usage_log" {
+    drop_table = "apex_usage_log"
+}

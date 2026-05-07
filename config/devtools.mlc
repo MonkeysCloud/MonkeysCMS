@@ -20,7 +20,7 @@ devtools {
 
     # ── Storage ─────────────────────────────────────────────
     storage {
-        driver         = ${DEVTOOLS_STORAGE:file}
+        driver         = ${DEVTOOLS_STORAGE:null}
         path           = "var/devtools/profiles"
         retention_days = 7
         max_profiles   = 1000

@@ -72,7 +72,8 @@ final class SchemaBuilder
         }
 
         // Parse column definitions: name = { ... }
-        preg_match_all('/^\s*(\w+)\s*=\s*\{([^}]+)\}/m', $body, $colMatches, PREG_SET_ORDER);
+        // The regex allows } inside quoted strings (e.g., default = "{}")
+        preg_match_all('/^\s*(\w+)\s*=\s*\{((?:[^}"\']*|"[^"]*"|\'[^\']*\')*)\}/m', $body, $colMatches, PREG_SET_ORDER);
 
         foreach ($colMatches as $col) {
             $colName = $col[1];
@@ -187,8 +188,19 @@ final class SchemaBuilder
 
         foreach ($rows[1] as $row) {
             $fields = [];
-            // Parse key = value pairs (both quoted and unquoted values)
-            preg_match_all('/(\w+)\s*=\s*("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\'|\S+)/', $row, $pairs, PREG_SET_ORDER);
+            // Parse key = value pairs
+            // Supports: double-quoted, single-quoted, and unquoted values
+            // The unquoted pattern [^\s,]+ avoids matching trailing commas
+            preg_match_all(
+                '/(\w+)\s*=\s*(' .
+                    '"(?:[^"\\\\]|\\\\.)*"' .   // double-quoted
+                    '|\'(?:[^\'\\\\]|\\\\.)*\'' . // single-quoted
+                    '|[^\s,]+' .                 // unquoted (stops at comma/space)
+                ')/',
+                $row,
+                $pairs,
+                PREG_SET_ORDER,
+            );
 
             foreach ($pairs as $pair) {
                 $key = $pair[1];
@@ -198,6 +210,8 @@ final class SchemaBuilder
                     || (str_starts_with($val, "'") && str_ends_with($val, "'"))) {
                     $val = substr($val, 1, -1);
                 }
+                // Unescape backslash-escaped quotes
+                $val = str_replace(['\"', "\\'"], ['"', "'"], $val);
                 $fields[$key] = $val;
             }
 
@@ -274,11 +288,8 @@ final class SchemaBuilder
         if ($value === 'false') return '0';
         if ($value === 'null') return 'NULL';
         if (is_numeric($value)) return $value;
-        // JSON-like values
-        if (str_starts_with($value, '[') || str_starts_with($value, '{')) {
-            return "'" . addslashes($value) . "'";
-        }
-        return "'" . addslashes($value) . "'";
+        // Escape single quotes for SQL, leave JSON double quotes intact
+        return "'" . str_replace("'", "\\'", $value) . "'";
     }
 
     /**

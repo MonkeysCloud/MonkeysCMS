@@ -47,10 +47,19 @@ final class ThemeManager
      */
     private function loadLibraries(): void
     {
-        $path = $this->basePath . '/config/libraries.mlc';
-        if (!file_exists($path)) return;
+        $path = $this->basePath . '/resources/libraries.mlc';
+        if (file_exists($path)) {
+            $this->parseLibrariesFile($path, '');
+        }
+    }
 
+    /**
+     * Parse a libraries.mlc file and register its libraries.
+     */
+    private function parseLibrariesFile(string $path, string $pathPrefix): void
+    {
         $content = file_get_contents($path);
+        if (!$content) return;
 
         // Strip comments
         $content = preg_replace('/^\s*#.*$/m', '', $content);
@@ -75,6 +84,9 @@ final class ThemeManager
                 weight: (int) ($this->extractMlcValue($body, 'weight') ?? '0'),
                 required: ($this->extractMlcValue($body, 'required') ?? 'false') === 'true',
                 module: ($this->extractMlcValue($body, 'module') ?? 'false') === 'true',
+                pathPrefix: $pathPrefix,
+                preconnect: $this->extractMlcArray($body, 'preconnect'),
+                dependencies: $this->extractMlcArray($body, 'dependencies'),
             );
         }
     }
@@ -137,6 +149,12 @@ final class ThemeManager
                 if ($info) {
                     // Higher tier overrides lower (custom > contrib > core)
                     $this->themes[$info->name] = $info;
+
+                    // Parse theme-specific libraries if they exist
+                    $librariesFile = $themePath . '/libraries.mlc';
+                    if (file_exists($librariesFile)) {
+                        $this->parseLibrariesFile($librariesFile, '/themes/' . $tier . '/' . $info->name);
+                    }
                 }
             }
         }
@@ -310,10 +328,12 @@ final class ThemeManager
         $css = [];
         $js = [];
         $modules = [];
+        $preconnect = [];
 
         // 1. Required libraries (always loaded)
         foreach ($this->getRequiredLibraries() as $lib) {
             $css = array_merge($css, $this->resolveLibraryCss($lib));
+            $preconnect = array_merge($preconnect, $lib->preconnect);
             if ($lib->module) {
                 $modules = array_merge($modules, $this->resolveLibraryJs($lib));
             } else {
@@ -322,7 +342,7 @@ final class ThemeManager
         }
 
         if (!$theme) {
-            return ['css' => $css, 'js' => $js, 'modules' => $modules];
+            return ['css' => $css, 'js' => $js, 'modules' => $modules, 'preconnect' => array_values(array_unique($preconnect))];
         }
 
         $chain = $this->getInheritanceChain($theme);
@@ -345,6 +365,7 @@ final class ThemeManager
 
         foreach ($themeLibraries as $lib) {
             $css = array_merge($css, $this->resolveLibraryCss($lib));
+            $preconnect = array_merge($preconnect, $lib->preconnect);
             if ($lib->module) {
                 $modules = array_merge($modules, $this->resolveLibraryJs($lib));
             } else {
@@ -368,6 +389,7 @@ final class ThemeManager
             'css' => array_values(array_unique($css)),
             'js' => array_values(array_unique($js)),
             'modules' => array_values(array_unique($modules)),
+            'preconnect' => array_values(array_unique($preconnect)),
         ];
     }
 
@@ -408,14 +430,24 @@ final class ThemeManager
 
     // ── Library Path Resolution ─────────────────────────────────────────
 
-    private function resolveLibraryCss(ThemeLibrary $lib): array
+    public function resolveLibraryCss(ThemeLibrary $lib): array
     {
-        return array_map(fn(string $f) => '/' . ltrim($f, '/'), $lib->css);
+        return array_map(
+            fn(string $f) => str_starts_with($f, 'http') || str_starts_with($f, '/') 
+                ? $f 
+                : $lib->pathPrefix . '/' . ltrim($f, '/'),
+            $lib->css,
+        );
     }
 
-    private function resolveLibraryJs(ThemeLibrary $lib): array
+    public function resolveLibraryJs(ThemeLibrary $lib): array
     {
-        return array_map(fn(string $f) => '/' . ltrim($f, '/'), $lib->js);
+        return array_map(
+            fn(string $f) => str_starts_with($f, 'http') || str_starts_with($f, '/') 
+                ? $f 
+                : $lib->pathPrefix . '/' . ltrim($f, '/'),
+            $lib->js,
+        );
     }
 
     // ── MLC Helpers ─────────────────────────────────────────────────────

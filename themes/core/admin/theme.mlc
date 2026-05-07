@@ -29,28 +29,40 @@ theme {
     ]
 
     # Global libraries this theme attaches
+    # NOTE: core/monkeysjs and core/icons are required=true (always loaded).
+    # Component styles (forms, buttons, etc.) are baked into admin.css.
     libraries = [
-        "core/base",
         "core/monkeysjs",
-        "core/forms",
-        "core/buttons",
-        "core/cards",
-        "core/tables",
-        "core/alerts",
-        "core/modals",
-        "core/navigation",
-        "core/media",
-        "admin/toolbar",
-        "admin/editor"
+        "core/icons"
     ]
 
-    # Theme-specific assets
+    # Theme-specific assets (CSS loaded by layout via Vite manifest)
     assets {
-        css = [
-            "css/admin.css"
-        ]
+        css = []
         js = [
-            "js/admin.js"
+            "js/admin.js",
+            "js/form-engine.js"
         ]
     }
 }
+
+# ─── Mosaic Page Builder Library ────────────────────────────────────────────
+# Loaded only on the mosaic editor page via @push directives or explicit attach.
+library "admin/mosaic" {
+    description  = "Mosaic visual page builder editor"
+    css          = ["css/mosaic.css"]
+    js           = ["js/mosaic-editor.js"]
+    weight       = 20
+    dependencies = ["core/monkeysjs", "core/icons"]
+}
+
+# ─── Media Browser Library ──────────────────────────────────────────────────
+# Loaded on content edit pages and the media library for the picker modal.
+library "admin/media-browser" {
+    description  = "Media picker modal with AJAX upload and grid selection"
+    css          = []
+    js           = ["js/media-browser.js"]
+    weight       = 25
+    dependencies = ["core/monkeysjs", "core/icons"]
+}
+

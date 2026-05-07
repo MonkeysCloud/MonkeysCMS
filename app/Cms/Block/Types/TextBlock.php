@@ -14,7 +14,7 @@ final class TextBlock implements BlockTypeInterface
     public static function getId(): string { return 'text'; }
     public static function getLabel(): string { return 'Text'; }
     public static function getDescription(): string { return 'Rich text content block'; }
-    public static function getIcon(): string { return '📝'; }
+    public static function getIcon(): string { return 'text'; }
     public static function getCategory(): string { return 'Content'; }
 
     public static function getFields(): array

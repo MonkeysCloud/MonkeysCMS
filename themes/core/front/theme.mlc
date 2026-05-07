@@ -32,26 +32,19 @@ theme {
         "post_header"
     ]
 
-    # Global libraries this theme attaches (from config/libraries.mlc)
-    # Child themes inherit these automatically
+    # Global libraries this theme attaches (from resources/libraries.mlc)
+    # NOTE: core/monkeysjs and core/icons are required=true (always loaded).
+    # Component styles are baked into front.css.
     libraries = [
-        "core/base",
         "core/monkeysjs",
-        "core/forms",
-        "core/buttons",
-        "core/cards",
-        "core/navigation",
-        "core/media",
-        "front/responsive",
-        "front/animations"
+        "core/icons"
     ]
 
-    # Theme-specific assets (loaded AFTER libraries)
+    # Theme-specific assets (CSS loaded by layout via Vite manifest)
     assets {
-        css = [
-            "css/front.css"
-        ]
-        js = [
+        css = []
+        js = []
+        modules = [
             "js/front.js"
         ]
     }

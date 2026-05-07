@@ -14,7 +14,7 @@ final class DividerBlock implements BlockTypeInterface
     public static function getId(): string { return 'divider'; }
     public static function getLabel(): string { return 'Divider'; }
     public static function getDescription(): string { return 'Horizontal line separator'; }
-    public static function getIcon(): string { return '➖'; }
+    public static function getIcon(): string { return 'minus'; }
     public static function getCategory(): string { return 'Layout'; }
 
     public static function getFields(): array

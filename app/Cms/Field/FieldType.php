@@ -45,6 +45,8 @@ enum FieldType: string
     case MARKDOWN = 'markdown';
     case SLUG = 'slug';
     case PASSWORD = 'password';
+    case REPEATER = 'repeater';
+    case SLOT = 'slot';
 
     /**
      * SQL column type for this field
@@ -66,6 +68,7 @@ enum FieldType: string
             self::TIME => 'TIME',
             self::JSON, self::MULTISELECT, self::CHECKBOX, self::GALLERY,
             self::LINK, self::ADDRESS, self::GEOLOCATION => 'JSON',
+            self::REPEATER, self::SLOT => 'JSON',
         };
     }
 
@@ -102,6 +105,8 @@ enum FieldType: string
             self::USER_REFERENCE => 'user_autocomplete',
             self::BLOCK_REFERENCE => 'block_select',
             self::PASSWORD => 'password_input',
+            self::REPEATER => 'repeater',
+            self::SLOT => 'slot_dropzone',
         };
     }
 
@@ -112,7 +117,7 @@ enum FieldType: string
     {
         return match ($this) {
             self::MULTISELECT, self::CHECKBOX, self::GALLERY,
-            self::TAXONOMY_REFERENCE => true,
+            self::TAXONOMY_REFERENCE, self::REPEATER, self::SLOT => true,
             default => false,
         };
     }
@@ -156,6 +161,8 @@ enum FieldType: string
             self::MARKDOWN => 'Markdown',
             self::SLUG => 'URL Slug',
             self::PASSWORD => 'Password',
+            self::REPEATER => 'Repeater',
+            self::SLOT => 'Component Slot',
         };
     }
 }

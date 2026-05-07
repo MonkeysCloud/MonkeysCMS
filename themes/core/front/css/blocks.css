@@ -1,0 +1,385 @@
+/**
+ * MonkeysCMS — Block Component Styles (Shared)
+ *
+ * These styles are used by BOTH the frontend and the Mosaic editor preview.
+ * This ensures true WYSIWYG — the editor shows the real design.
+ *
+ * Atomic Design: atoms → molecules → organisms
+ *
+ * Override these in your custom theme's blocks.css to change how blocks render
+ * across the entire CMS (editor + frontend simultaneously).
+ */
+
+/* ── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --block-font-family: inherit;
+  --block-font-size: 1rem;
+  --block-line-height: 1.7;
+  --block-color: inherit;
+  --block-color-muted: #64748b;
+  --block-radius: 8px;
+  --block-spacing: 1rem;
+  --block-accent: #6366f1;
+  --block-accent-hover: #818cf8;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ATOMS — Single-purpose primitive blocks
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Text ────────────────────────────────────────────────────────── */
+.block-text {
+  font-family: var(--block-font-family);
+  font-size: var(--block-font-size);
+  line-height: var(--block-line-height);
+  color: var(--block-color);
+}
+.block-text p { margin: 0 0 .75em; }
+.block-text p:last-child { margin-bottom: 0; }
+.block-text a { color: var(--block-accent); text-decoration: underline; }
+.block-text a:hover { color: var(--block-accent-hover); }
+.block-text ul, .block-text ol { padding-left: 1.5em; margin: .5em 0; }
+.block-text blockquote {
+  border-left: 3px solid var(--block-accent);
+  padding: .5em 1em;
+  margin: .75em 0;
+  color: var(--block-color-muted);
+  font-style: italic;
+}
+
+/* ── Heading ─────────────────────────────────────────────────────── */
+.block-heading {
+  font-family: var(--block-font-family);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--block-color);
+  margin: 0;
+}
+
+/* ── Divider ─────────────────────────────────────────────────────── */
+.block-divider {
+  border: none;
+  border-top: 2px solid currentColor;
+  opacity: .15;
+  margin: var(--block-spacing) 0;
+}
+.block-divider--dashed { border-top-style: dashed; }
+.block-divider--dotted { border-top-style: dotted; }
+
+/* ── Spacer ──────────────────────────────────────────────────────── */
+.block-spacer { display: block; }
+
+/* ── HTML (raw embed) ────────────────────────────────────────────── */
+.block-html { overflow: hidden; }
+.block-html iframe { max-width: 100%; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOLECULES — Composite blocks (atom combinations)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Image ───────────────────────────────────────────────────────── */
+.block-image { margin: 0; }
+.block-image__img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--block-radius);
+}
+.block-image__caption {
+  margin-top: .5rem;
+  font-size: .85rem;
+  color: var(--block-color-muted);
+  text-align: center;
+}
+.block-image--empty {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 80px; border: 2px dashed rgba(128,128,128,.2);
+  border-radius: var(--block-radius); background: rgba(128,128,128,.03);
+}
+.block-image__placeholder {
+  font-size: .8rem; color: var(--block-color-muted); font-style: italic;
+}
+
+/* ── Video ───────────────────────────────────────────────────────── */
+.block-video__wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: var(--block-radius);
+  background: #000;
+}
+.block-video__wrapper iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: 0;
+}
+.block-video__native {
+  display: block;
+  max-width: 100%;
+  border-radius: var(--block-radius);
+}
+.block-video__caption {
+  margin-top: .5rem;
+  font-size: .85rem;
+  color: var(--block-color-muted);
+  text-align: center;
+}
+
+/* ── Button ──────────────────────────────────────────────────────── */
+.block-button { display: inline-flex; }
+.block-button__link {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .65rem 1.5rem;
+  border-radius: var(--block-radius);
+  font-size: .9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .2s ease;
+  cursor: pointer;
+}
+.block-button__link--primary {
+  background: var(--block-accent);
+  color: #fff;
+}
+.block-button__link--primary:hover {
+  background: var(--block-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99,102,241,.25);
+}
+.block-button__link--secondary {
+  background: transparent;
+  color: var(--block-accent);
+  border: 2px solid var(--block-accent);
+}
+.block-button__link--secondary:hover {
+  background: var(--block-accent);
+  color: #fff;
+}
+.block-button__link--ghost {
+  background: transparent;
+  color: var(--block-accent);
+}
+.block-button__link--ghost:hover {
+  background: rgba(99,102,241,.08);
+}
+
+/* ── Field ───────────────────────────────────────────────────────── */
+.block-field__label {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--block-color-muted);
+  margin-bottom: .35rem;
+}
+.block-field__value {
+  font-size: var(--block-font-size);
+  line-height: var(--block-line-height);
+  color: var(--block-color);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ORGANISMS — Complex composite blocks
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Feature Card ────────────────────────────────────────────────── */
+.block-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.06);
+  transition: transform .2s ease, box-shadow .2s ease;
+  font-family: var(--block-font-family);
+}
+.block-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+}
+.block-card--featured {
+  border-color: rgba(99,102,241,.25);
+  box-shadow: 0 0 0 1px rgba(99,102,241,.08), 0 4px 20px rgba(99,102,241,.1);
+}
+
+/* Card image */
+.block-card__image {
+  position: relative;
+  overflow: hidden;
+  max-height: 200px;
+}
+.block-card__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-height: 200px;
+}
+
+/* Card content area */
+.block-card__content {
+  padding: 1rem 1.2rem;
+}
+.block-card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--block-color, #e2e8f0);
+  margin: 0 0 .35rem;
+  line-height: 1.3;
+}
+.block-card__subtitle {
+  font-size: .85rem;
+  color: var(--block-color-muted, #94a3b8);
+  margin: 0 0 .6rem;
+  line-height: 1.4;
+}
+.block-card__body {
+  font-size: .88rem;
+  line-height: 1.65;
+  color: var(--block-color-muted, #94a3b8);
+  margin-bottom: .75rem;
+}
+.block-card__body p { margin: 0 0 .5em; }
+.block-card__body p:last-child { margin-bottom: 0; }
+
+/* Feature list */
+.block-card__features {
+  list-style: none;
+  padding: 0;
+  margin: .6rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+.block-card__feature {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .82rem;
+  color: var(--block-color-muted, #94a3b8);
+}
+.block-card__feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(99,102,241,.1);
+  color: var(--block-accent, #818cf8);
+  font-size: .7rem;
+  flex-shrink: 0;
+}
+
+/* CTA button */
+.block-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .5rem 1.1rem;
+  margin-top: .5rem;
+  border-radius: var(--block-radius, 8px);
+  background: var(--block-accent, #6366f1);
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .2s ease;
+}
+.block-card__cta:hover {
+  background: var(--block-accent-hover, #818cf8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99,102,241,.2);
+}
+
+/* Footer slot */
+.block-card__footer {
+  padding: .6rem 1rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+  background: rgba(0,0,0,.1);
+}
+
+/* ── Hero Banner ─────────────────────────────────────────────────── */
+.block-hero {
+  position: relative;
+  min-height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  background-size: cover;
+  background-position: center;
+}
+.block-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(15,17,32,.85), rgba(15,17,32,.5));
+}
+.block-hero__content {
+  position: relative;
+  z-index: 1;
+  padding: 2rem 2.5rem;
+  max-width: 640px;
+}
+.block-hero__title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 .5rem;
+  line-height: 1.2;
+}
+.block-hero__subtitle {
+  font-size: 1rem;
+  color: rgba(255,255,255,.7);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Dynamic Blocks (DB-defined) ─────────────────────────────────── */
+.block-dynamic { font-family: var(--block-font-family); }
+.block-dynamic__field { margin-bottom: .5rem; }
+.block-dynamic__field:last-child { margin-bottom: 0; }
+.block-dynamic__img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--block-radius);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION LAYOUTS — Grid definitions for Mosaic page sections
+   Used by both the live frontend and the editor's Shadow DOM preview.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.me-regions--full { }
+.me-regions--two_col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.me-regions--three_col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+.me-regions--sidebar_left {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+}
+.me-regions--sidebar_right {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .me-regions--two_col,
+  .me-regions--three_col,
+  .me-regions--sidebar_left,
+  .me-regions--sidebar_right {
+    grid-template-columns: 1fr;
+  }
+}

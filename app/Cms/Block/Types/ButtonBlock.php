@@ -14,7 +14,7 @@ final class ButtonBlock implements BlockTypeInterface
     public static function getId(): string { return 'button'; }
     public static function getLabel(): string { return 'Button'; }
     public static function getDescription(): string { return 'Call-to-action button with link'; }
-    public static function getIcon(): string { return '🔘'; }
+    public static function getIcon(): string { return 'mouse-pointer-click'; }
     public static function getCategory(): string { return 'Content'; }
 
     public static function getFields(): array
@@ -23,7 +23,7 @@ final class ButtonBlock implements BlockTypeInterface
             'text' => ['type' => 'string', 'label' => 'Button Text', 'required' => true, 'default' => 'Click Here'],
             'url' => ['type' => 'url', 'label' => 'Link URL', 'required' => true],
             'style' => ['type' => 'select', 'label' => 'Style', 'default' => 'primary', 'options' => [
-                'primary' => 'Primary', 'secondary' => 'Secondary', 'outline' => 'Outline',
+                'primary' => 'Primary', 'secondary' => 'Secondary', 'ghost' => 'Ghost',
             ]],
             'target' => ['type' => 'select', 'label' => 'Open in', 'default' => '_self', 'options' => [
                 '_self' => 'Same window', '_blank' => 'New window',

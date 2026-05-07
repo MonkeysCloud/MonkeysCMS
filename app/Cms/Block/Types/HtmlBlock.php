@@ -14,7 +14,7 @@ final class HtmlBlock implements BlockTypeInterface
     public static function getId(): string { return 'html'; }
     public static function getLabel(): string { return 'HTML'; }
     public static function getDescription(): string { return 'Raw HTML content block'; }
-    public static function getIcon(): string { return '🧱'; }
+    public static function getIcon(): string { return 'code'; }
     public static function getCategory(): string { return 'Advanced'; }
 
     public static function getFields(): array

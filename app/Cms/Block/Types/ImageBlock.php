@@ -14,7 +14,7 @@ final class ImageBlock implements BlockTypeInterface
     public static function getId(): string { return 'image'; }
     public static function getLabel(): string { return 'Image'; }
     public static function getDescription(): string { return 'Image with optional caption'; }
-    public static function getIcon(): string { return '🖼️'; }
+    public static function getIcon(): string { return 'image'; }
     public static function getCategory(): string { return 'Media'; }
 
     public static function getFields(): array
@@ -24,6 +24,15 @@ final class ImageBlock implements BlockTypeInterface
             'alt' => ['type' => 'string', 'label' => 'Alt Text', 'required' => true],
             'caption' => ['type' => 'string', 'label' => 'Caption', 'required' => false],
             'link' => ['type' => 'url', 'label' => 'Link', 'required' => false],
+            'target' => [
+                'type' => 'select',
+                'label' => 'Open Link in',
+                'default' => '_self',
+                'options' => [
+                    '_self' => 'Same Window',
+                    '_blank' => 'New Tab',
+                ],
+            ],
         ];
     }
 

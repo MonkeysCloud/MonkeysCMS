@@ -7,12 +7,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "watch": "vite build --watch",
     "preview": "vite preview"
   },
   "dependencies": {
     "monkeysjs": "^1.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.2.4",
+    "tailwindcss": "^4.2.4",
     "vite": "^5.0"
   }
 }

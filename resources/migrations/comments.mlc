@@ -1,0 +1,33 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Comments System Migration
+# resources/migrations/comments.mlc
+#
+# Stores threaded comments on content nodes. Supports moderation,
+# spam filtering, and anonymous/authenticated authors.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "comments" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    node_id       = { type = "bigint" }
+    parent_id     = { type = "bigint", nullable = true }
+    author_name   = { type = "string", length = 100 }
+    author_email  = { type = "string", length = 255 }
+    author_url    = { type = "string", length = 500, nullable = true }
+    author_id     = { type = "bigint", nullable = true }
+    body          = { type = "text" }
+    status        = { type = "string", length = 20, default = "pending" }
+    ip_address    = { type = "string", length = 45, nullable = true }
+    user_agent    = { type = "string", length = 500, nullable = true }
+    created_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at    = { type = "timestamp", nullable = true }
+
+    index "idx_comments_node"   = ["node_id"]
+    index "idx_comments_status" = ["status"]
+    index "idx_comments_parent" = ["parent_id"]
+    index "idx_comments_author" = ["author_id"]
+}
+
+# Rollback
+rollback "comments" {
+    drop_table = "comments"
+}

@@ -105,14 +105,37 @@ class FieldDefinition
 
     // ── Accessors ───────────────────────────────────────────────────────
 
-    public function getFieldTypeEnum(): FieldType
+    /**
+     * Get the FieldType enum for this field.
+     * Returns null for custom module types not in the core enum.
+     */
+    public function getFieldTypeEnum(): ?FieldType
     {
-        return FieldType::from($this->field_type);
+        return FieldType::tryFrom($this->field_type);
     }
 
+    /**
+     * Get the widget type identifier for this field.
+     *
+     * Resolution order:
+     *   1. Explicit widget override ($this->widget)
+     *   2. Default widget from FieldType enum (if known)
+     *   3. The field_type string itself (convention: custom modules register
+     *      a widget with the same name as their custom type)
+     */
     public function getWidget(): string
     {
-        return $this->widget ?? $this->getFieldTypeEnum()->getDefaultWidget();
+        if ($this->widget !== null) {
+            return $this->widget;
+        }
+
+        $enum = $this->getFieldTypeEnum();
+        if ($enum !== null) {
+            return $enum->getDefaultWidget();
+        }
+
+        // Custom module type: use the type string as the widget identifier
+        return $this->field_type;
     }
 
     public function getSetting(string $key, mixed $default = null): mixed
@@ -181,13 +204,13 @@ class FieldDefinition
      */
     public function getSqlColumnDefinition(): string
     {
-        $type = $this->getFieldTypeEnum()->getSqlType();
+        $fieldTypeEnum = $this->getFieldTypeEnum();
+        $type = $fieldTypeEnum?->getSqlType() ?? 'JSON'; // Custom types default to JSON storage
         $nullable = $this->required ? 'NOT NULL' : 'NULL';
         $default = '';
 
         if ($this->default_value !== null) {
-            $fieldType = $this->getFieldTypeEnum();
-            $default = ' DEFAULT ' . match ($fieldType) {
+            $default = ' DEFAULT ' . match ($fieldTypeEnum) {
                 FieldType::INTEGER, FieldType::BOOLEAN => (string) (int) $this->default_value,
                 FieldType::FLOAT, FieldType::DECIMAL => (string) (float) $this->default_value,
                 default => "'" . addslashes($this->default_value) . "'",

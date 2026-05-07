@@ -16,6 +16,20 @@
 @section('content')
 <form id="settings-form" method="POST" action="/admin/settings">
 
+@if(!empty($flashSuccess))
+<div class="alert alert--success mb-4">
+  <i data-lucide="check-circle" class="w-4 h-4"></i>
+  {{ $flashSuccess }}
+</div>
+@endif
+
+@if(!empty($flashError))
+<div class="alert alert--danger mb-4">
+  <i data-lucide="alert-circle" class="w-4 h-4"></i>
+  {{ $flashError }}
+</div>
+@endif
+
   {{-- Settings Tabs --}}
   <div class="tabs mb-4">
     <button class="tabs__item" :class="{ active: activeTab === 'general' }" $m-on:click="activeTab = 'general'">General</button>
@@ -83,10 +97,66 @@
             <span>Enable content revisions</span>
           </label>
         </div>
-        <div class="form-group">
-          <label class="form-check">
+      </div>
+    </div>
+
+    {{-- Comments Global Toggle --}}
+    <div class="card mb-4">
+      <div class="card__header">
+        <h3 class="card__title"><i data-lucide="message-circle" class="w-4 h-4" style="color:#818cf8;vertical-align:-2px;margin-right:.35rem"></i>Comments</h3>
+      </div>
+      <div class="card__body">
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-info">
+            <div class="settings-toggle-label">Enable Comments Globally</div>
+            <div class="settings-toggle-desc">Allow visitors to submit comments on content. Individual content types can still be toggled separately in their settings.</div>
+          </div>
+          <label class="form-toggle" style="margin:0">
+            <input type="hidden" name="enable_comments" value="0">
             <input type="checkbox" name="enable_comments" value="1" {{ !empty($settings['enable_comments']) ? 'checked' : '' }}>
-            <span>Enable comments</span>
+            <span class="form-toggle__slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-info">
+            <div class="settings-toggle-label">Require Moderation</div>
+            <div class="settings-toggle-desc">New comments must be approved by an admin before appearing publicly.</div>
+          </div>
+          <label class="form-toggle" style="margin:0">
+            <input type="hidden" name="comments_moderation" value="0">
+            <input type="checkbox" name="comments_moderation" value="1" {{ !empty($settings['comments_moderation']) ? 'checked' : '' }}>
+            <span class="form-toggle__slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-info">
+            <div class="settings-toggle-label">Allow Threaded Replies</div>
+            <div class="settings-toggle-desc">Let visitors reply to existing comments to create conversation threads.</div>
+          </div>
+          <label class="form-toggle" style="margin:0">
+            <input type="hidden" name="comments_threaded" value="0">
+            <input type="checkbox" name="comments_threaded" value="1" {{ !empty($settings['comments_threaded']) ? 'checked' : '' }}>
+            <span class="form-toggle__slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-info">
+            <div class="settings-toggle-label">Require Login to Comment</div>
+            <div class="settings-toggle-desc">Only authenticated users can post comments. Anonymous visitors will see a login prompt.</div>
+          </div>
+          <label class="form-toggle" style="margin:0">
+            <input type="hidden" name="comments_require_login" value="0">
+            <input type="checkbox" name="comments_require_login" value="1" {{ !empty($settings['comments_require_login']) ? 'checked' : '' }}>
+            <span class="form-toggle__slider"></span>
           </label>
         </div>
       </div>
@@ -164,6 +234,66 @@
   </div>
 </form>
 @endsection
+
+@push('head')
+<style>
+/* Settings toggle rows */
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-toggle-info { flex: 1; }
+
+.settings-toggle-label {
+  font-size: .85rem;
+  color: #e2e8f0;
+  font-weight: 500;
+  margin-bottom: .15rem;
+}
+
+.settings-toggle-desc {
+  font-size: .75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.settings-divider {
+  height: 1px;
+  background: rgba(255,255,255,.06);
+  margin: .75rem 0;
+}
+
+/* Toggle switch */
+.form-toggle {
+  display: flex; align-items: center; gap: 0.75rem;
+  cursor: pointer; margin-bottom: 0.75rem; user-select: none;
+}
+.form-toggle__slider {
+  width: 40px; height: 22px;
+  background: rgba(255,255,255,0.1); border-radius: 11px;
+  position: relative; transition: background 0.2s; flex-shrink: 0;
+}
+.form-toggle__slider::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #64748b; top: 2px; left: 2px; transition: all 0.2s;
+}
+.form-toggle input:checked + .form-toggle__slider {
+  background: rgba(99,102,241,0.4);
+}
+.form-toggle input:checked + .form-toggle__slider::after {
+  background: #818cf8; transform: translateX(18px);
+}
+.form-toggle input { display: none; }
+.form-toggle input[type="hidden"] + input { display: none; }
+.form-toggle__label {
+  font-size: 0.85rem; color: #cbd5e1;
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>

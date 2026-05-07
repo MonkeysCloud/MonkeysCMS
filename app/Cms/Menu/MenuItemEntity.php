@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cms\Menu;
 
+use App\Cms\I18n\TranslatableInterface;
 use MonkeysLegion\Entity\Attributes\Column;
 use MonkeysLegion\Entity\Attributes\Entity;
 use MonkeysLegion\Entity\Attributes\Id;
@@ -12,7 +13,7 @@ use MonkeysLegion\Entity\Attributes\Id;
  * MenuItemEntity — A single item in a menu, supporting nested tree structure.
  */
 #[Entity(table: 'menu_items')]
-class MenuItemEntity
+class MenuItemEntity implements TranslatableInterface
 {
     #[Id]
     public ?int $id = null;
@@ -50,6 +51,9 @@ class MenuItemEntity
     #[Column(type: 'boolean', default: true)]
     public bool $enabled = true;
 
+    #[Column(type: 'string', length: 10, default: 'en')]
+    public string $language = 'en';
+
     /** @var MenuItemEntity[] child items */
     public array $children = [];
 
@@ -68,6 +72,7 @@ class MenuItemEntity
         $this->icon = $data['icon'] ?? $this->icon;
         $this->weight = (int) ($data['weight'] ?? $this->weight);
         $this->enabled = (bool) ($data['enabled'] ?? $this->enabled);
+        $this->language = $data['language'] ?? $this->language;
 
         foreach (['route_params', 'attributes'] as $jsonField) {
             if (isset($data[$jsonField])) {
@@ -83,14 +88,25 @@ class MenuItemEntity
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
-            'title' => $this->title,
-            'url' => $this->url,
-            'target' => $this->target,
-            'icon' => $this->icon,
-            'weight' => $this->weight,
-            'enabled' => $this->enabled,
-            'children' => array_map(fn(MenuItemEntity $c) => $c->toArray(), $this->children),
+            'id'          => $this->id,
+            'menu_id'     => $this->menu_id,
+            'parent_id'   => $this->parent_id,
+            'title'       => $this->title,
+            'url'         => $this->url,
+            'route_name'  => $this->route_name,
+            'target'      => $this->target,
+            'icon'        => $this->icon,
+            'weight'      => $this->weight,
+            'enabled'     => $this->enabled,
+            'language'     => $this->language,
+            'attributes'  => $this->attributes,
+            'children'    => array_map(fn(MenuItemEntity $c) => $c->toArray(), $this->children),
         ];
     }
+
+    // ── TranslatableInterface ─────────────────────────────────────────
+
+    public function getTranslatableType(): string { return 'menu_item'; }
+    public function getTranslatableId(): int { return $this->id ?? 0; }
+    public function getLanguage(): string { return $this->language; }
 }

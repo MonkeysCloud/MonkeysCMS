@@ -1,47 +1,132 @@
-# Composer dependencies
+# ===========================
+# Composer (PHP)
+# ===========================
 /vendor/
-/composer.lock
+composer.lock
 
-# Build / distribution artifacts
+# ===========================
+# Node / NPM
+# ===========================
+/node_modules/
+package-lock.json
+npm-debug.log*
+yarn-error.log*
+yarn.lock
+pnpm-lock.yaml
+
+# ===========================
+# Build & Distribution
+# ===========================
 /build/
 /dist/
+/public/build/
 /*.phar
 
-# Logs and runtime cache
-/var/cache/*
-!/var/cache/.gitkeep
+# ===========================
+# Logs
+# ===========================
+*.log
 /var/log/*
 !/var/log/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# ===========================
+# Cache & Runtime
+# ===========================
+/var/cache/*
+!/var/cache/.gitkeep
 /var/sessions/*
 !/var/sessions/.gitkeep
 /var/migrations/*
 !/var/migrations/.gitkeep
-/storage/logs/*
-!/storage/logs/.gitkeep
 /storage/cache/*
 !/storage/cache/.gitkeep
-/coverage/
+/storage/framework/*
+!/storage/framework/.gitkeep
 
-# IDE / editor settings
-/.idea/
-/.vscode/
-/nbproject/
-/*.sublime-workspace
-/*.sublime-project
-
+# ===========================
 # Environment files
+# ===========================
 .env
 .env.*.local
 .env.local
 .env.testing
+.env.production
 
-# PHPUnit and test artifacts
+# ===========================
+# IDE / Editor settings
+# ===========================
+/.idea/
+/.vscode/
+/nbproject/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*~
+
+# ===========================
+# PHPUnit & Testing
+# ===========================
 /.phpunit.cache/
 /phpunit.result.cache
+/coverage/
+.phpunit.result.cache
+/.phpunit.result.cache
 
-# PHPStan cache
+# ===========================
+# PHPStan
+# ===========================
 /var/cache/phpstan/
+phpstan.neon.dist
 
+# ===========================
 # OS-specific files
+# ===========================
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+._*
+
+# ===========================
+# Docker (local dev only)
+# ===========================
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+/docker/
+
+# ===========================
+# Database files
+# ===========================
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+/database/database.sqlite
+/storage/database.sqlite
+
+# ===========================
+# User uploads & public runtime
+# ===========================
+/public/uploads/*
+!/public/uploads/.gitkeep
+/public/var/
+
+# ===========================
+# Storage runtime
+# ===========================
+/storage/.installed
+/storage/test.php
+
+# ===========================
+# Misc runtime / temp
+# ===========================
+supervisord.pid
+supervisord.log
+*.pid
+/tmp/
+/.php-cs-fixer.cache
+/test_db.php

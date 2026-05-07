@@ -25,7 +25,7 @@
           {{ $node->published_at?->format('M j, Y') ?? $node->created_at?->format('M j, Y') }}
         </div>
         <h2 class="article-card__title">
-          <a href="/{{ $node->content_type }}/{{ $node->slug }}">{{ $node->title }}</a>
+          <a href="/{{ $node->slug }}">{{ $node->title }}</a>
         </h2>
         @if($node->summary)
         <p class="article-card__excerpt">{{ $node->summary }}</p>

@@ -54,6 +54,87 @@ migrations {
         requires    = ["core_schema"]
         reversible  = true
     }
+    # ── Apex AI Usage Log ─────────────────────────────────────────────────
+    migration "apex_usage_log" {
+        description = "AI usage tracking: operations, tokens, costs per user/model"
+        file        = "resources/migrations/apex_usage_log.mlc"
+        module      = "apex"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Blocks Extended ──────────────────────────────────────────────────
+    migration "blocks_extended" {
+        description = "Block instances (reusable pre-filled blocks) and block type revision tracking"
+        file        = "resources/migrations/blocks_extended.mlc"
+        module      = "blocks"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Activity / Audit Log ────────────────────────────────────────────
+    migration "activity_log" {
+        description = "Activity audit log for tracking administrative actions"
+        file        = "resources/migrations/activity_log.mlc"
+        module      = "core"
+        version     = "1.1.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Comments System ─────────────────────────────────────────────────
+    migration "comments" {
+        description = "Comments system for content nodes with threaded replies and moderation"
+        file        = "resources/migrations/comments.mlc"
+        module      = "comments"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Cron Log ────────────────────────────────────────────────────────
+    migration "cron_log" {
+        description = "Scheduled task execution log for the admin cron dashboard"
+        file        = "resources/migrations/cron_log.mlc"
+        module      = "system"
+        version     = "1.1.0"
+        requires    = []
+        reversible  = true
+    }
+    # ── Editorial Workflow ──────────────────────────────────────────────
+    migration "editorial_workflow" {
+        description = "Workflow transitions log and per-content-type moderation config"
+        file        = "resources/migrations/editorial_workflow.mlc"
+        module      = "workflow"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Sessions (DB Driver) ──────────────────────────────────────────────
+    migration "sessions" {
+        description = "Database-backed session storage (replaces file driver)"
+        file        = "resources/migrations/sessions.mlc"
+        module      = "system"
+        version     = "2.0.0"
+        requires    = []
+        reversible  = true
+    }
+    # ── Plugin System ───────────────────────────────────────────────────
+    migration "plugins" {
+        description = "Plugin registry and per-plugin settings storage"
+        file        = "resources/migrations/plugins.mlc"
+        module      = "plugins"
+        version     = "2.0.0"
+        requires    = []
+        reversible  = true
+    }
+    # ── Webhooks ────────────────────────────────────────────────────────
+    migration "webhooks" {
+        description = "Outbound webhook system: endpoint registration, event subscriptions, delivery log"
+        file        = "resources/migrations/webhooks.mlc"
+        module      = "webhooks"
+        version     = "2.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════

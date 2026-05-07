@@ -250,14 +250,19 @@ table "block_types" {
     type_id     = { type = "string", length = 64, unique = true }
     label       = { type = "string", length = 128 }
     description = { type = "text", nullable = true }
-    icon        = { type = "string", length = 10, default = "🧱" }
-    category    = { type = "string", length = 50, default = "Content" }
-    fields      = { type = "json", default = "[]" }
+    icon        = { type = "string", length = 50, default = "puzzle" }
+    category    = { type = "string", length = 50, default = "Custom" }
+    fields      = { type = "json", default = "{}" }
     template    = { type = "text", nullable = true }
+    settings    = { type = "json", default = "{}" }
     enabled     = { type = "boolean", default = true }
+    is_system   = { type = "boolean", default = false }
     weight      = { type = "integer", default = 0 }
     created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
     updated_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    index "idx_bt_enabled" = ["enabled"]
+    index "idx_bt_category" = ["category"]
 }
 
 table "settings" {
@@ -271,14 +276,43 @@ table "settings" {
     unique "idx_settings_key" = ["group", "key"]
 }
 
+table "slug_patterns" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    entity_type = { type = "string", length = 32, default = "node" }
+    bundle      = { type = "string", length = 64 }
+    pattern     = { type = "string", length = 500 }
+    weight      = { type = "integer", default = 0 }
+    created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    unique "uq_slug_type_bundle" = ["entity_type", "bundle"]
+}
+
+table "breadcrumb_configs" {
+    id                = { type = "bigint", auto_increment = true, primary = true }
+    entity_type       = { type = "string", length = 32, default = "global" }
+    bundle            = { type = "string", length = 64, default = "*" }
+    enabled           = { type = "boolean", default = true }
+    show_home         = { type = "boolean", default = true }
+    show_current      = { type = "boolean", default = true }
+    show_content_type = { type = "boolean", default = true }
+    show_taxonomy     = { type = "boolean", default = false }
+    separator         = { type = "string", length = 16, default = ">" }
+    json_ld           = { type = "boolean", default = true }
+    created_at        = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at        = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    unique "uq_bc_type_bundle" = ["entity_type", "bundle"]
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Seed Data
 # ═══════════════════════════════════════════════════════════════════════════════
 
 seed "cms_roles" {
-    { machine_name = "admin",  label = "Administrator", permissions = "[\"admin.*\"]", is_super_admin = true, is_system = true }
-    { machine_name = "editor", label = "Editor", permissions = "[\"content.create\",\"content.edit\",\"content.publish\",\"content.delete\",\"media.upload\",\"media.delete\"]", is_super_admin = false, is_system = true }
-    { machine_name = "author", label = "Author", permissions = "[\"content.create\",\"content.edit_own\",\"media.upload\"]", is_super_admin = false, is_system = true }
+    { machine_name = "admin", label = "Administrator", permissions = '["admin.*"]', is_super_admin = true, is_system = true }
+    { machine_name = "editor", label = "Editor", permissions = '["content.create","content.edit","content.publish","content.delete","media.upload","media.delete"]', is_super_admin = false, is_system = true }
+    { machine_name = "author", label = "Author", permissions = '["content.create","content.edit_own","media.upload"]', is_super_admin = false, is_system = true }
 }
 
 seed "content_types" {

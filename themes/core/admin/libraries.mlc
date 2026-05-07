@@ -1,0 +1,42 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Admin Theme Libraries
+# themes/core/admin/libraries.mlc
+# ═══════════════════════════════════════════════════════════════════════════════
+
+libraries {
+    library "admin/auth" {
+        description = "Auth layout styles (login, register, forgot-password)"
+        css = [
+            "css/auth.css"
+        ]
+        js = []
+        weight = 5
+        required = false
+        module = false
+    }
+
+    library "admin/login" {
+        description = "Login page logic"
+        js = [
+            "js/login.js"
+        ]
+        css = []
+        weight = 10
+        required = false
+        module = false
+        dependencies = [
+            "admin/auth"
+        ]
+    }
+
+    library "admin/apex-assistant" {
+        description = "AI Assistant sidebar and per-field AI actions"
+        js = [
+            "js/apex-assistant.js"
+        ]
+        css = []
+        weight = 20
+        required = false
+        module = true
+    }
+}

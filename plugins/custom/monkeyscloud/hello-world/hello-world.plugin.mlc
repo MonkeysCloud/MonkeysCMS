@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Hello World Plugin — MonkeysCMS
+# plugins/custom/monkeyscloud/hello-world/hello-world.plugin.mlc
+#
+# Sample plugin demonstrating the plugin system capabilities:
+#   - Custom admin route + controller
+#   - Hook into admin sidebar menu
+#   - Register custom content type
+#   - Extend content save lifecycle
+# ═══════════════════════════════════════════════════════════════════════════════
+
+plugin {
+    name        = "hello-world"
+    vendor      = "monkeyscloud"
+    version     = "1.0.0"
+    description = "Sample plugin demonstrating MonkeysCMS plugin architecture"
+    author      = "MonkeysCloud"
+    namespace   = "MonkeysCloud\\HelloWorld"
+    provider    = "MonkeysCloud\\HelloWorld\\HelloWorldPlugin"
+    requires    = ["core:>=2.0.0"]
+    core        = "2.x"
+}
+
+# ── Plugin Settings (rendered as form in admin) ──────────────────────────────
+settings {
+    greeting = { type = "string", label = "Default Greeting", default = "Hello, World!" }
+    enabled  = { type = "boolean", label = "Show greeting on dashboard", default = true }
+}

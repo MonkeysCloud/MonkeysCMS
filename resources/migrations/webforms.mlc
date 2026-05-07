@@ -1,0 +1,59 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Webforms Migration
+# resources/migrations/webforms.mlc
+#
+# Public form builder: form definitions, multi-page support, submissions,
+# file attachments, and reCAPTCHA configuration.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "webforms" {
+    id              = { type = "bigint", auto_increment = true, primary = true }
+    machine_name    = { type = "string", length = 64 }
+    label           = { type = "string", length = 255 }
+    description     = { type = "text", nullable = true }
+    status          = { type = "string", length = 20, default = "open" }
+    fields          = { type = "json" }
+    pages           = { type = "json", default = "[{\"title\":\"Page 1\",\"weight\":0}]" }
+    settings        = { type = "json", default = "{}" }
+    confirmation    = { type = "text", nullable = true }
+    redirect_url    = { type = "string", length = 500, nullable = true }
+    submit_label    = { type = "string", length = 100, default = "Submit" }
+    max_submissions = { type = "integer", nullable = true }
+    open_at         = { type = "datetime", nullable = true }
+    close_at        = { type = "datetime", nullable = true }
+    recaptcha_enabled = { type = "boolean", default = false }
+    notify_emails   = { type = "text", nullable = true }
+    created_by      = { type = "bigint", nullable = true }
+    created_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    unique "idx_wf_name" = ["machine_name"]
+    index "idx_wf_status" = ["status"]
+}
+
+table "webform_submissions" {
+    id              = { type = "bigint", auto_increment = true, primary = true }
+    webform_id      = { type = "bigint", references = "webforms.id", on_delete = "CASCADE" }
+    data            = { type = "json" }
+    files           = { type = "json", nullable = true }
+    page_data       = { type = "json", nullable = true }
+    user_id         = { type = "bigint", nullable = true }
+    ip_address      = { type = "string", length = 45 }
+    user_agent      = { type = "string", length = 500, nullable = true }
+    is_read         = { type = "boolean", default = false }
+    is_starred      = { type = "boolean", default = false }
+    created_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_wfs_webform" = ["webform_id"]
+    index "idx_wfs_created" = ["created_at"]
+    index "idx_wfs_read"    = ["is_read"]
+}
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+rollback "webforms" {
+    drop_table = "webforms"
+}
+
+rollback "webform_submissions" {
+    drop_table = "webform_submissions"
+}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cms\Content;
 
+use App\Cms\I18n\TranslatableInterface;
 use MonkeysLegion\Entity\Attributes\Column;
 use MonkeysLegion\Entity\Attributes\Entity;
 use MonkeysLegion\Entity\Attributes\Id;
@@ -16,7 +17,7 @@ use MonkeysLegion\Entity\Attributes\Id;
  * are stored in `node_fields` (EAV) and Mosaic layout data in `node_mosaic`.
  */
 #[Entity(table: 'nodes')]
-class ContentEntity
+class ContentEntity implements TranslatableInterface
 {
     #[Id]
     public ?int $id = null;
@@ -30,7 +31,14 @@ class ContentEntity
     #[Column(type: 'string', length: 300)]
     public string $slug = '' {
         set(string $value) {
-            $this->slug = strtolower(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($value)), '-'));
+            // Preserve slashes for pattern-based slugs (e.g. article/my-title)
+            // Slugify each segment independently
+            $parts = explode('/', $value);
+            $cleaned = array_map(
+                static fn(string $p) => strtolower(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($p)), '-')),
+                $parts,
+            );
+            $this->slug = implode('/', array_filter($cleaned, static fn(string $p) => $p !== ''));
         }
     }
 
@@ -42,6 +50,9 @@ class ContentEntity
 
     #[Column(type: 'text', nullable: true)]
     public ?string $body = null;
+
+    #[Column(type: 'string', length: 20)]
+    public string $body_format = 'wysiwyg';
 
     #[Column(type: 'text', nullable: true)]
     public ?string $summary = null;
@@ -85,6 +96,21 @@ class ContentEntity
     #[Column(type: 'datetime', nullable: true)]
     public ?\DateTimeImmutable $deleted_at = null;
 
+    /** Computed: typed status enum */
+    public ContentStatus $statusEnum {
+        get => ContentStatus::tryFrom($this->status) ?? ContentStatus::DRAFT;
+    }
+
+    /** Computed: human-readable status label */
+    public string $statusLabel {
+        get => $this->statusEnum->label();
+    }
+
+    /** Computed: CSS badge class */
+    public string $statusBadge {
+        get => $this->statusEnum->badge();
+    }
+
     /** Computed: is this content published? */
     public bool $isPublished {
         get => $this->status === 'published' && (
@@ -102,6 +128,31 @@ class ContentEntity
         get => $this->deleted_at !== null;
     }
 
+    /** Computed: admin edit URL */
+    public string $editUrl {
+        get => '/admin/content/' . ($this->id ?? 0) . '/edit';
+    }
+
+    /** Computed: public-facing URL based on slug (prefer UrlManager::url() for pattern-based URLs) */
+    public string $viewUrl {
+        get => '/' . $this->slug;
+    }
+
+    /** Computed: formatted date for admin listing */
+    public string $updatedAgo {
+        get {
+            if ($this->updated_at === null) return 'never';
+            $diff = (new \DateTimeImmutable())->getTimestamp() - $this->updated_at->getTimestamp();
+            return match (true) {
+                $diff < 60      => 'just now',
+                $diff < 3600    => (int) ($diff / 60) . 'm ago',
+                $diff < 86400   => (int) ($diff / 3600) . 'h ago',
+                $diff < 604800  => (int) ($diff / 86400) . 'd ago',
+                default         => $this->updated_at->format('M j, Y'),
+            };
+        }
+    }
+
     public function hydrate(array $data): static
     {
         $this->id = isset($data['id']) ? (int) $data['id'] : $this->id;
@@ -111,6 +162,7 @@ class ContentEntity
         $this->status = $data['status'] ?? $this->status;
         $this->author_id = isset($data['author_id']) ? (int) $data['author_id'] : $this->author_id;
         $this->body = $data['body'] ?? $this->body;
+        $this->body_format = $data['body_format'] ?? $this->body_format;
         $this->summary = $data['summary'] ?? $this->summary;
         $this->meta_title = $data['meta_title'] ?? $this->meta_title;
         $this->meta_description = $data['meta_description'] ?? $this->meta_description;
@@ -144,6 +196,7 @@ class ContentEntity
                 'slug' => $this->slug,
                 'status' => $this->status,
                 'body' => $this->body,
+                'body_format' => $this->body_format,
                 'summary' => $this->summary,
                 'meta_title' => $this->meta_title,
                 'meta_description' => $this->meta_description,
@@ -163,4 +216,10 @@ class ContentEntity
             ],
         ];
     }
+
+    // ── TranslatableInterface ─────────────────────────────────────────
+
+    public function getTranslatableType(): string { return 'node'; }
+    public function getTranslatableId(): int { return $this->id ?? 0; }
+    public function getLanguage(): string { return $this->language; }
 }

@@ -29,11 +29,13 @@
     .step-dot { width:10px; height:10px; border-radius:50%; background:var(--bg-surface); transition:all 300ms; }
     .step-dot.active { background:var(--primary); width:24px; border-radius:5px; }
     .step-dot.done { background:var(--success); }
+    .step-panel { display:none; }
+    .step-panel.visible { display:block; }
     .form-group { margin-bottom:1rem; }
     .form-label { display:block; font-size:0.85rem; font-weight:500; margin-bottom:0.35rem; color:var(--text); }
     .form-input, .form-select { width:100%; padding:0.6rem 0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:0.9rem; font-family:inherit; outline:none; transition:border 200ms; }
     .form-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light); }
-    .btn { display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.65rem 1.5rem; border:none; border-radius:var(--radius-sm); font-size:0.9rem; font-weight:600; cursor:pointer; transition:all 200ms; font-family:inherit; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.65rem 1.5rem; border:none; border-radius:var(--radius-sm); font-size:0.9rem; font-weight:600; cursor:pointer; transition:all 200ms; font-family:inherit; text-decoration:none; }
     .btn-primary { background:var(--primary); color:#fff; }
     .btn-primary:hover { background:var(--primary-hover); }
     .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
@@ -42,7 +44,8 @@
     .check-item { display:flex; align-items:center; gap:0.75rem; padding:0.5rem 0; font-size:0.9rem; }
     .check-item__icon { font-size:1.1rem; }
     .check-item__value { margin-left:auto; font-size:0.8rem; color:var(--text-muted); }
-    .msg { padding:0.75rem 1rem; border-radius:var(--radius-sm); font-size:0.85rem; margin-top:0.75rem; }
+    .msg { padding:0.75rem 1rem; border-radius:var(--radius-sm); font-size:0.85rem; margin-top:0.75rem; display:none; }
+    .msg.show { display:block; }
     .msg--success { background:rgba(34,197,94,.1); border:1px solid var(--success); color:var(--success); }
     .msg--error { background:rgba(239,68,68,.1); border:1px solid var(--danger); color:var(--danger); }
     .migration-row { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:0.85rem; }
@@ -50,6 +53,7 @@
     .spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 600ms linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
     .complete-check { font-size:4rem; text-align:center; margin:1.5rem 0; }
+    .form-grid { display:grid; grid-template-columns:1fr 100px; gap:0.75rem; }
   </style>
 </head>
 <body>
@@ -61,24 +65,23 @@
     <p class="installer__subtitle">Installation Wizard</p>
   </div>
 
-  {{-- Step Indicator --}}
-  <div class="step-indicator">
-    <div class="step-dot" :class="{ active: step === 1, done: step > 1 }"></div>
-    <div class="step-dot" :class="{ active: step === 2, done: step > 2 }"></div>
-    <div class="step-dot" :class="{ active: step === 3, done: step > 3 }"></div>
-    <div class="step-dot" :class="{ active: step === 4, done: step > 4 }"></div>
-    <div class="step-dot" :class="{ active: step === 5, done: step > 5 }"></div>
-    <div class="step-dot" :class="{ active: step === 6, done: step > 6 }"></div>
+  <div class="step-indicator" id="step-dots">
+    <div class="step-dot active" data-step="1"></div>
+    <div class="step-dot" data-step="2"></div>
+    <div class="step-dot" data-step="3"></div>
+    <div class="step-dot" data-step="4"></div>
+    <div class="step-dot" data-step="5"></div>
+    <div class="step-dot" data-step="6"></div>
   </div>
 
   {{-- Step 1: Requirements --}}
-  <div $m-show="step === 1">
+  <div class="step-panel visible" id="step-1">
     <div class="card">
       <div class="card__header"><span class="card__title">1. System Requirements</span></div>
       <div class="card__body">
         @foreach($requirements as $req)
         <div class="check-item">
-          <span class="check-item__icon">{{ $req['passed'] ? '✅' : '❌' }}</span>
+          <span class="check-item__icon">{!! $req['passed'] ? '✅' : '❌' !!}</span>
           <span>{{ $req['name'] }}</span>
           <span class="check-item__value">{{ $req['value'] }}</span>
         </div>
@@ -87,130 +90,114 @@
     </div>
     <div class="actions">
       <span></span>
-      <button class="btn btn-primary" $m-on:click="step = 2" @if(in_array(false, array_column($requirements, 'passed'))) disabled @endif>Continue →</button>
+      <button class="btn btn-primary" onclick="goStep(2)" {!! in_array(false, array_column($requirements, 'passed')) ? 'disabled' : '' !!}>Continue →</button>
     </div>
   </div>
 
   {{-- Step 2: Database --}}
-  <div $m-show="step === 2">
+  <div class="step-panel" id="step-2">
     <div class="card">
       <div class="card__header"><span class="card__title">2. Database Configuration</span></div>
       <div class="card__body">
-        <div style="display:grid; grid-template-columns:1fr 100px; gap:0.75rem;">
+        <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Host</label>
-            <input class="form-input" $m-model="db.host" placeholder="127.0.0.1">
+            <input class="form-input" id="db-host" value="db" placeholder="127.0.0.1">
           </div>
           <div class="form-group">
             <label class="form-label">Port</label>
-            <input class="form-input" $m-model="db.port" placeholder="3306">
+            <input class="form-input" id="db-port" value="3306" placeholder="3306">
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Database Name</label>
-          <input class="form-input" $m-model="db.name" placeholder="monkeyscms">
+          <input class="form-input" id="db-name" value="monkeyscms" placeholder="monkeyscms">
         </div>
         <div class="form-group">
           <label class="form-label">Username</label>
-          <input class="form-input" $m-model="db.user" placeholder="root">
+          <input class="form-input" id="db-user" value="" placeholder="root">
         </div>
         <div class="form-group">
           <label class="form-label">Password</label>
-          <input class="form-input" type="password" $m-model="db.pass">
+          <input class="form-input" type="password" id="db-pass" value="">
         </div>
-        <div $m-show="dbMessage" class="msg" :class="dbSuccess ? 'msg--success' : 'msg--error'" $m-text="dbMessage"></div>
+        <div class="msg" id="db-msg"></div>
       </div>
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" $m-on:click="step = 1">← Back</button>
-      <button class="btn btn-primary" $m-on:click="testDatabase()" :disabled="loading">
-        <span $m-show="loading" class="spinner"></span>
-        <span $m-text="loading ? 'Testing...' : 'Test & Save →'"></span>
-      </button>
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" id="btn-test-db" onclick="testDatabase()">Test & Save →</button>
     </div>
   </div>
 
   {{-- Step 3: Migrations --}}
-  <div $m-show="step === 3">
+  <div class="step-panel" id="step-3">
     <div class="card">
       <div class="card__header"><span class="card__title">3. Database Schema</span></div>
       <div class="card__body">
         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">
           The installer will create all required tables from MLC schema definitions.
         </p>
-        <div $m-show="migrations.length > 0">
-          <template $m-for="m in migrations">
-            <div class="migration-row">
-              <span $m-text="m.status === 'done' ? '✅' : m.status === 'error' ? '❌' : '⏳'"></span>
-              <span $m-text="m.id"></span>
-              <span style="margin-left:auto; color:var(--text-muted); font-size:0.8rem;" $m-text="m.time_ms ? m.time_ms + 'ms' : ''"></span>
-            </div>
-          </template>
-        </div>
-        <div $m-show="migrateMessage" class="msg" :class="migrateSuccess ? 'msg--success' : 'msg--error'" $m-text="migrateMessage"></div>
+        <div id="migration-list"></div>
+        <div class="msg" id="migrate-msg"></div>
       </div>
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" $m-on:click="step = 2">← Back</button>
-      <button class="btn btn-primary" $m-on:click="runMigrations()" :disabled="loading || migrateSuccess">
-        <span $m-show="loading" class="spinner"></span>
-        <span $m-text="migrateSuccess ? 'Done ✅' : loading ? 'Running...' : 'Run Migrations →'"></span>
-      </button>
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" id="btn-migrate" onclick="runMigrations()">Run Migrations →</button>
     </div>
   </div>
 
   {{-- Step 4: Admin User --}}
-  <div $m-show="step === 4">
+  <div class="step-panel" id="step-4">
     <div class="card">
       <div class="card__header"><span class="card__title">4. Admin Account</span></div>
       <div class="card__body">
         <div class="form-group">
           <label class="form-label">Full Name</label>
-          <input class="form-input" $m-model="admin.name" placeholder="Admin">
+          <input class="form-input" id="admin-name" placeholder="Admin">
         </div>
         <div class="form-group">
           <label class="form-label">Email</label>
-          <input class="form-input" type="email" $m-model="admin.email" placeholder="admin@example.com">
+          <input class="form-input" type="email" id="admin-email" placeholder="admin@example.com">
         </div>
         <div class="form-group">
           <label class="form-label">Password (min 8 characters)</label>
-          <input class="form-input" type="password" $m-model="admin.password">
+          <input class="form-input" type="password" id="admin-password">
         </div>
-        <div $m-show="adminMessage" class="msg" :class="adminSuccess ? 'msg--success' : 'msg--error'" $m-text="adminMessage"></div>
+        <div class="msg" id="admin-msg"></div>
       </div>
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" $m-on:click="step = 3">← Back</button>
-      <button class="btn btn-primary" $m-on:click="createAdmin()" :disabled="loading">
-        <span $m-text="loading ? 'Creating...' : 'Create Admin →'"></span>
-      </button>
+      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
+      <button class="btn btn-primary" id="btn-admin" onclick="createAdmin()">Create Admin →</button>
     </div>
   </div>
 
   {{-- Step 5: Site Config --}}
-  <div $m-show="step === 5">
+  <div class="step-panel" id="step-5">
     <div class="card">
       <div class="card__header"><span class="card__title">5. Site Configuration</span></div>
       <div class="card__body">
         <div class="form-group">
           <label class="form-label">Site Name</label>
-          <input class="form-input" $m-model="site.name" placeholder="My Website">
+          <input class="form-input" id="site-name" value="MonkeysCMS" placeholder="My Website">
         </div>
         <div class="form-group">
           <label class="form-label">Tagline</label>
-          <input class="form-input" $m-model="site.tagline" placeholder="A modern website">
+          <input class="form-input" id="site-tagline" placeholder="A modern website">
         </div>
         <div class="form-group">
           <label class="form-label">Site URL</label>
-          <input class="form-input" $m-model="site.url" placeholder="https://example.com">
+          <input class="form-input" id="site-url" placeholder="https://example.com">
         </div>
         <div class="form-group">
           <label class="form-label">Contact Email</label>
-          <input class="form-input" type="email" $m-model="site.email">
+          <input class="form-input" type="email" id="site-email">
         </div>
         <div class="form-group">
           <label class="form-label">Timezone</label>
-          <select class="form-select" $m-model="site.timezone">
+          <select class="form-select" id="site-timezone">
             <option value="UTC">UTC</option>
             <option value="America/New_York">Eastern (US)</option>
             <option value="America/Chicago">Central (US)</option>
@@ -226,15 +213,13 @@
       </div>
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" $m-on:click="step = 4">← Back</button>
-      <button class="btn btn-primary" $m-on:click="saveSiteConfig()" :disabled="loading">
-        <span $m-text="loading ? 'Saving...' : 'Finish →'"></span>
-      </button>
+      <button class="btn btn-secondary" onclick="goStep(4)">← Back</button>
+      <button class="btn btn-primary" id="btn-site" onclick="saveSiteConfig()">Finish →</button>
     </div>
   </div>
 
   {{-- Step 6: Complete --}}
-  <div $m-show="step === 6">
+  <div class="step-panel" id="step-6">
     <div class="card">
       <div class="card__body" style="text-align:center; padding:2.5rem;">
         <div class="complete-check">🎉</div>
@@ -249,74 +234,116 @@
   </div>
 </div>
 
-<script type="module">
-import { createApp, createClient } from 'monkeysjs';
+<script>
+  // ── Installer State ─────────────────────────────────────────────────────
+  let currentStep = 1;
 
-const api = createClient({ baseURL: '/install', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' } });
+  function goStep(n) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('visible'));
+    document.getElementById('step-' + n).classList.add('visible');
+    document.querySelectorAll('.step-dot').forEach(d => {
+      const s = parseInt(d.dataset.step);
+      d.classList.toggle('active', s === n);
+      d.classList.toggle('done', s < n);
+    });
+    currentStep = n;
+  }
 
-const app = createApp({
-  step: {{ $step ?? 1 }},
-  loading: false,
+  function showMsg(id, text, success) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'msg show ' + (success ? 'msg--success' : 'msg--error');
+  }
 
-  db: { host: '127.0.0.1', port: '3306', name: '', user: '', pass: '' },
-  dbMessage: '', dbSuccess: false,
+  async function post(path, data) {
+    const res = await fetch('/install' + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  }
 
-  migrations: [], migrateMessage: '', migrateSuccess: false,
-
-  admin: { name: '', email: '', password: '' },
-  adminMessage: '', adminSuccess: false,
-
-  site: { name: 'MonkeysCMS', tagline: '', url: window.location.origin, email: '', timezone: 'UTC' },
-
-  async testDatabase() {
-    this.loading = true; this.dbMessage = '';
+  // ── Step 2: Database ──────────────────────────────────────────────────
+  async function testDatabase() {
+    const btn = document.getElementById('btn-test-db');
+    btn.disabled = true; btn.textContent = 'Testing...';
     try {
-      const res = await api.post('/database', JSON.stringify({ db_host: this.db.host, db_port: this.db.port, db_name: this.db.name, db_user: this.db.user, db_pass: this.db.pass }));
-      if (res.data.success) { this.dbSuccess = true; this.dbMessage = '✅ Connected!'; setTimeout(() => { this.step = 3; }, 500); }
-      else { this.dbMessage = res.data.error || 'Connection failed'; }
-    } catch (e) { this.dbMessage = e.response?.data?.error || 'Connection failed'; }
-    this.loading = false;
-  },
-
-  async runMigrations() {
-    this.loading = true; this.migrateMessage = '';
-    try {
-      const res = await api.post('/migrate');
-      if (res.data.success) {
-        this.migrateSuccess = true;
-        this.migrations = (res.data.executed || []).map(m => ({ ...m, status: 'done' }));
-        this.migrateMessage = '✅ All migrations completed!';
-        setTimeout(() => { this.step = 4; }, 800);
+      const data = await post('/database', {
+        db_host: document.getElementById('db-host').value,
+        db_port: document.getElementById('db-port').value,
+        db_name: document.getElementById('db-name').value,
+        db_user: document.getElementById('db-user').value,
+        db_pass: document.getElementById('db-pass').value,
+      });
+      if (data.success) {
+        showMsg('db-msg', '✅ Connected!', true);
+        setTimeout(() => goStep(3), 500);
       } else {
-        this.migrations = (res.data.executed || []).map(m => ({ ...m, status: 'done' }));
-        if (res.data.errors?.length) this.migrations.push(...res.data.errors.map(e => ({ ...e, status: 'error' })));
-        this.migrateMessage = res.data.errors?.[0]?.error || 'Migration failed';
+        showMsg('db-msg', data.error || 'Connection failed', false);
       }
-    } catch (e) { this.migrateMessage = e.response?.data?.error || 'Migration failed'; }
-    this.loading = false;
-  },
+    } catch (e) { showMsg('db-msg', 'Connection failed', false); }
+    btn.disabled = false; btn.textContent = 'Test & Save →';
+  }
 
-  async createAdmin() {
-    this.loading = true; this.adminMessage = '';
+  // ── Step 3: Migrations ────────────────────────────────────────────────
+  async function runMigrations() {
+    const btn = document.getElementById('btn-migrate');
+    btn.disabled = true; btn.textContent = 'Running...';
     try {
-      const res = await api.post('/admin-user', JSON.stringify(this.admin));
-      if (res.data.success) { this.adminSuccess = true; this.adminMessage = '✅ Admin created!'; setTimeout(() => { this.step = 5; }, 500); }
-      else { this.adminMessage = res.data.error; }
-    } catch (e) { this.adminMessage = e.response?.data?.error || 'Failed'; }
-    this.loading = false;
-  },
+      const data = await post('/migrate', {});
+      const list = document.getElementById('migration-list');
+      list.innerHTML = '';
+      (data.executed || []).forEach(m => {
+        list.innerHTML += '<div class="migration-row">✅ ' + m.id + ' <span style="margin-left:auto;color:var(--text-muted);font-size:0.8rem">' + (m.time_ms || '') + 'ms</span></div>';
+      });
+      if (data.success) {
+        showMsg('migrate-msg', '✅ All migrations completed!', true);
+        setTimeout(() => goStep(4), 800);
+      } else {
+        showMsg('migrate-msg', (data.errors && data.errors[0] && data.errors[0].error) || 'Migration failed', false);
+      }
+    } catch (e) { showMsg('migrate-msg', 'Migration failed', false); }
+    btn.disabled = false; btn.textContent = 'Run Migrations →';
+  }
 
-  async saveSiteConfig() {
-    this.loading = true;
+  // ── Step 4: Admin User ────────────────────────────────────────────────
+  async function createAdmin() {
+    const btn = document.getElementById('btn-admin');
+    btn.disabled = true; btn.textContent = 'Creating...';
     try {
-      const res = await api.post('/configure', JSON.stringify({ site_name: this.site.name, site_tagline: this.site.tagline, site_url: this.site.url, site_email: this.site.email, timezone: this.site.timezone }));
-      if (res.data.success) this.step = 6;
+      const data = await post('/admin-user', {
+        name: document.getElementById('admin-name').value,
+        email: document.getElementById('admin-email').value,
+        password: document.getElementById('admin-password').value,
+      });
+      if (data.success) {
+        showMsg('admin-msg', '✅ Admin created!', true);
+        setTimeout(() => goStep(5), 500);
+      } else { showMsg('admin-msg', data.error || 'Failed', false); }
+    } catch (e) { showMsg('admin-msg', 'Failed', false); }
+    btn.disabled = false; btn.textContent = 'Create Admin →';
+  }
+
+  // ── Step 5: Site Config ───────────────────────────────────────────────
+  async function saveSiteConfig() {
+    const btn = document.getElementById('btn-site');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const data = await post('/configure', {
+        site_name: document.getElementById('site-name').value,
+        site_tagline: document.getElementById('site-tagline').value,
+        site_url: document.getElementById('site-url').value || window.location.origin,
+        site_email: document.getElementById('site-email').value,
+        timezone: document.getElementById('site-timezone').value,
+      });
+      if (data.success) goStep(6);
     } catch (e) { console.error(e); }
-    this.loading = false;
-  },
-});
+    btn.disabled = false; btn.textContent = 'Finish →';
+  }
 
-app.mount('#installer-app');
+  // Set site URL default
+  document.getElementById('site-url').value = window.location.origin;
 </script>
 </body>
 </html>

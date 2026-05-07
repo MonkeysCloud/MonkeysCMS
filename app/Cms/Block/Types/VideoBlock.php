@@ -14,7 +14,7 @@ final class VideoBlock implements BlockTypeInterface
     public static function getId(): string { return 'video'; }
     public static function getLabel(): string { return 'Video'; }
     public static function getDescription(): string { return 'Embed a video from YouTube, Vimeo, or a URL'; }
-    public static function getIcon(): string { return '🎬'; }
+    public static function getIcon(): string { return 'video'; }
     public static function getCategory(): string { return 'Media'; }
 
     public static function getFields(): array

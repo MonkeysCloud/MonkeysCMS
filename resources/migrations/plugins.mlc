@@ -1,0 +1,39 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Plugin System Migration
+# resources/migrations/plugins.mlc
+#
+# Plugin registry and settings storage.
+# Tracks installed plugins, their versions, and per-plugin configuration.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "cms_plugins" {
+    id           = { type = "unsignedBigInt", autoIncrement = true, primary = true }
+    name         = { type = "string", length = 128 }
+    vendor       = { type = "string", length = 128 }
+    version      = { type = "string", length = 32 }
+    namespace    = { type = "string", length = 255 }
+    path         = { type = "string", length = 500 }
+    enabled      = { type = "boolean", default = false }
+    installed_at = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at   = { type = "timestamp", nullable = true }
+
+    index "idx_plugins_vendor_name" = ["vendor", "name"]
+}
+
+table "cms_plugin_settings" {
+    id        = { type = "unsignedBigInt", autoIncrement = true, primary = true }
+    plugin_id = { type = "unsignedBigInt" }
+    key       = { type = "string", length = 128 }
+    value     = { type = "text", nullable = true }
+
+    index "idx_ps_plugin_key" = ["plugin_id", "key"]
+}
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+rollback "cms_plugins" {
+    drop_table = "cms_plugins"
+}
+
+rollback "cms_plugin_settings" {
+    drop_table = "cms_plugin_settings"
+}

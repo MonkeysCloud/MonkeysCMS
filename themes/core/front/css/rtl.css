@@ -1,0 +1,162 @@
+/**
+ * RTL (Right-to-Left) Layout Overrides
+ *
+ * Activated via <html dir="rtl"> for Arabic, Hebrew, etc.
+ * Uses CSS logical properties where possible, with explicit
+ * overrides for components that use physical properties.
+ */
+
+/* ── Base Direction ────────────────────────────────────────────── */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+[dir="rtl"] .site-header__inner {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .site-nav {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .site-nav__link {
+  margin-left: 0;
+  margin-right: 1rem;
+}
+
+/* ── Language Switcher ─────────────────────────────────────────── */
+[dir="rtl"] .lang-switcher__menu {
+  right: auto;
+  left: 0;
+}
+
+/* ── Breadcrumbs ───────────────────────────────────────────────── */
+[dir="rtl"] .site-breadcrumb {
+  direction: rtl;
+}
+
+[dir="rtl"] .site-breadcrumb__sep {
+  transform: scaleX(-1);
+}
+
+/* ── Article Hero ──────────────────────────────────────────────── */
+[dir="rtl"] .article-hero__meta {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .article-hero__meta-item {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .article-hero__meta-item svg {
+  margin-left: .35rem;
+  margin-right: 0;
+}
+
+/* ── Article Content ───────────────────────────────────────────── */
+[dir="rtl"] .article-content__body {
+  text-align: right;
+}
+
+[dir="rtl"] .article-content__body blockquote {
+  border-left: none;
+  border-right: 4px solid rgba(99,102,241,.3);
+  padding-left: 0;
+  padding-right: 1.25rem;
+}
+
+[dir="rtl"] .article-content__body ul,
+[dir="rtl"] .article-content__body ol {
+  padding-left: 0;
+  padding-right: 1.5rem;
+}
+
+/* ── Tags / Taxonomy ───────────────────────────────────────────── */
+[dir="rtl"] .article-tags {
+  flex-direction: row-reverse;
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
+[dir="rtl"] .site-footer__inner {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] .site-footer__links {
+  text-align: right;
+}
+
+/* ── Search ────────────────────────────────────────────────────── */
+[dir="rtl"] .search-box__icon {
+  left: auto;
+  right: 0.75rem;
+}
+
+[dir="rtl"] .search-box__input {
+  padding-left: 0.5rem;
+  padding-right: 2.25rem;
+}
+
+[dir="rtl"] .search-box__clear {
+  right: auto;
+  left: 0.5rem;
+}
+
+/* ── Listing Cards ─────────────────────────────────────────────── */
+[dir="rtl"] .content-card {
+  text-align: right;
+}
+
+[dir="rtl"] .content-card__meta {
+  flex-direction: row-reverse;
+}
+
+/* ── Comments ──────────────────────────────────────────────────── */
+[dir="rtl"] .comment {
+  border-left: none;
+  border-right: 3px solid rgba(99,102,241,.15);
+  padding-left: 0;
+  padding-right: 1.25rem;
+}
+
+[dir="rtl"] .comment__meta {
+  flex-direction: row-reverse;
+}
+
+/* ── Prose (general content) ───────────────────────────────────── */
+[dir="rtl"] .prose {
+  text-align: right;
+}
+
+[dir="rtl"] .prose code {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+[dir="rtl"] .prose pre {
+  direction: ltr;
+  text-align: left;
+}
+
+/* ── Pagination ────────────────────────────────────────────────── */
+[dir="rtl"] .pagination {
+  flex-direction: row-reverse;
+}
+
+/* ── Node Toolbar ──────────────────────────────────────────────── */
+[dir="rtl"] .node-toolbar__inner {
+  flex-direction: row-reverse;
+}
+
+/* ── Admin Bar (top bar) ───────────────────────────────────────── */
+[dir="rtl"] .cms-bar__inner {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .cms-bar__left,
+[dir="rtl"] .cms-bar__right {
+  flex-direction: row-reverse;
+}

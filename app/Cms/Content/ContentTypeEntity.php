@@ -33,8 +33,8 @@ final class ContentTypeEntity
     #[Column(type: 'text', nullable: true)]
     public ?string $description = null;
 
-    #[Column(type: 'string', length: 10, default: '📄')]
-    public string $icon = '📄';
+    #[Column(type: 'string', length: 64, default: 'file-text')]
+    public string $icon = 'file-text';
 
     #[Column(type: 'boolean', default: false)]
     public bool $is_system = false;
@@ -68,6 +68,10 @@ final class ContentTypeEntity
     #[Column(type: 'boolean', default: false)]
     public bool $mosaic_default = false;
 
+    /** Whether comments are enabled for this content type */
+    #[Column(type: 'boolean', default: false)]
+    public bool $comments_enabled = false;
+
     #[Column(type: 'string', length: 64, default: 'title')]
     public string $title_field = 'title';
 
@@ -96,7 +100,34 @@ final class ContentTypeEntity
     public ?\DateTimeImmutable $updated_at = null;
 
     /** @var array<FieldDefinition> Loaded via ContentTypeManager */
-    public array $fields = [];
+    public array $fieldDefinitions = [];
+
+    // ── PHP 8.4 Computed Property Hooks ──────────────────────────────────
+
+    /** Whether this content type can be edited by users */
+    public bool $isEditable {
+        get => $this->enabled && !$this->is_system;
+    }
+
+    /** Whether Mosaic page builder is available for this type */
+    public bool $hasMosaic {
+        get => $this->mosaic_enabled;
+    }
+
+    /** Resolved URL route pattern, or fallback */
+    public string $routePattern {
+        get => $this->url_pattern ?? '/' . $this->type_id . '/{slug}';
+    }
+
+    /** Admin edit URL prefix */
+    public string $adminUrl {
+        get => '/admin/content-types/' . $this->type_id;
+    }
+
+    /** Lucide icon markup for templates */
+    public string $iconHtml {
+        get => '<i data-lucide="' . htmlspecialchars($this->icon) . '" class="w-4 h-4"></i>';
+    }
 
     /**
      * Get the dynamic content table name for this type
@@ -127,6 +158,7 @@ final class ContentTypeEntity
         $this->has_media = (bool) ($data['has_media'] ?? $this->has_media);
         $this->mosaic_enabled = (bool) ($data['mosaic_enabled'] ?? $this->mosaic_enabled);
         $this->mosaic_default = (bool) ($data['mosaic_default'] ?? $this->mosaic_default);
+        $this->comments_enabled = (bool) ($data['comments_enabled'] ?? $this->comments_enabled);
         $this->title_field = $data['title_field'] ?? $this->title_field;
         $this->slug_field = $data['slug_field'] ?? $this->slug_field;
         $this->url_pattern = $data['url_pattern'] ?? $this->url_pattern;
@@ -170,6 +202,7 @@ final class ContentTypeEntity
             'has_media' => $this->has_media,
             'mosaic_enabled' => $this->mosaic_enabled,
             'mosaic_default' => $this->mosaic_default,
+            'comments_enabled' => $this->comments_enabled,
             'url_pattern' => $this->url_pattern,
             'weight' => $this->weight,
         ];

@@ -1,0 +1,148 @@
+/**
+ * Breadcrumb Admin — Configuration dashboard styles.
+ */
+
+/* ── Page ─────────────────────────────────────── */
+.bc-page { padding: 1.5rem 2rem; max-width: 1280px; }
+
+/* ── Cards ────────────────────────────────────── */
+.bc-card .card__title-icon { vertical-align: -3px; margin-right: 0.25rem; }
+.bc-card--term { border-color: rgba(251,146,60,0.15); }
+
+/* ── Toggle Grid ──────────────────────────────── */
+.bc-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+}
+@media (max-width: 800px) { .bc-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.bc-toggle {
+  display: flex; flex-direction: column; gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; cursor: pointer;
+  transition: all 0.15s;
+}
+.bc-toggle:hover { border-color: rgba(99,102,241,0.2); background: rgba(255,255,255,0.04); }
+.bc-toggle:has(input:checked) {
+  border-color: rgba(99,102,241,0.25);
+  background: rgba(99,102,241,0.06);
+}
+.bc-toggle input[type="checkbox"] { display: none; }
+.bc-toggle__label {
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.85rem; font-weight: 600; color: #e2e8f0;
+}
+.bc-toggle:has(input:checked) .bc-toggle__label { color: #a5b4fc; }
+.bc-toggle__desc { font-size: 0.72rem; color: #64748b; }
+
+/* ── Separator Row ────────────────────────────── */
+.bc-separator-row { display: flex; align-items: center; gap: 1rem; }
+.bc-field-label { font-size: 0.8rem; color: #94a3b8; font-weight: 600; white-space: nowrap; }
+.bc-separator-options { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.bc-sep-option input[type="radio"] { display: none; }
+.bc-sep-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.2rem; height: 2.2rem; border-radius: 8px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: #94a3b8; font-size: 1rem; cursor: pointer; transition: all 0.15s;
+}
+.bc-sep-option:hover .bc-sep-chip { border-color: rgba(99,102,241,0.3); color: #e2e8f0; }
+.bc-sep-option input:checked + .bc-sep-chip {
+  background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4);
+  color: #a5b4fc; box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+}
+
+/* ── Preview ──────────────────────────────────── */
+.bc-preview {
+  padding: 0.75rem 1rem;
+  background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+.bc-preview__label {
+  font-size: 0.7rem; text-transform: uppercase; color: #64748b;
+  letter-spacing: 0.06em; font-weight: 600; margin-bottom: 0.5rem;
+  display: block;
+}
+.bc-preview__trail {
+  display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+.bc-crumb--link { color: #818cf8; text-decoration: none; }
+.bc-crumb--sep { color: #475569; font-size: 0.8rem; }
+.bc-crumb--current { color: #94a3b8; }
+
+/* ── Actions Row ──────────────────────────────── */
+.bc-actions { display: flex; justify-content: flex-end; }
+
+/* ── Per-Type List ────────────────────────────── */
+.bc-types-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.bc-type-row {
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; transition: all 0.15s;
+}
+.bc-type-row:hover { border-color: rgba(99,102,241,0.15); background: rgba(255,255,255,0.03); }
+.bc-type-row--term:hover { border-color: rgba(251,146,60,0.2); }
+
+.bc-type-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+.bc-type-info { display: flex; align-items: center; gap: 0.6rem; }
+.bc-type-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(99,102,241,0.1); color: #818cf8;
+}
+.bc-type-icon--term { background: rgba(251,146,60,0.1); color: #fb923c; }
+.bc-type-name { font-weight: 600; font-size: 0.9rem; color: #e2e8f0; display: block; }
+.bc-type-id { font-size: 0.7rem; color: #64748b; font-family: monospace; }
+.bc-type-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+.bc-type-options {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ── Mini Toggles ─────────────────────────────── */
+.bc-mini-toggle {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-size: 0.75rem; color: #94a3b8; cursor: pointer;
+  padding: 0.25rem 0.5rem; border-radius: 6px;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.15s;
+}
+.bc-mini-toggle:has(input:checked) {
+  color: #a5b4fc; background: rgba(99,102,241,0.08);
+  border-color: rgba(99,102,241,0.2);
+}
+.bc-mini-toggle input[type="checkbox"] { width: 12px; height: 12px; accent-color: #818cf8; }
+
+/* ── Inline Toggle Switch ─────────────────────── */
+.bc-inline-toggle { position: relative; display: inline-block; width: 36px; height: 20px; cursor: pointer; }
+.bc-inline-toggle input { opacity: 0; width: 0; height: 0; }
+.bc-inline-toggle__slider {
+  position: absolute; inset: 0; background: rgba(255,255,255,0.1);
+  border-radius: 20px; transition: all 0.2s;
+}
+.bc-inline-toggle__slider::before {
+  content: ''; position: absolute; left: 2px; top: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #64748b; transition: all 0.2s;
+}
+.bc-inline-toggle input:checked + .bc-inline-toggle__slider {
+  background: rgba(99,102,241,0.3);
+}
+.bc-inline-toggle input:checked + .bc-inline-toggle__slider::before {
+  background: #818cf8; transform: translateX(16px);
+}
+
+/* ── Separator Select (xs) ────────────────────── */
+.bc-sep-select {
+  width: 3.5rem; padding: 0.2rem 0.4rem !important;
+  font-size: 0.85rem !important; text-align: center;
+}
+
+/* ── Badge variants ───────────────────────────── */
+.badge--sm { font-size: 0.6rem; padding: 0.1rem 0.4rem; }
+.badge--info { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+.badge--muted { background: rgba(255,255,255,0.06); color: #64748b; }

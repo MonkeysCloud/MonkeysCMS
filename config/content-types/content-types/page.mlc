@@ -1,0 +1,38 @@
+# ═══════════════════════════════════════════════════════════════════
+# Page Content Type
+# config/content-types/page.mlc
+# ═══════════════════════════════════════════════════════════════════
+
+content_type "page" {
+    label        = "Page"
+    label_plural = "Pages"
+    description  = "Static pages with optional Mosaic visual builder"
+    icon         = "file-text"
+
+    publishable    = true
+    revisionable   = false
+    has_author     = true
+    has_taxonomy   = false
+    has_media      = true
+    mosaic_enabled = true
+    mosaic_default = true
+    url_pattern    = "/{slug}"
+
+    fields {
+        field "subtitle" {
+            type     = "string"
+            label    = "Subtitle"
+            widget   = "text_input"
+            required = false
+            weight   = 0
+            help_text = "Optional subtitle displayed below the page title"
+        }
+        field "show_sidebar" {
+            type     = "boolean"
+            label    = "Show Sidebar"
+            widget   = "toggle"
+            required = false
+            weight   = 1
+        }
+    }
+}

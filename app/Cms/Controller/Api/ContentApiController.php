@@ -4,137 +4,145 @@ declare(strict_types=1);
 
 namespace App\Cms\Controller\Api;
 
-use App\Cms\Content\ContentRepository;
 use App\Cms\Content\ContentEntity;
+use App\Cms\Content\ContentRepository;
+use App\Cms\Content\ContentStatus;
+use App\Cms\Content\ContentTypeManager;
 use MonkeysLegion\Http\Message\Response;
 use MonkeysLegion\Router\Attributes\Route;
 use MonkeysLegion\Router\Attributes\RoutePrefix;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * ContentApiController — Admin REST API for content nodes.
+ * ContentApiController — JSON REST API for content nodes.
+ *
+ * Serves both the admin AJAX operations and headless consumers.
  */
-#[RoutePrefix('/admin/api/content')]
+#[RoutePrefix('/api/cms/content')]
 final class ContentApiController
 {
     public function __construct(
         private readonly ContentRepository $contentRepo,
+        private readonly ContentTypeManager $typeManager,
     ) {}
 
-    #[Route('GET', '/', name: 'admin.api.content.index')]
+    #[Route('GET', '/', name: 'api::content.index')]
     public function index(ServerRequestInterface $request): Response
     {
         $params = $request->getQueryParams();
-        $type = $params['type'] ?? null;
-        $status = $params['status'] ?? 'all';
-        $page = max(1, (int) ($params['page'] ?? 1));
-        $limit = min(100, max(1, (int) ($params['per_page'] ?? 25)));
-        $offset = ($page - 1) * $limit;
+
+        // Search mode
         $search = $params['q'] ?? '';
-
         if ($search) {
-            $nodes = $this->contentRepo->search($search, $type, $limit);
-            return Response::json(['data' => array_map(fn(ContentEntity $n) => $n->toArray(), $nodes)]);
+            $nodes = $this->contentRepo->search($search, $params['type'] ?? null);
+            return Response::json([
+                'data' => array_map(fn(ContentEntity $n) => $n->toArray(), $nodes),
+                'meta' => ['total' => count($nodes)],
+            ]);
         }
 
-        if (!$type) {
-            return Response::json(['error' => 'Content type required'], 422);
-        }
-
-        $nodes = $this->contentRepo->findByType($type, $status, $limit, $offset);
-        $total = $this->contentRepo->countByType($type, $status);
+        $result = $this->contentRepo->paginate(
+            contentType: $params['type'] ?? null,
+            status: $params['status'] ?? 'all',
+            page: max(1, (int) ($params['page'] ?? 1)),
+            perPage: min(100, max(1, (int) ($params['per_page'] ?? 25))),
+            orderBy: $params['sort'] ?? 'updated_at',
+            direction: $params['order'] ?? 'DESC',
+        );
 
         return Response::json([
-            'data' => array_map(fn(ContentEntity $n) => $n->toArray(), $nodes),
-            'meta' => [
-                'total' => $total,
-                'page' => $page,
-                'per_page' => $limit,
-                'last_page' => (int) ceil($total / $limit),
-            ],
+            'data' => array_map(fn(ContentEntity $n) => $n->toArray(), $result->items),
+            'meta' => $result->meta(),
         ]);
     }
 
-    #[Route('GET', '/{id:\d+}', name: 'admin.api.content.show')]
+    #[Route('GET', '/{id:\d+}', name: 'api::content.show')]
     public function show(ServerRequestInterface $request, string $id): Response
     {
-        $node = $this->contentRepo->find((int) $id);
+        $node = $this->contentRepo->findWithFields((int) $id);
         if (!$node) {
             return Response::json(['error' => 'Not found'], 404);
         }
+
         return Response::json(['data' => $node->toArray()]);
     }
 
-    #[Route('POST', '/', name: 'admin.api.content.store')]
+    #[Route('POST', '/', name: 'api::content.store')]
     public function store(ServerRequestInterface $request): Response
     {
-        $body = json_decode((string) $request->getBody(), true);
-        if (!$body) {
-            return Response::json(['error' => 'Invalid JSON'], 422);
-        }
+        $body = $this->parseBody($request);
 
-        $node = new ContentEntity();
-        $node->hydrate($body);
-        $node->status = $body['status'] ?? 'draft';
-        $node = $this->contentRepo->persist($node);
+        $entity = new ContentEntity();
+        $entity->title        = $body['title'] ?? '';
+        $entity->slug         = $body['slug'] ?? $body['title'] ?? '';
+        $entity->content_type = $body['content_type'] ?? '';
+        $entity->status       = $body['status'] ?? 'draft';
+        $entity->body         = $body['body'] ?? null;
+        $entity->summary      = $body['summary'] ?? null;
+        $entity->meta_title   = $body['meta_title'] ?? null;
+        $entity->meta_description = $body['meta_description'] ?? null;
 
-        return Response::json(['data' => $node->toArray(), 'meta' => ['created' => true]], 201);
+        $fieldValues = $body['fields'] ?? [];
+        $entity = $this->contentRepo->save($entity, $fieldValues);
+
+        return Response::json(['data' => $entity->toArray()], 201);
     }
 
-    #[Route('PUT', '/{id:\d+}', name: 'admin.api.content.update')]
+    #[Route('PUT', '/{id:\d+}', name: 'api::content.update')]
     public function update(ServerRequestInterface $request, string $id): Response
     {
-        $node = $this->contentRepo->find((int) $id);
-        if (!$node) {
-            return Response::json(['error' => 'Not found'], 404);
-        }
+        $node = $this->contentRepo->findOrFail((int) $id);
+        $body = $this->parseBody($request);
 
-        $body = json_decode((string) $request->getBody(), true);
-        if (!$body) {
-            return Response::json(['error' => 'Invalid JSON'], 422);
-        }
+        if (isset($body['title']))            $node->title = $body['title'];
+        if (isset($body['slug']))             $node->slug = $body['slug'];
+        if (isset($body['content_type']))     $node->content_type = $body['content_type'];
+        if (isset($body['status']))           $node->status = $body['status'];
+        if (isset($body['body']))             $node->body = $body['body'];
+        if (isset($body['summary']))          $node->summary = $body['summary'];
+        if (isset($body['meta_title']))       $node->meta_title = $body['meta_title'];
+        if (isset($body['meta_description'])) $node->meta_description = $body['meta_description'];
 
-        $node->hydrate($body);
-        $node = $this->contentRepo->persist($node);
+        $fieldValues = $body['fields'] ?? [];
+        $node = $this->contentRepo->save($node, $fieldValues);
 
-        return Response::json(['data' => $node->toArray(), 'meta' => ['updated' => true]]);
+        return Response::json(['data' => $node->toArray()]);
     }
 
-    #[Route('DELETE', '/{id:\d+}', name: 'admin.api.content.delete')]
-    public function delete(ServerRequestInterface $request, string $id): Response
+    #[Route('DELETE', '/{id:\d+}', name: 'api::content.destroy')]
+    public function destroy(ServerRequestInterface $request, string $id): Response
     {
         $deleted = $this->contentRepo->delete((int) $id);
-        return $deleted
-            ? Response::json(['meta' => ['deleted' => true]])
-            : Response::json(['error' => 'Not found'], 404);
-    }
-
-    #[Route('POST', '/{id:\d+}/publish', name: 'admin.api.content.publish')]
-    public function publish(ServerRequestInterface $request, string $id): Response
-    {
-        $node = $this->contentRepo->find((int) $id);
-        if (!$node) {
+        if (!$deleted) {
             return Response::json(['error' => 'Not found'], 404);
         }
-
-        $node->status = 'published';
-        $node->published_at = new \DateTimeImmutable();
-        $this->contentRepo->persist($node);
-
-        return Response::json(['data' => $node->toArray(), 'meta' => ['published' => true]]);
+        return Response::noContent();
     }
 
-    #[Route('POST', '/{id:\d+}/unpublish', name: 'admin.api.content.unpublish')]
-    public function unpublish(ServerRequestInterface $request, string $id): Response
+    #[Route('POST', '/{id:\d+}/status', name: 'api::content.status')]
+    public function changeStatus(ServerRequestInterface $request, string $id): Response
     {
-        $node = $this->contentRepo->find((int) $id);
-        if (!$node) {
-            return Response::json(['error' => 'Not found'], 404);
+        $body = $this->parseBody($request);
+        $status = ContentStatus::tryFrom($body['status'] ?? '');
+
+        if (!$status) {
+            return Response::json(['error' => 'Invalid status'], 422);
         }
 
-        $node->status = 'draft';
-        $this->contentRepo->persist($node);
+        $this->contentRepo->updateStatus((int) $id, $status);
 
-        return Response::json(['data' => $node->toArray(), 'meta' => ['unpublished' => true]]);
+        return Response::json(['success' => true, 'status' => $status->value]);
+    }
+
+    private function parseBody(ServerRequestInterface $request): array
+    {
+        $body = $request->getParsedBody() ?? [];
+        if (empty($body)) {
+            $stream = $request->getBody();
+            $stream->rewind();
+            $decoded = json_decode($stream->getContents(), true);
+            if (is_array($decoded)) $body = $decoded;
+        }
+        return $body;
     }
 }

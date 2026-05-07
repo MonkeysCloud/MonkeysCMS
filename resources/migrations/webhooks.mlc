@@ -1,0 +1,49 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Webhooks Migration
+# resources/migrations/webhooks.mlc
+#
+# Event-driven outbound webhook system: webhook definitions, event subscriptions,
+# HMAC-signed delivery, retry logic, and delivery audit logs.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "webhooks" {
+    id                = { type = "bigint", auto_increment = true, primary = true }
+    name              = { type = "string", length = 100 }
+    url               = { type = "string", length = 500 }
+    events            = { type = "json" }                    # ["node.created", "node.published"]
+    secret            = { type = "string", length = 255 }
+    is_active         = { type = "boolean", default = true }
+    last_triggered_at = { type = "datetime", nullable = true }
+    failure_count     = { type = "integer", default = 0 }
+    created_by        = { type = "bigint", nullable = true }
+    created_at        = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at        = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    index "idx_wh_active" = ["is_active"]
+}
+
+table "webhook_logs" {
+    id              = { type = "bigint", auto_increment = true, primary = true }
+    webhook_id      = { type = "bigint", references = "webhooks.id", on_delete = "CASCADE" }
+    event           = { type = "string", length = 100 }
+    payload         = { type = "json" }
+    response_code   = { type = "smallint", nullable = true }
+    response_body   = { type = "text", nullable = true }
+    duration_ms     = { type = "integer", nullable = true }
+    status          = { type = "string", length = 20, default = "pending" }  # pending|delivered|failed
+    attempts        = { type = "integer", default = 0 }
+    created_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_whl_webhook" = ["webhook_id"]
+    index "idx_whl_event"   = ["event"]
+    index "idx_whl_status"  = ["status"]
+}
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+rollback "webhook_logs" {
+    drop_table = "webhook_logs"
+}
+
+rollback "webhooks" {
+    drop_table = "webhooks"
+}

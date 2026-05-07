@@ -9,16 +9,21 @@ middleware {
     global = [
         "MonkeysLegion\\DevTools\\Middleware\\DevToolsMiddleware",
         "MonkeysLegion\\Http\\Middleware\\ErrorHandlerMiddleware",
+        "App\\Cms\\Middleware\\InstallCheckMiddleware",
+        "App\\Cms\\Middleware\\ThemeResolverMiddleware",
+        "App\\Cms\\Redirect\\RedirectMiddleware",
         "MonkeysLegion\\Core\\Middleware\\CorsMiddleware",
         "MonkeysLegion\\I18n\\Middleware\\LocaleMiddleware",
         "MonkeysLegion\\Session\\Middleware\\SessionMiddleware",
-        "MonkeysLegion\\Session\\Middleware\\VerifyCsrfToken",
+        "App\\Cms\\Middleware\\CsrfExemptMiddleware",
+        "App\\Cms\\Middleware\\AdminAuthMiddleware",
         "MonkeysLegion\\Auth\\Middleware\\AuthenticationMiddleware",
         "MonkeysLegion\\Auth\\Middleware\\AuthorizationMiddleware",
         "MonkeysLegion\\Http\\Middleware\\RateLimitMiddleware",
         "MonkeysLegion\\Http\\Middleware\\LoggingMiddleware",
         "MonkeysLegion\\Http\\Middleware\\ContentNegotiationMiddleware",
         "MonkeysLegion\\Validation\\Middleware\\ValidationMiddleware",
+        "App\\Cms\\Form\\FormSecurityMiddleware",
         "MonkeysLegion\\Http\\OpenApi\\OpenApiMiddleware"
     ]
 

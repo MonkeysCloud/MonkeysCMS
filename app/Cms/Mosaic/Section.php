@@ -18,32 +18,32 @@ final class Section
     public const LAYOUTS = [
         'full' => [
             'label' => 'Full Width',
-            'icon' => '⬜',
+            'icon' => 'square',
             'regions' => ['main'],
         ],
         'two_col' => [
             'label' => 'Two Columns',
-            'icon' => '◻◻',
+            'icon' => 'columns-2',
             'regions' => ['first', 'second'],
         ],
         'three_col' => [
             'label' => 'Three Columns',
-            'icon' => '◻◻◻',
+            'icon' => 'columns-3',
             'regions' => ['first', 'second', 'third'],
         ],
         'four_col' => [
             'label' => 'Four Columns',
-            'icon' => '◻◻◻◻',
+            'icon' => 'columns-4',
             'regions' => ['first', 'second', 'third', 'fourth'],
         ],
         'sidebar_left' => [
             'label' => 'Sidebar Left',
-            'icon' => '▮◻',
+            'icon' => 'panel-left',
             'regions' => ['sidebar', 'main'],
         ],
         'sidebar_right' => [
             'label' => 'Sidebar Right',
-            'icon' => '◻▮',
+            'icon' => 'panel-right',
             'regions' => ['main', 'sidebar'],
         ],
     ];

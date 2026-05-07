@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
       const saveBtn = document.querySelector('[data-action="save"]') || document.querySelector('.btn-primary');
-      if (saveBtn) saveBtn.click();
+      if (saveBtn && !saveBtn.disabled) saveBtn.click();
     }
 
     // Escape → Close modals/panels

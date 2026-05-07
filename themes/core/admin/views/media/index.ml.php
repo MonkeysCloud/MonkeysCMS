@@ -1,126 +1,135 @@
 @extends('layouts.admin')
 
 @section('title', 'Media Library')
-@section('page_title', 'Media Library')
 
 @section('breadcrumb')
-<a href="/admin" class="breadcrumb__item">Dashboard</a>
-<span class="breadcrumb__sep">›</span>
-<span class="breadcrumb__item breadcrumb__item--active">Media</span>
+<a href="/admin">Dashboard</a>
+<span class="admin-breadcrumb__sep">/</span>
+<span>Media Library</span>
 @endsection
 
-@section('page_actions')
-<button class="btn btn--primary btn--sm" $m-on:click="showUpload = true">📤 Upload Files</button>
+@section('toolbar_actions')
+<a href="/admin/media/upload" class="btn btn--sm btn--primary">
+  <i data-lucide="upload" class="w-4 h-4"></i> Upload
+</a>
+<a href="/admin/media/settings" class="btn btn--sm btn--ghost">
+  <i data-lucide="settings" class="w-4 h-4"></i> Settings
+</a>
 @endsection
 
 @section('content')
-<div id="media-app">
+<div class="admin-content">
 
-  {{-- Upload Zone (toggle) --}}
-  <div class="card mb-4" $m-show="showUpload">
-    <div class="card__body">
-      <div class="upload-zone" $m-on:dragover.prevent="dragOver = true" $m-on:dragleave="dragOver = false" $m-on:drop.prevent="handleDrop($event)" :class="{ 'upload-zone--active': dragOver }">
-        <div class="upload-zone__content">
-          <span class="upload-zone__icon">📂</span>
-          <p>Drag & drop files here or <label class="upload-zone__browse">browse<input type="file" multiple hidden $m-on:change="handleFiles($event)"></label></p>
-          <p class="text-xs text-muted mt-2">Max 10MB per file. Images, documents, videos.</p>
-        </div>
-      </div>
+  {{-- Notifications --}}
+  @php $uploaded = $_GET['uploaded'] ?? null; $deleted = $_GET['deleted'] ?? null; $error = $_GET['error'] ?? null; @endphp
+  @if($uploaded)
+  <div class="admin-alert admin-alert--success">
+    <i data-lucide="check-circle" class="w-4 h-4"></i>
+    {{ $uploaded }} file(s) uploaded successfully.
+  </div>
+  @endif
+  @if($deleted)
+  <div class="admin-alert admin-alert--success">
+    <i data-lucide="check-circle" class="w-4 h-4"></i>
+    Media deleted successfully.
+  </div>
+  @endif
+  @if($error)
+  <div class="admin-alert admin-alert--error">
+    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+    {{ $error }}
+  </div>
+  @endif
+
+  {{-- Filter Tabs --}}
+  <div class="media-filters">
+    <a href="/admin/media" class="media-filter-tab {{ !$type ? 'active' : '' }}">
+      <i data-lucide="grid-3x3" class="w-4 h-4"></i> All
+      <span class="media-filter-tab__count">{{ $diskUsage['count'] ?? 0 }}</span>
+    </a>
+    <a href="/admin/media?type=image" class="media-filter-tab {{ $type === 'image' ? 'active' : '' }}">
+      <i data-lucide="image" class="w-4 h-4"></i> Images
+      <span class="media-filter-tab__count">{{ $diskUsage['by_type']['images'] ?? 0 }}</span>
+    </a>
+    <a href="/admin/media?type=video" class="media-filter-tab {{ $type === 'video' ? 'active' : '' }}">
+      <i data-lucide="video" class="w-4 h-4"></i> Videos
+      <span class="media-filter-tab__count">{{ $diskUsage['by_type']['videos'] ?? 0 }}</span>
+    </a>
+    <a href="/admin/media?type=audio" class="media-filter-tab {{ $type === 'audio' ? 'active' : '' }}">
+      <i data-lucide="music" class="w-4 h-4"></i> Audio
+      <span class="media-filter-tab__count">{{ $diskUsage['by_type']['audio'] ?? 0 }}</span>
+    </a>
+    <a href="/admin/media?type=application" class="media-filter-tab {{ $type === 'application' ? 'active' : '' }}">
+      <i data-lucide="file-text" class="w-4 h-4"></i> Documents
+      <span class="media-filter-tab__count">{{ $diskUsage['by_type']['documents'] ?? 0 }}</span>
+    </a>
+
+    <div class="media-filters__spacer"></div>
+
+    <div class="media-filters__info">
+      <span class="text-muted">{{ $diskUsage['formatted_size'] ?? '0 B' }} used</span>
     </div>
   </div>
 
-  {{-- Filters --}}
-  <div class="card mb-4">
-    <div class="card__body">
-      <div class="flex gap-4 flex-wrap">
-        <input type="text" class="form-input" style="flex:1; min-width:200px;" placeholder="Search media..." $m-model="search">
-        <select class="form-select" style="width:160px;" $m-model="filterType">
-          <option value="">All Types</option>
-          <option value="image">Images</option>
-          <option value="document">Documents</option>
-          <option value="video">Videos</option>
-          <option value="audio">Audio</option>
-        </select>
-        <div class="btn-group">
-          <button class="btn btn--sm" :class="viewMode === 'grid' ? 'btn--primary' : 'btn--ghost'" $m-on:click="viewMode = 'grid'">⊞ Grid</button>
-          <button class="btn btn--sm" :class="viewMode === 'list' ? 'btn--primary' : 'btn--ghost'" $m-on:click="viewMode = 'list'">☰ List</button>
-        </div>
-      </div>
-    </div>
+  {{-- Grid --}}
+  @if(empty($items))
+  <div class="admin-empty">
+    <i data-lucide="image-off" class="w-12 h-12"></i>
+    <h3>No media found</h3>
+    <p>Upload files to get started.</p>
+    <a href="/admin/media/upload" class="btn btn--primary">
+      <i data-lucide="upload" class="w-4 h-4"></i> Upload Files
+    </a>
   </div>
-
-  {{-- Media Grid --}}
-  <div $m-show="viewMode === 'grid'">
-    <div class="grid grid-auto">
-      @foreach($media ?? [] as $item)
-      <div class="media-card" $m-on:click="selectMedia({{ $item->id }})">
-        @if(str_starts_with($item->mime_type ?? '', 'image/'))
-        <img src="/uploads/{{ $item->filename }}" alt="{{ $item->alt_text ?? $item->filename }}" class="media-card__image">
+  @else
+  <div class="media-grid">
+    @foreach($items as $item)
+    <a href="/admin/media/{{ $item->id }}" class="media-card" data-media-id="{{ $item->id }}">
+      <div class="media-card__preview">
+        @if($item->type === 'image')
+          <img src="{{ $item->url ?? '/uploads/' . $item->path }}" alt="{{ $item->alt ?? $item->title ?? '' }}" loading="lazy">
+        @elseif($item->type === 'video')
+          <div class="media-card__icon media-card__icon--video">
+            <i data-lucide="video" class="w-8 h-8"></i>
+          </div>
+        @elseif($item->type === 'audio')
+          <div class="media-card__icon media-card__icon--audio">
+            <i data-lucide="music" class="w-8 h-8"></i>
+          </div>
+        @elseif($item->type === 'document')
+          <div class="media-card__icon media-card__icon--document">
+            <i data-lucide="file-text" class="w-8 h-8"></i>
+          </div>
         @else
-        <div class="media-card__icon">
-          {{ match(true) {
-            str_contains($item->mime_type ?? '', 'pdf') => '📄',
-            str_contains($item->mime_type ?? '', 'video') => '🎬',
-            str_contains($item->mime_type ?? '', 'audio') => '🎵',
-            default => '📎'
-          } }}
-        </div>
+          <div class="media-card__icon media-card__icon--file">
+            <i data-lucide="file" class="w-8 h-8"></i>
+          </div>
         @endif
-        <div class="media-card__info">
-          <div class="media-card__name truncate">{{ $item->filename }}</div>
-          <div class="media-card__meta text-xs text-muted">{{ $item->file_size ?? '' }}</div>
+        <div class="media-card__overlay">
+          <i data-lucide="eye" class="w-5 h-5"></i>
         </div>
       </div>
-      @endforeach
-      @empty($media)
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <div class="empty-state__icon">🖼️</div>
-        <div class="empty-state__title">No media files</div>
-        <p class="text-muted">Upload your first media file to get started.</p>
+      <div class="media-card__info">
+        <span class="media-card__name" title="{{ $item->original_name }}">{{ $item->title ?? $item->original_name }}</span>
+        <span class="media-card__meta">{{ $item->formattedSize }} · {{ strtoupper(pathinfo($item->filename, PATHINFO_EXTENSION)) }}</span>
       </div>
-      @endempty
-    </div>
+    </a>
+    @endforeach
   </div>
 
-  {{-- Media List --}}
-  <div $m-show="viewMode === 'list'">
-    <div class="card">
-      <div class="card__body p-0">
-        <table class="table table--hover">
-          <thead>
-            <tr>
-              <th style="width:50px;"></th>
-              <th>Filename</th>
-              <th>Type</th>
-              <th>Size</th>
-              <th>Uploaded</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach($media ?? [] as $item)
-            <tr>
-              <td>
-                @if(str_starts_with($item->mime_type ?? '', 'image/'))
-                <img src="/uploads/{{ $item->filename }}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:var(--radius-sm);">
-                @else
-                <span style="font-size:1.5rem;">📎</span>
-                @endif
-              </td>
-              <td class="font-medium">{{ $item->filename }}</td>
-              <td class="text-sm text-muted">{{ $item->mime_type ?? '' }}</td>
-              <td class="text-sm text-muted">{{ $item->file_size ?? '' }}</td>
-              <td class="text-sm text-muted">{{ $item->created_at ?? '' }}</td>
-              <td>
-                <button class="btn btn--xs btn--ghost" $m-on:click="editMedia({{ $item->id }})">Edit</button>
-                <button class="btn btn--xs btn--ghost text-danger" $m-on:click="deleteMedia({{ $item->id }})">Delete</button>
-              </td>
-            </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
-    </div>
+  {{-- Pagination --}}
+  @if($totalPages > 1)
+  <div class="admin-pagination">
+    @if($page > 1)
+    <a href="/admin/media?page={{ $page - 1 }}{{ $type ? '&type=' . $type : '' }}" class="btn btn--sm btn--ghost">← Previous</a>
+    @endif
+    <span class="admin-pagination__info">Page {{ $page }} of {{ $totalPages }}</span>
+    @if($page < $totalPages)
+    <a href="/admin/media?page={{ $page + 1 }}{{ $type ? '&type=' . $type : '' }}" class="btn btn--sm btn--ghost">Next →</a>
+    @endif
   </div>
+  @endif
+  @endif
+
 </div>
 @endsection

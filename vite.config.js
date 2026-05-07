@@ -1,9 +1,14 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   root: resolve(__dirname),
   publicDir: false,
+
+  plugins: [
+    tailwindcss(),
+  ],
 
   resolve: {
     alias: {
@@ -20,8 +25,8 @@ export default defineConfig({
         admin: resolve(__dirname, 'resources/js/admin.js'),
         frontend: resolve(__dirname, 'resources/js/frontend.js'),
         'mosaic-editor': resolve(__dirname, 'resources/js/mosaic-editor.js'),
-        'admin-css': resolve(__dirname, 'resources/css/admin.css'),
-        'frontend-css': resolve(__dirname, 'resources/css/frontend.css'),
+        'admin-css': resolve(__dirname, 'themes/core/admin/css/admin.css'),
+        'frontend-css': resolve(__dirname, 'themes/core/front/css/front.css'),
       },
     },
   },

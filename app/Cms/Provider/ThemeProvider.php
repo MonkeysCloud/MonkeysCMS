@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Cms\Provider;
 
+use App\Cms\Theme\AssetRenderer;
 use App\Cms\Theme\AssetResolver;
+use App\Cms\Theme\PageAssets;
 use App\Cms\Theme\ThemeManager;
 use Psr\Container\ContainerInterface;
 
@@ -36,6 +38,10 @@ final class ThemeProvider
 
                 return new AssetResolver($basePath, $isDev, $devUrl);
             },
+
+            AssetRenderer::class => fn(): AssetRenderer => new AssetRenderer(),
+
+            PageAssets::class => fn(): PageAssets => new PageAssets(),
         ];
     }
 }
