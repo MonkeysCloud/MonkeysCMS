@@ -60,13 +60,42 @@
     </form>
   </div>
 
+  {{-- Bulk Actions Bar --}}
+  <div class="bulk-bar" data-bulk-toolbar style="display:none">
+    <span class="bulk-bar__count"><span data-bulk-count>0</span> selected</span>
+    <button class="btn btn--xs btn--ghost" style="color:#34d399" data-bulk-action="activate">
+      <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Activate
+    </button>
+    <button class="btn btn--xs btn--ghost" style="color:#fbbf24" data-bulk-action="deactivate"
+            data-bulk-confirm="Deactivate {count} user{s}?" data-bulk-severity="warning">
+      <i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Deactivate
+    </button>
+    <span class="bulk-bar__separator"></span>
+    <select name="role_id" class="bulk-bar__role-select">
+      <option value="">— Select role —</option>
+      @foreach($roles as $r)
+      <option value="{{ $r['id'] }}">{{ $r['label'] }}</option>
+      @endforeach
+    </select>
+    <button class="btn btn--xs btn--ghost" data-bulk-action="change_role" data-bulk-extra="role_id">
+      <i data-lucide="shield" class="w-3.5 h-3.5"></i> Assign Role
+    </button>
+    <span class="bulk-bar__separator"></span>
+    <button class="btn btn--xs btn--ghost text-danger" data-bulk-action="delete"
+            data-bulk-confirm="Permanently delete {count} user{s}? This cannot be undone."
+            data-bulk-severity="danger">
+      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+    </button>
+  </div>
+
   {{-- Users Table --}}
   @if(!empty($users))
   <div class="card">
     <div class="table-wrap">
-      <table class="data-table">
+      <table class="data-table" id="users-table" data-bulk-actions data-bulk-url="/admin/users/bulk">
         <thead>
           <tr>
+            <th class="table__check"><input type="checkbox" data-bulk-select-all></th>
             <th class="w-12"></th>
             <th>Name</th>
             <th>Email</th>
@@ -79,6 +108,9 @@
         <tbody>
           @foreach($users as $u)
           <tr class="data-table__row">
+            <td class="table__check">
+              <input type="checkbox" value="{{ $u['id'] }}" data-bulk-item>
+            </td>
             <td>
               <div class="user-avatar user-avatar--sm">
                 @if($u['avatar'])
@@ -180,6 +212,7 @@
 </div>
 
 @push('head')
+<link rel="stylesheet" href="/themes/core/admin/css/bulk.css?v={{ time() }}">
 <link rel="stylesheet" href="/themes/core/admin/css/users.css?v={{ time() }}">
 @endpush
 
@@ -209,6 +242,7 @@ document.querySelectorAll('.status-toggle').forEach(btn => {
   });
 });
 </script>
+<script src="/themes/core/admin/js/bulk-actions.js?v={{ time() }}"></script>
 @endpush
 
 @endsection

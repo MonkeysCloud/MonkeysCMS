@@ -298,22 +298,33 @@ final class ContentController
         $action = $body['action'] ?? '';
         $ids = array_map('intval', $body['ids'] ?? []);
 
+        $isJson = str_contains($request->getHeaderLine('Content-Type'), 'application/json');
+
         if (empty($ids)) {
-            return Response::redirect('/admin/content');
+            return $isJson
+                ? Response::json(['error' => 'No items selected'], 422)
+                : Response::redirect('/admin/content');
         }
 
-        match ($action) {
+        $affected = match ($action) {
             'delete'  => $this->contentRepo->bulkDelete($ids),
             'publish' => $this->contentRepo->bulkUpdateStatus($ids, ContentStatus::PUBLISHED),
             'draft'   => $this->contentRepo->bulkUpdateStatus($ids, ContentStatus::DRAFT),
             'archive' => $this->contentRepo->bulkUpdateStatus($ids, ContentStatus::ARCHIVED),
-            default   => null,
+            default   => 0,
         };
 
         $this->activity->setContext($request);
         $this->activity->log('bulk_' . $action, 'node', null, count($ids) . ' items', [
             'ids' => $ids,
         ]);
+
+        if ($isJson) {
+            return Response::json([
+                'message'  => "{$affected} item(s) {$action}ed successfully.",
+                'affected' => $affected,
+            ]);
+        }
 
         return Response::redirect('/admin/content');
     }

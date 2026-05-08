@@ -240,6 +240,48 @@ final class MediaController
         return Response::redirect('/admin/media?deleted=1');
     }
 
+    // ── Bulk Operations ─────────────────────────────────────────────────
+
+    #[Route('POST', '/bulk', name: 'admin::media.bulk')]
+    public function bulk(ServerRequestInterface $request): Response
+    {
+        $raw = (string) $request->getBody();
+        $body = json_decode($raw, true) ?? $request->getParsedBody() ?? [];
+        $action = $body['action'] ?? '';
+        $ids = array_map('intval', $body['ids'] ?? []);
+
+        if (empty($ids)) {
+            return Response::json(['error' => 'No items selected'], 422);
+        }
+
+        $affected = 0;
+
+        match ($action) {
+            'delete' => (function () use ($ids, &$affected) {
+                // Delete files from disk/storage first
+                foreach ($ids as $id) {
+                    try {
+                        $this->media->delete($id);
+                        $affected++;
+                    } catch (\Throwable) {
+                        // Skip individual failures
+                    }
+                }
+            })(),
+            default => null,
+        };
+
+        $this->activity->setContext($request);
+        $this->activity->log('bulk_' . $action, 'media', null, $affected . ' file(s)', [
+            'ids' => $ids,
+        ]);
+
+        return Response::json([
+            'message' => "{$affected} file(s) {$action}d successfully.",
+            'affected' => $affected,
+        ]);
+    }
+
     // ── Settings ────────────────────────────────────────────────────────
 
     #[Route('GET', '/settings', name: 'admin::media.settings')]

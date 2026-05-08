@@ -166,34 +166,32 @@
   </div>
   @endif
 
-  {{-- Bulk Actions Bar --}}
-  <div class="bulk-bar" id="bulk-bar" style="display:none;">
-    <form action="/admin/content/bulk" method="POST" id="bulk-form">
-      <span class="bulk-bar__count"><span id="selected-count">0</span> selected</span>
-      <button type="submit" name="action" value="publish" class="btn btn--xs btn--ghost">
-        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Publish
-      </button>
-      <button type="submit" name="action" value="draft" class="btn btn--xs btn--ghost">
-        <i data-lucide="pencil-line" class="w-3.5 h-3.5"></i> Draft
-      </button>
-      <button type="submit" name="action" value="archive" class="btn btn--xs btn--ghost">
-        <i data-lucide="archive" class="w-3.5 h-3.5"></i> Archive
-      </button>
-      <button type="submit" name="action" value="delete" class="btn btn--xs btn--ghost text-danger"
-              data-confirm="Delete selected content?" data-confirm-title="Bulk Delete">
-        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
-      </button>
-      <div id="bulk-ids"></div>
-    </form>
+  {{-- Bulk Actions Bar (auto-managed by BulkActions.js) --}}
+  <div class="bulk-bar" data-bulk-toolbar style="display:none;">
+    <span class="bulk-bar__count"><span data-bulk-count>0</span> selected</span>
+    <button class="btn btn--xs btn--ghost" data-bulk-action="publish">
+      <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Publish
+    </button>
+    <button class="btn btn--xs btn--ghost" data-bulk-action="draft">
+      <i data-lucide="pencil-line" class="w-3.5 h-3.5"></i> Draft
+    </button>
+    <button class="btn btn--xs btn--ghost" data-bulk-action="archive">
+      <i data-lucide="archive" class="w-3.5 h-3.5"></i> Archive
+    </button>
+    <button class="btn btn--xs btn--ghost text-danger" data-bulk-action="delete"
+            data-bulk-confirm="Are you sure you want to delete {count} item{s}? This action cannot be undone."
+            data-bulk-severity="danger">
+      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+    </button>
   </div>
 
   {{-- Content Table --}}
   <div class="card">
     <div class="card__body p-0">
-      <table class="table table--hover">
+      <table class="table table--hover" id="content-table" data-bulk-actions data-bulk-url="/admin/content/bulk">
         <thead>
           <tr>
-            <th class="table__check"><input type="checkbox" id="check-all"></th>
+            <th class="table__check"><input type="checkbox" data-bulk-select-all></th>
             <th>
               <a href="{{ $sortLink('title') }}" class="sort-link">
                 Title <i data-lucide="{{ $sortIcon('title') }}" class="w-3 h-3"></i>
@@ -222,7 +220,7 @@
           @foreach($nodes ?? [] as $node)
           <tr>
             <td class="table__check">
-              <input type="checkbox" value="{{ $node->id }}" class="node-check">
+              <input type="checkbox" value="{{ $node->id }}" data-bulk-item>
             </td>
             <td>
               <a href="{{ $node->editUrl }}" class="font-medium content-title">{{ $node->title }}</a>
@@ -320,6 +318,7 @@
 </div>
 
 @push('head')
+<link rel="stylesheet" href="/themes/core/admin/css/bulk.css?v={{ time() }}">
 <style>
 /* ── Search + Filters Grid ────────────────────────────────────────── */
 .content-filters-grid {
@@ -398,14 +397,6 @@
 }
 .content-title { color: #e2e8f0; text-decoration: none; }
 .content-title:hover { color: #818cf8; }
-.bulk-bar {
-  background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15);
-  border-radius: 10px; padding: 0.5rem 1rem; margin-bottom: 0.75rem;
-  display: flex; align-items: center; gap: 0.75rem;
-}
-.bulk-bar__count {
-  font-size: 0.8rem; font-weight: 600; color: #818cf8; margin-right: 0.5rem;
-}
 .dropdown { position: relative; }
 .dropdown__menu {
   position: absolute; top: 100%; right: 0; min-width: 180px;
@@ -462,35 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ── Bulk selection ─────────────────────────────────────────────
-  const checkAll = document.getElementById('check-all');
-  const bulkBar = document.getElementById('bulk-bar');
-  const bulkIds = document.getElementById('bulk-ids');
-  const selectedCount = document.getElementById('selected-count');
-
-  function updateBulkBar() {
-    const checked = document.querySelectorAll('.node-check:checked');
-    if (bulkBar) bulkBar.style.display = checked.length > 0 ? 'flex' : 'none';
-    if (selectedCount) selectedCount.textContent = checked.length;
-    if (bulkIds) {
-      bulkIds.innerHTML = '';
-      checked.forEach(cb => {
-        const input = document.createElement('input');
-        input.type = 'hidden'; input.name = 'ids[]'; input.value = cb.value;
-        bulkIds.appendChild(input);
-      });
-    }
-  }
-
-  if (checkAll) {
-    checkAll.addEventListener('change', () => {
-      document.querySelectorAll('.node-check').forEach(cb => { cb.checked = checkAll.checked; });
-      updateBulkBar();
-    });
-  }
-  document.querySelectorAll('.node-check').forEach(cb => {
-    cb.addEventListener('change', updateBulkBar);
-  });
+  // Bulk selection is auto-managed by BulkActions.js via data-bulk-* attributes
 });
 
 // ── Filter helper (used by select dropdowns) ───────────────────────
@@ -505,5 +468,6 @@ function applyFilter(name, value) {
   window.location.href = url.toString();
 }
 </script>
+<script src="/themes/core/admin/js/bulk-actions.js?v={{ time() }}"></script>
 @endpush
 @endsection

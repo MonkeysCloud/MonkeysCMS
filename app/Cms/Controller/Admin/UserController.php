@@ -283,6 +283,83 @@ final class UserController
         return Response::redirect('/admin/users');
     }
 
+    // ── Bulk Operations ─────────────────────────────────────────────────
+
+    #[Route('POST', '/bulk', name: 'admin::users.bulk')]
+    public function bulk(ServerRequestInterface $request): Response
+    {
+        $raw = (string) $request->getBody();
+        $body = json_decode($raw, true) ?? $request->getParsedBody() ?? [];
+        $action = $body['action'] ?? '';
+        $ids = array_map('intval', $body['ids'] ?? []);
+
+        if (empty($ids)) {
+            return Response::json(['error' => 'No items selected'], 422);
+        }
+
+        $currentUserId = (int) $this->session->get('cms_user_id');
+        $affected = 0;
+
+        match ($action) {
+            'delete' => (function () use ($ids, $currentUserId, &$affected) {
+                foreach ($ids as $id) {
+                    // Cannot delete yourself
+                    if ($id === $currentUserId) continue;
+                    // Cannot delete last admin
+                    if ($this->isLastAdmin($id)) continue;
+
+                    $this->pdo->prepare('DELETE FROM cms_users WHERE id = :id')
+                        ->execute(['id' => $id]);
+                    $affected++;
+                }
+            })(),
+
+            'activate' => (function () use ($ids, &$affected) {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $stmt = $this->pdo->prepare(
+                    "UPDATE cms_users SET active = 1 WHERE id IN ({$placeholders})"
+                );
+                $stmt->execute(array_values($ids));
+                $affected = $stmt->rowCount();
+            })(),
+
+            'deactivate' => (function () use ($ids, $currentUserId, &$affected) {
+                foreach ($ids as $id) {
+                    // Cannot deactivate yourself
+                    if ($id === $currentUserId) continue;
+
+                    $this->pdo->prepare('UPDATE cms_users SET active = 0 WHERE id = :id')
+                        ->execute(['id' => $id]);
+                    $affected++;
+                }
+            })(),
+
+            'change_role' => (function () use ($ids, $body, &$affected) {
+                $roleId = (int) ($body['role_id'] ?? 0);
+                if ($roleId <= 0) return;
+
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $stmt = $this->pdo->prepare(
+                    "UPDATE cms_users SET role_id = ? WHERE id IN ({$placeholders})"
+                );
+                $stmt->execute([$roleId, ...array_values($ids)]);
+                $affected = $stmt->rowCount();
+            })(),
+
+            default => null,
+        };
+
+        $this->activity->setContext($request);
+        $this->activity->log('bulk_' . $action, 'user', null, $affected . ' users', [
+            'ids' => $ids,
+        ]);
+
+        return Response::json([
+            'message' => "{$affected} user(s) {$action}d successfully.",
+            'affected' => $affected,
+        ]);
+    }
+
     // ── Toggle Active (AJAX) ────────────────────────────────────────────
 
     #[Route('POST', '/{id:\d+}/toggle-active', name: 'admin::users.toggle_active')]

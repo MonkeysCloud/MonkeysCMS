@@ -23,4 +23,5 @@ return array_merge(
     \App\Cms\Provider\ScheduleProvider::getDefinitions(),
     \App\Cms\Provider\PluginProvider::getDefinitions(),
     \App\Cms\Provider\AdminMenuProvider::getDefinitions(),
+    \App\Cms\Provider\ConfigProvider::getDefinitions(),
 );

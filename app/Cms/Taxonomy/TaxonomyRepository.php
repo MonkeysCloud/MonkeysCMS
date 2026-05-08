@@ -166,6 +166,27 @@ final class TaxonomyRepository
         return $stmt->rowCount() > 0;
     }
 
+    /**
+     * Bulk delete terms — re-parents children and cleans up node_terms.
+     *
+     * @param list<int> $ids
+     */
+    public function bulkDeleteTerms(array $ids): int
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $affected = 0;
+        foreach ($ids as $id) {
+            if ($this->deleteTerm($id)) {
+                $affected++;
+            }
+        }
+
+        return $affected;
+    }
+
     public function reorderTerms(array $weights): void
     {
         $stmt = $this->pdo->prepare('UPDATE terms SET weight = :w WHERE id = :id');

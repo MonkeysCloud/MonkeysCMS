@@ -67,13 +67,24 @@
     </div>
   </div>
 
+  {{-- Bulk Actions Bar --}}
+  <div class="bulk-bar mb-3" data-bulk-toolbar style="display:none">
+    <span class="bulk-bar__count"><span data-bulk-count>0</span> selected</span>
+    <button class="btn btn--xs btn--ghost text-danger" data-bulk-action="delete"
+            data-bulk-confirm="Delete {count} term{s}? Children will be re-parented."
+            data-bulk-severity="danger">
+      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+    </button>
+  </div>
+
   {{-- Terms Table --}}
   <div class="card">
     <div class="card__body card__body--flush">
       @if(!empty($terms))
-      <table class="data-table terms-table" id="terms-table">
+      <table class="data-table terms-table" id="terms-table" data-bulk-actions data-bulk-url="/admin/taxonomy/{{ $vocabulary->id }}/terms/bulk-action">
         <thead>
           <tr>
+            <th class="table__check"><input type="checkbox" data-bulk-select-all></th>
             <th style="width: 40px"></th>
             <th>Name</th>
             <th>Slug</th>
@@ -89,6 +100,7 @@
                 $depthClass = $depth > 0 ? ' term-row--child' : '';
                 $paddingLeft = $depth * 28; // 28px per level
                 $html .= '<tr class="term-row' . $depthClass . '" data-term-id="' . $term->id . '" data-depth="' . $depth . '">';
+                $html .= '<td class="table__check"><input type="checkbox" value="' . $term->id . '" data-bulk-item></td>';
                 $html .= '<td class="term-drag"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-muted"></i></td>';
                 $html .= '<td>';
                 $html .= '<div class="term-name-wrap" style="padding-left:' . $paddingLeft . 'px">';
@@ -214,6 +226,9 @@
 @push('head')
 <style>
 .terms-page { padding: 1.5rem 2rem; max-width: 1100px; }
+</style>
+<link rel="stylesheet" href="/themes/core/admin/css/bulk.css?v={{ time() }}">
+<style>
 
 .terms-header {
   display: flex; justify-content: space-between; align-items: center;
@@ -619,6 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<script src="/themes/core/admin/js/bulk-actions.js?v={{ time() }}"></script>
 @endpush
 
 @endsection

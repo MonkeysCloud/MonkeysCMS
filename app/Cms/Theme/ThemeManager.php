@@ -237,6 +237,85 @@ final class ThemeManager
         return array_filter($this->themes, fn(ThemeInfo $t) => $t->type === 'admin');
     }
 
+    /**
+     * Check if a theme has a screenshot image.
+     */
+    public function hasScreenshot(ThemeInfo $theme): bool
+    {
+        return file_exists($theme->basePath . '/screenshot.png')
+            || file_exists($theme->basePath . '/screenshot.jpg')
+            || file_exists($theme->basePath . '/screenshot.webp');
+    }
+
+    /**
+     * Get the public URL of the theme screenshot.
+     */
+    public function getScreenshotUrl(ThemeInfo $theme): ?string
+    {
+        $prefix = '/themes/' . $theme->tier . '/' . $theme->name;
+
+        foreach (['screenshot.png', 'screenshot.jpg', 'screenshot.webp'] as $file) {
+            if (file_exists($theme->basePath . '/' . $file)) {
+                return $prefix . '/' . $file;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Delete a theme from the filesystem.
+     *
+     * Only allows deleting contrib/custom themes — core themes are protected.
+     *
+     * @return bool True if the theme was deleted
+     * @throws \RuntimeException if the theme is core or active
+     */
+    public function deleteTheme(string $name): bool
+    {
+        $theme = $this->themes[$name] ?? null;
+        if (!$theme) {
+            return false;
+        }
+
+        if ($theme->tier === 'core') {
+            throw new \RuntimeException("Cannot delete core theme '{$name}'.");
+        }
+
+        if ($theme === $this->activeTheme || $theme === $this->adminTheme) {
+            throw new \RuntimeException("Cannot delete active theme '{$name}'. Deactivate it first.");
+        }
+
+        // Recursively delete the theme directory
+        $this->deleteDirectory($theme->basePath);
+        unset($this->themes[$name]);
+
+        return true;
+    }
+
+    /**
+     * Recursively delete a directory.
+     */
+    private function deleteDirectory(string $dir): void
+    {
+        if (!is_dir($dir)) return;
+
+        $items = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST,
+        );
+
+        foreach ($items as $item) {
+            if ($item->isDir()) {
+                rmdir($item->getPathname());
+            } else {
+                unlink($item->getPathname());
+            }
+        }
+
+        rmdir($dir);
+    }
+
     // ── Inheritance Chain ───────────────────────────────────────────────
 
     /**

@@ -128,6 +128,46 @@ final class MediaRepository
         return $stmt->rowCount() > 0;
     }
 
+    /**
+     * Bulk delete media records.
+     *
+     * @param list<int> $ids
+     */
+    public function bulkDelete(array $ids): int
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->pdo->prepare("DELETE FROM media WHERE id IN ({$placeholders})");
+        $stmt->execute(array_values($ids));
+
+        return $stmt->rowCount();
+    }
+
+    /**
+     * Find multiple media entities by ID.
+     *
+     * @param list<int> $ids
+     * @return MediaEntity[]
+     */
+    public function bulkFind(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->pdo->prepare("SELECT * FROM media WHERE id IN ({$placeholders})");
+        $stmt->execute(array_values($ids));
+
+        return array_map(
+            fn(array $row) => (new MediaEntity())->hydrate($row),
+            $stmt->fetchAll(PDO::FETCH_ASSOC)
+        );
+    }
+
     public function count(?string $type = null): int
     {
         $sql = 'SELECT COUNT(*) FROM media WHERE 1=1';

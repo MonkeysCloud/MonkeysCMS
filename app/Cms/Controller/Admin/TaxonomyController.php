@@ -267,6 +267,36 @@ final class TaxonomyController
         return Response::redirect("/admin/taxonomy/{$vocabId}/terms?success=" . urlencode('Term deleted.'));
     }
 
+    #[Route('POST', '/{vocabId:\d+}/terms/bulk-action', name: 'admin::taxonomy.terms.bulk_action')]
+    public function bulkActionTerms(ServerRequestInterface $request, string $vocabId): Response
+    {
+        $vocab = $this->repo->findVocabularyById((int) $vocabId);
+        if (!$vocab) {
+            return Response::json(['error' => 'Vocabulary not found'], 404);
+        }
+
+        $raw = (string) $request->getBody();
+        $body = json_decode($raw, true) ?? $request->getParsedBody() ?? [];
+        $action = $body['action'] ?? '';
+        $ids = array_map('intval', $body['ids'] ?? []);
+
+        if (empty($ids)) {
+            return Response::json(['error' => 'No items selected'], 422);
+        }
+
+        $affected = 0;
+
+        match ($action) {
+            'delete' => $affected = $this->repo->bulkDeleteTerms($ids),
+            default  => null,
+        };
+
+        return Response::json([
+            'message'  => "{$affected} term(s) deleted successfully.",
+            'affected' => $affected,
+        ]);
+    }
+
     #[Route('POST', '/{vocabId:\d+}/terms/reorder', name: 'admin::taxonomy.terms.reorder')]
     public function reorderTerms(ServerRequestInterface $request, string $vocabId): Response
     {

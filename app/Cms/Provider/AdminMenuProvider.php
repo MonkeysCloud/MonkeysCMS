@@ -202,5 +202,9 @@ final class AdminMenuProvider
             weight: 20, permission: P::AI_ACCESS);
         $registry->addChild('tools', 'tools.cron', 'Cron', '/admin/cron',
             weight: 30, permission: P::CRON_MANAGE);
+        $registry->addChild('tools', 'tools.config_export', 'Export Config', '/admin/config/export',
+            weight: 40, permission: P::SETTINGS_MANAGE);
+        $registry->addChild('tools', 'tools.config_import', 'Import Config', '/admin/config/import',
+            weight: 50, permission: P::SETTINGS_MANAGE);
     }
 }

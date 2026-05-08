@@ -109,25 +109,37 @@ final class CommentController
     #[Route('POST', '/bulk', name: 'admin::comments.bulk')]
     public function bulk(ServerRequestInterface $request): Response
     {
-        $body = $request->getParsedBody() ?? [];
+        $raw = (string) $request->getBody();
+        $body = json_decode($raw, true) ?? $request->getParsedBody() ?? [];
         $action = $body['action'] ?? '';
         $ids = array_map('intval', $body['ids'] ?? []);
 
+        $isJson = str_contains($request->getHeaderLine('Content-Type'), 'application/json');
+
         if (empty($ids)) {
-            return Response::redirect('/admin/comments');
+            return $isJson
+                ? Response::json(['error' => 'No items selected'], 422)
+                : Response::redirect('/admin/comments');
         }
 
-        match ($action) {
+        $affected = match ($action) {
             'approve' => $this->commentService->bulkUpdateStatus($ids, 'approved'),
             'spam'    => $this->commentService->bulkUpdateStatus($ids, 'spam'),
             'trash'   => $this->commentService->bulkUpdateStatus($ids, 'trashed'),
-            default   => null,
+            default   => 0,
         };
 
         $this->activity->setContext($request);
         $this->activity->log('bulk_' . $action, 'comment', null, count($ids) . ' comments', [
             'ids' => $ids,
         ]);
+
+        if ($isJson) {
+            return Response::json([
+                'message'  => "{$affected} comment(s) {$action}d successfully.",
+                'affected' => $affected,
+            ]);
+        }
 
         return $this->redirectBack($request);
     }

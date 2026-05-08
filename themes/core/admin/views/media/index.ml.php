@@ -17,6 +17,10 @@
 </a>
 @endsection
 
+@push('head')
+<link rel="stylesheet" href="/themes/core/admin/css/bulk.css?v={{ time() }}">
+@endpush
+
 @section('content')
 <div class="admin-content">
 
@@ -82,9 +86,22 @@
     </a>
   </div>
   @else
-  <div class="media-grid">
+
+  {{-- Bulk Actions Bar --}}
+  <div class="bulk-bar mb-3" data-bulk-toolbar style="display:none">
+    <span class="bulk-bar__count"><span data-bulk-count>0</span> selected</span>
+    <button class="btn btn--xs btn--ghost text-danger" data-bulk-action="delete"
+            data-bulk-confirm="Permanently delete {count} file{s}? This cannot be undone."
+            data-bulk-severity="danger">
+      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+    </button>
+  </div>
+
+  <div class="media-grid" id="media-grid" data-bulk-actions data-bulk-url="/admin/media/bulk" data-bulk-grid>
     @foreach($items as $item)
     <a href="/admin/media/{{ $item->id }}" class="media-card" data-media-id="{{ $item->id }}">
+      <input type="checkbox" value="{{ $item->id }}" data-bulk-item class="media-card__check"
+             onclick="event.stopPropagation(); event.preventDefault(); this.checked = !this.checked; this.dispatchEvent(new Event('change', {bubbles:true}));">
       <div class="media-card__preview">
         @if($item->type === 'image')
           <img src="{{ $item->url ?? '/uploads/' . $item->path }}" alt="{{ $item->alt ?? $item->title ?? '' }}" loading="lazy">
@@ -132,4 +149,8 @@
   @endif
 
 </div>
+
+@push('scripts')
+<script src="/themes/core/admin/js/bulk-actions.js?v={{ time() }}"></script>
+@endpush
 @endsection

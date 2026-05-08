@@ -74,30 +74,28 @@
   </div>
 </div>
 
-{{-- Bulk Actions Bar --}}
-<div class="bulk-bar mb-3" id="cm-bulk-bar" style="display:none">
-  <form action="/admin/comments/bulk" method="POST" id="cm-bulk-form">
-    <span class="bulk-bar__count"><span id="cm-selected-count">0</span> selected</span>
-    <button type="submit" name="action" value="approve" class="btn btn--xs btn--ghost" style="color:#34d399">
-      <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Approve
-    </button>
-    <button type="submit" name="action" value="spam" class="btn btn--xs btn--ghost" style="color:#fbbf24">
-      <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Spam
-    </button>
-    <button type="submit" name="action" value="trash" class="btn btn--xs btn--ghost" style="color:#f87171">
-      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Trash
-    </button>
-    <div id="cm-bulk-ids"></div>
-  </form>
+{{-- Bulk Actions Bar (auto-managed by BulkActions.js) --}}
+<div class="bulk-bar mb-3" data-bulk-toolbar style="display:none">
+  <span class="bulk-bar__count"><span data-bulk-count>0</span> selected</span>
+  <button class="btn btn--xs btn--ghost" style="color:#34d399" data-bulk-action="approve">
+    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Approve
+  </button>
+  <button class="btn btn--xs btn--ghost" style="color:#fbbf24" data-bulk-action="spam">
+    <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Spam
+  </button>
+  <button class="btn btn--xs btn--ghost" style="color:#f87171" data-bulk-action="trash"
+          data-bulk-confirm="Move {count} comment{s} to trash?" data-bulk-severity="warning">
+    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Trash
+  </button>
 </div>
 
 {{-- Comments Table --}}
 <div class="card">
   <div class="card__body p-0">
-    <table class="table table--hover">
+    <table class="table table--hover" id="comments-table" data-bulk-actions data-bulk-url="/admin/comments/bulk">
       <thead>
         <tr>
-          <th class="table__check"><input type="checkbox" id="cm-check-all"></th>
+          <th class="table__check"><input type="checkbox" data-bulk-select-all></th>
           <th>Author</th>
           <th>Comment</th>
           <th style="width:180px">In Response To</th>
@@ -110,7 +108,7 @@
         @foreach($items as $comment)
         <tr>
           <td class="table__check">
-            <input type="checkbox" value="{{ $comment->id }}" class="cm-check">
+            <input type="checkbox" value="{{ $comment->id }}" data-bulk-item>
           </td>
           <td>
             <div class="cm-author">
@@ -360,40 +358,9 @@
   font-size: .8rem; font-weight: 600; color: #818cf8; margin-right: .5rem;
 }
 </style>
+<link rel="stylesheet" href="/themes/core/admin/css/bulk.css?v={{ time() }}">
 @endpush
 
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const checkAll = document.getElementById('cm-check-all');
-  const bulkBar = document.getElementById('cm-bulk-bar');
-  const bulkIds = document.getElementById('cm-bulk-ids');
-  const selectedCount = document.getElementById('cm-selected-count');
-
-  function updateBulkBar() {
-    const checked = document.querySelectorAll('.cm-check:checked');
-    if (bulkBar) bulkBar.style.display = checked.length > 0 ? 'flex' : 'none';
-    if (selectedCount) selectedCount.textContent = checked.length;
-    if (bulkIds) {
-      bulkIds.innerHTML = '';
-      checked.forEach(cb => {
-        const input = document.createElement('input');
-        input.type = 'hidden'; input.name = 'ids[]'; input.value = cb.value;
-        bulkIds.appendChild(input);
-      });
-    }
-  }
-
-  if (checkAll) {
-    checkAll.addEventListener('change', () => {
-      document.querySelectorAll('.cm-check').forEach(cb => { cb.checked = checkAll.checked; });
-      updateBulkBar();
-    });
-  }
-
-  document.querySelectorAll('.cm-check').forEach(cb => {
-    cb.addEventListener('change', updateBulkBar);
-  });
-});
-</script>
+<script src="/themes/core/admin/js/bulk-actions.js?v={{ time() }}"></script>
 @endpush
