@@ -1,0 +1,83 @@
+# Feature Card — Advanced component showcasing all field types
+# Category: Molecules (composed of multiple atomic fields)
+
+label = "Feature Card"
+description = "Rich card with image, text, CTA, entity references, and repeatable features"
+icon = "square"
+category = "Molecules"
+
+fields {
+    image {
+        type = "media"
+        label = "Card Image"
+        required = true
+    }
+    title {
+        type = "string"
+        label = "Title"
+        required = true
+        translatable = true
+    }
+    subtitle {
+        type = "string"
+        label = "Subtitle"
+        translatable = true
+    }
+    body {
+        type = "html"
+        label = "Body Text"
+        translatable = true
+    }
+    cta {
+        type = "link"
+        label = "Call to Action"
+        translatable = true
+    }
+    featured {
+        type = "boolean"
+        label = "Featured Card"
+        default = false
+    }
+    bg_color {
+        type = "color"
+        label = "Background Color"
+        default = "#1a1b2e"
+    }
+    related_content {
+        type = "entity_reference"
+        label = "Related Article"
+        entity_type = "article"
+        cardinality = 1
+    }
+    tags {
+        type = "taxonomy_reference"
+        label = "Tags"
+        vocabulary = "tags"
+        cardinality = -1
+    }
+    features {
+        type = "repeater"
+        label = "Feature List"
+        translatable = true
+        sub_fields {
+            icon {
+                type = "string"
+                label = "Icon Name"
+            }
+            text {
+                type = "string"
+                label = "Feature Text"
+                translatable = true
+            }
+        }
+    }
+    footer_slot {
+        type = "slot"
+        label = "Footer Content"
+        allowed_types = [
+            "button",
+            "text",
+            "image",
+        ]
+    }
+}

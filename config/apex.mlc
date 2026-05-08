@@ -1,0 +1,40 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Apex AI Configuration — MonkeysCMS
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# AI provider settings. These serve as defaults; the admin panel overrides
+# are stored in the `settings` table (group=apex) and take priority.
+# Use .env variables for Docker/CI environments.
+
+apex {
+    provider = ${APEX_PROVIDER:openai}
+    api_key  = ${APEX_API_KEY:""}
+    model    = ${APEX_MODEL:"gpt-4.1"}
+    base_url = ${APEX_BASE_URL:""}
+
+    defaults {
+        temperature = 0.7
+        max_tokens  = 4096
+    }
+
+    features {
+        content_generation = true
+        seo_assistant      = true
+        taxonomy_suggest   = true
+        mosaic_ai          = true
+        field_assistance   = true
+        image_analysis     = false
+    }
+
+    guardrails {
+        pii_detection       = true
+        prompt_injection    = true
+        toxicity_filter     = false
+        max_output_words    = 5000
+    }
+
+    budget {
+        monthly_limit_usd = 100.00
+        alert_threshold   = 0.8
+    }
+}

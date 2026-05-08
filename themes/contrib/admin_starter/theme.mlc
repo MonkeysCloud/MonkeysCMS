@@ -1,0 +1,43 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Admin Starter Theme (Example Child Admin Theme)
+# themes/contrib/admin_starter/theme.mlc
+#
+# Demonstrates how to create a custom admin theme that extends the
+# core "admin" base theme. The user can switch admin themes in:
+#   Settings → Appearance → Admin Theme
+#
+# To install a custom admin theme:
+#   1. Place folder in themes/contrib/ or themes/custom/
+#   2. Include theme.mlc with type = "admin" and base_theme = "admin"
+#   3. Add your custom CSS/JS to override the look & feel
+#   4. Optionally override specific views/components
+#   5. Activate it in CMS settings
+# ═══════════════════════════════════════════════════════════════════════════════
+
+theme {
+    name        = "admin_starter"
+    label       = "Admin Starter"
+    description = "Example custom admin theme — extends the core admin with a dark sidebar"
+    version     = "1.0.0"
+    type        = "admin"
+
+    # Extend the core admin base theme
+    base_theme = "admin"
+
+    # Inherit all parent regions (remove this line to use parent's regions)
+    # Or override with your own:
+    # regions = ["header", "sidebar", "content", "footer", "messages", "breadcrumb", "actions"]
+
+    # Add extra libraries on top of what admin provides
+    libraries = []
+
+    # Custom CSS/JS — loaded AFTER the base admin theme's assets
+    assets {
+        css = [
+            "css/admin_starter.css"
+        ]
+        js = [
+            "js/admin_starter.js"
+        ]
+    }
+}

@@ -1,0 +1,153 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MonkeysCMS — Global Modal System (Base)
+   ─────────────────────────────────────────────────────────────────────────
+   Structure-only. Themes override visual properties via CSS variables:
+     --modal-bg, --modal-border, --modal-shadow, --modal-radius,
+     --modal-overlay-bg, --modal-header-border, --modal-footer-border,
+     --modal-title-color, --modal-close-color, --modal-backdrop-blur
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Variables (defaults — themes override these) ────────────────────────── */
+:root {
+  --modal-bg:            #1e293b;
+  --modal-border:        rgba(255,255,255,0.1);
+  --modal-shadow:        0 20px 60px rgba(0,0,0,0.5);
+  --modal-radius:        12px;
+  --modal-overlay-bg:    rgba(0,0,0,0.6);
+  --modal-backdrop-blur: 4px;
+  --modal-header-border: rgba(255,255,255,0.08);
+  --modal-footer-border: rgba(255,255,255,0.08);
+  --modal-title-color:   rgba(255,255,255,0.95);
+  --modal-close-color:   rgba(255,255,255,0.5);
+  --modal-width:         480px;
+  --modal-z:             1000;
+}
+
+/* ── Overlay ─────────────────────────────────────────────────────────────── */
+.cms-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay-bg);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--modal-z);
+  padding: 1rem;
+
+  /* Entry animation */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.cms-modal-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ── Modal Container ─────────────────────────────────────────────────────── */
+.cms-modal {
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  border-radius: var(--modal-radius);
+  box-shadow: var(--modal-shadow);
+  width: 100%;
+  max-width: var(--modal-width);
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* Entry animation */
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.2s ease;
+}
+
+.cms-modal-overlay.is-open .cms-modal {
+  transform: scale(1) translateY(0);
+}
+
+/* ── Size Variants ───────────────────────────────────────────────────────── */
+.cms-modal--sm  { --modal-width: 360px; }
+.cms-modal--md  { --modal-width: 480px; }
+.cms-modal--lg  { --modal-width: 640px; }
+.cms-modal--xl  { --modal-width: 800px; }
+.cms-modal--full { --modal-width: calc(100vw - 2rem); max-height: calc(100vh - 2rem); }
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.cms-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--modal-header-border);
+  flex-shrink: 0;
+}
+
+.cms-modal__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--modal-title-color);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cms-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: var(--modal-close-color);
+  font-size: 1.25rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.cms-modal__close:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.9);
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+.cms-modal__body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.cms-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--modal-footer-border);
+  flex-shrink: 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .cms-modal {
+    --modal-width: 100%;
+    max-height: calc(100vh - 1rem);
+    border-radius: var(--modal-radius) var(--modal-radius) 0 0;
+  }
+
+  .cms-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+}
+
+/* ── Utility: prevent body scroll when modal is open ─────────────────────── */
+body.cms-modal-open {
+  overflow: hidden;
+}

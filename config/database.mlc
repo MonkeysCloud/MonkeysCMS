@@ -1,86 +1,43 @@
-# MonkeysCMS Database Configuration
-# Uses MLC (MonkeysLegion Config) format
+# ═══════════════════════════════════════════════════════════════════════════════
+# Database Configuration — MonkeysLegion v2
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Supports MySQL 8.4+, PostgreSQL 16+, and SQLite.
+# If no DB_HOST is set the skeleton falls back to SQLite in-memory.
 
 database {
-    # Default connection
     default = ${DB_CONNECTION:mysql}
-    
+
     connections {
         mysql {
-            driver = mysql
-            host = ${DB_HOST:127.0.0.1}
-            port = ${DB_PORT:3306}
-            database = ${DB_DATABASE:monkeyscms}
+            driver   = "mysql"
+            host     = ${DB_HOST:127.0.0.1}
+            port     = ${DB_PORT:3306}
+            database = ${DB_DATABASE:ml_skeleton}
             username = ${DB_USERNAME:root}
             password = ${DB_PASSWORD:}
-            charset = ${DB_CHARSET:utf8mb4}
-            collation = utf8mb4_unicode_ci
-            prefix = ${DB_PREFIX:}
-            strict = true
-            engine = InnoDB
+            charset  = ${DB_CHARSET:utf8mb4}
+
+            options {
+                errmode            = "exception"
+                default_fetch_mode = "assoc"
+            }
         }
-        
-        sqlite {
-            driver = sqlite
-            database = ${DB_DATABASE:storage/database.sqlite}
-            prefix = ${DB_PREFIX:}
-            foreign_key_constraints = true
-        }
-        
+
         pgsql {
-            driver = pgsql
-            host = ${DB_HOST:127.0.0.1}
-            port = ${DB_PORT:5432}
-            database = ${DB_DATABASE:monkeyscms}
+            driver   = "pgsql"
+            host     = ${DB_HOST:127.0.0.1}
+            port     = ${DB_PORT:5432}
+            database = ${DB_DATABASE:ml_skeleton}
             username = ${DB_USERNAME:postgres}
             password = ${DB_PASSWORD:}
-            charset = utf8
-            prefix = ${DB_PREFIX:}
-            schema = public
-            sslmode = prefer
+            charset  = ${DB_CHARSET:utf8}
+            schema   = "public"
         }
-    }
-    
-    # Migration settings
-    migrations {
-        table = migrations
-        path = "var/migrations"
-    }
-    
-    # Query logging (dev only)
-    logging {
-        enabled = ${DB_LOGGING:false}
-        slow_query_threshold = 1000  # milliseconds
-    }
-}
 
-# Redis configuration (for cache, sessions, queue)
-redis {
-    default = ${REDIS_CONNECTION:default}
-    
-    connections {
-        default {
-            host = ${REDIS_HOST:127.0.0.1}
-            port = ${REDIS_PORT:6379}
-            password = ${REDIS_PASSWORD:}
-            database = ${REDIS_DB:0}
-            prefix = ${REDIS_PREFIX:monkeyscms:}
-        }
-        
-        cache {
-            host = ${REDIS_HOST:127.0.0.1}
-            port = ${REDIS_PORT:6379}
-            password = ${REDIS_PASSWORD:}
-            database = ${REDIS_CACHE_DB:1}
-            prefix = ${REDIS_PREFIX:monkeyscms:cache:}
-        }
-        
-        session {
-            host = ${REDIS_HOST:127.0.0.1}
-            port = ${REDIS_PORT:6379}
-            password = ${REDIS_PASSWORD:}
-            database = ${REDIS_SESSION_DB:2}
-            prefix = ${REDIS_PREFIX:monkeyscms:session:}
+        sqlite {
+            driver   = "sqlite"
+            database = ${DB_DATABASE::memory:}
         }
     }
 }

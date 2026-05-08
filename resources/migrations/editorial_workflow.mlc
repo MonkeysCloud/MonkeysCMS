@@ -1,0 +1,73 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Editorial Workflow Migration
+# resources/migrations/editorial_workflow.mlc
+#
+# Tracks content moderation transitions, custom statuses, and editorial config.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "workflow_statuses" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    machine_name  = { type = "string", length = 50 }
+    label         = { type = "string", length = 100 }
+    color         = { type = "string", length = 20, default = "#94a3b8" }
+    icon          = { type = "string", length = 50, default = "circle" }
+    weight        = { type = "integer", default = 0 }
+    is_system     = { type = "boolean", default = false }
+    is_published  = { type = "boolean", default = false }
+    is_review     = { type = "boolean", default = false }
+    is_default    = { type = "boolean", default = false }
+    created_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    unique "idx_ws_name" = ["machine_name"]
+    index "idx_ws_weight" = ["weight"]
+}
+
+table "workflow_transitions" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    node_id       = { type = "bigint", references = "nodes.id", on_delete = "CASCADE" }
+    from_status   = { type = "string", length = 50 }
+    to_status     = { type = "string", length = 50 }
+    user_id       = { type = "bigint", nullable = true }
+    assignee_id   = { type = "bigint", nullable = true }
+    comment       = { type = "text", nullable = true }
+    created_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_wt_node"    = ["node_id"]
+    index "idx_wt_user"    = ["user_id"]
+    index "idx_wt_assignee"= ["assignee_id"]
+    index "idx_wt_created" = ["created_at"]
+}
+
+table "workflow_config" {
+    id               = { type = "bigint", auto_increment = true, primary = true }
+    content_type     = { type = "string", length = 64, unique = true }
+    require_review   = { type = "boolean", default = false }
+    allowed_transitions = { type = "json", default = "{}" }
+    reviewer_roles   = { type = "json", default = "[\"editor\",\"admin\"]" }
+    notify_on_submit = { type = "boolean", default = true }
+    created_at       = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at       = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+}
+
+# ── Seed default statuses ──────────────────────────────────────────────────────
+seed "workflow_statuses" {
+    { machine_name = "draft",        label = "Draft",        color = "#fbbf24", icon = "pencil-line",  weight = 0,  is_system = true, is_published = false, is_review = false, is_default = true }
+    { machine_name = "needs_review", label = "Needs Review", color = "#f97316", icon = "send",         weight = 10, is_system = true, is_published = false, is_review = true,  is_default = false }
+    { machine_name = "in_review",    label = "In Review",    color = "#3b82f6", icon = "eye",          weight = 20, is_system = true, is_published = false, is_review = true,  is_default = false }
+    { machine_name = "published",    label = "Published",    color = "#22c55e", icon = "check-circle", weight = 30, is_system = true, is_published = true,  is_review = false, is_default = false }
+    { machine_name = "archived",     label = "Archived",     color = "#64748b", icon = "archive",      weight = 40, is_system = true, is_published = false, is_review = false, is_default = false }
+    { machine_name = "scheduled",    label = "Scheduled",    color = "#8b5cf6", icon = "clock",        weight = 50, is_system = true, is_published = false, is_review = false, is_default = false }
+}
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+rollback "workflow_statuses" {
+    drop_table = "workflow_statuses"
+}
+
+rollback "workflow_transitions" {
+    drop_table = "workflow_transitions"
+}
+
+rollback "workflow_config" {
+    drop_table = "workflow_config"
+}

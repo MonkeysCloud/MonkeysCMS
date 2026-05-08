@@ -1,0 +1,31 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Activity / Audit Log Migration
+# resources/migrations/activity_log.mlc
+#
+# Tracks all administrative actions for security auditing and operational
+# visibility. Logs user actions, entity changes, and system events.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "activity_log" {
+    id           = { type = "bigint", auto_increment = true, primary = true }
+    user_id      = { type = "bigint", nullable = true }
+    user_name    = { type = "string", length = 100, nullable = true }
+    action       = { type = "string", length = 50 }
+    entity_type  = { type = "string", length = 50 }
+    entity_id    = { type = "string", length = 100, nullable = true }
+    entity_label = { type = "string", length = 255, nullable = true }
+    details      = { type = "json", nullable = true }
+    ip_address   = { type = "string", length = 45, nullable = true }
+    user_agent   = { type = "string", length = 500, nullable = true }
+    created_at   = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_activity_user"    = ["user_id"]
+    index "idx_activity_entity"  = ["entity_type", "entity_id"]
+    index "idx_activity_action"  = ["action"]
+    index "idx_activity_created" = ["created_at"]
+}
+
+# Rollback
+rollback "activity_log" {
+    drop_table = "activity_log"
+}

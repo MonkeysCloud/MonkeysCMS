@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Content Access Control Migration
+# resources/migrations/content_access.mlc
+#
+# Role-based access control for content types and individual nodes.
+# Supports per-content-type and per-node permission overrides.
+# Users may have multiple roles; access is granted if ANY role matches.
+#
+# Permission types: view, create, edit, delete
+# Entity types: content_type (machine name), node (node ID)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "content_access" {
+    id          = { type = "unsignedBigInt", autoIncrement = true, primary = true }
+    entity_type = { type = "string", length = 50 }
+    entity_id   = { type = "string", length = 100 }
+    role_id     = { type = "unsignedBigInt" }
+    permission  = { type = "string", length = 20 }
+
+    unique "idx_access"  = ["entity_type", "entity_id", "role_id", "permission"]
+    index  "idx_entity"  = ["entity_type", "entity_id"]
+    index  "idx_role"    = ["role_id"]
+}
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+rollback "content_access" {
+    drop_table = "content_access"
+}

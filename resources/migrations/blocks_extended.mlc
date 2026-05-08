@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Blocks Extended Migration
+# resources/migrations/blocks_extended.mlc
+#
+# Adds:
+#   - block_instances  — Pre-filled reusable block instances
+#   - block_type_revisions — Track changes to block type definitions
+#   - ALTER block_types — Add settings, is_system columns
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Block Instances ─────────────────────────────────────────────────────────
+# Pre-filled, reusable block instances that can be placed multiple times
+# across different Mosaic layouts (e.g., "Footer CTA", "Newsletter Signup").
+table "block_instances" {
+    id              = { type = "bigint", auto_increment = true, primary = true }
+    block_type      = { type = "string", length = 64 }
+    label           = { type = "string", length = 255 }
+    description     = { type = "text", nullable = true }
+    data            = { type = "json", default = "{}" }
+    settings        = { type = "json", default = "{}" }
+    status          = { type = "string", length = 20, default = "published" }
+    author_id       = { type = "bigint", nullable = true }
+    usage_count     = { type = "integer", default = 0 }
+    created_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    updated_at      = { type = "timestamp", default = "CURRENT_TIMESTAMP", on_update = true }
+
+    index "idx_bi_type" = ["block_type"]
+    index "idx_bi_status" = ["status"]
+    index "idx_bi_author" = ["author_id"]
+}
+
+# ── Block Type Revisions ────────────────────────────────────────────────────
+# Snapshot field definitions and templates whenever a block type is modified.
+# Prevents breaking existing Mosaic layouts when fields change.
+table "block_type_revisions" {
+    id                = { type = "bigint", auto_increment = true, primary = true }
+    block_type_id     = { type = "string", length = 64 }
+    revision          = { type = "integer", default = 1 }
+    fields_snapshot   = { type = "json", default = "{}" }
+    template_snapshot = { type = "text", nullable = true }
+    settings_snapshot = { type = "json", default = "{}" }
+    changed_by        = { type = "bigint", nullable = true }
+    change_summary    = { type = "string", length = 500, nullable = true }
+    created_at        = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_btr_type" = ["block_type_id"]
+    index "idx_btr_revision" = ["block_type_id", "revision"]
+}
+
+# ── Rollback ────────────────────────────────────────────────────────────────
+rollback "block_instances" {
+    drop_table = "block_instances"
+}
+rollback "block_type_revisions" {
+    drop_table = "block_type_revisions"
+}

@@ -1,0 +1,18 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Two-Factor Authentication Migration
+# resources/migrations/two_factor_auth.mlc
+#
+# Adds TOTP (Time-based One-Time Password) support to user accounts.
+# Columns added to cms_users: totp_secret, totp_enabled, recovery_codes
+# ═══════════════════════════════════════════════════════════════════════════════
+
+alter "cms_users" {
+    add_column "totp_secret"    = { type = "string", length = 255, nullable = true }
+    add_column "totp_enabled"   = { type = "boolean", default = false }
+    add_column "recovery_codes" = { type = "json", nullable = true }
+}
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+rollback "cms_users_2fa" {
+    drop_column "cms_users" = ["totp_secret", "totp_enabled", "recovery_codes"]
+}

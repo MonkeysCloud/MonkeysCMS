@@ -1,0 +1,43 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Admin Starter Theme — Custom Admin CSS
+ * themes/contrib/admin_starter/css/admin_starter.css
+ *
+ * Loaded AFTER all global libraries and the base admin theme's CSS.
+ * Override any variable or style here to change the admin look & feel.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Dark sidebar variant */
+:root {
+  --admin-sidebar-bg: var(--gray-900);
+  --admin-sidebar-text: var(--gray-200);
+  --admin-sidebar-active: var(--color-primary);
+  --admin-header-bg: var(--gray-800);
+  --admin-header-border: var(--gray-700);
+}
+
+.admin-sidebar {
+  background: var(--admin-sidebar-bg);
+  color: var(--admin-sidebar-text);
+}
+
+.admin-sidebar .nav-link {
+  color: var(--admin-sidebar-text);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+  transition: all var(--transition-fast);
+}
+
+.admin-sidebar .nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.admin-sidebar .nav-link.active {
+  background: var(--admin-sidebar-active);
+  color: #fff;
+}
+
+.admin-header {
+  background: var(--admin-header-bg);
+  border-bottom: 1px solid var(--admin-header-border);
+}

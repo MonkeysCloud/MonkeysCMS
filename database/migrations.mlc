@@ -1,0 +1,160 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Migration Registry
+# database/migrations.mlc
+#
+# Declares all database migrations in execution order.
+# Each migration has a unique ID, description, and MLC schema file path.
+#
+# Migrations are tracked in the `cms_migrations` table.
+# Only unexecuted migrations will run during `migrate:run`.
+#
+# Migration files use MLC schema syntax (table definitions, seeds, rollbacks).
+# The SchemaBuilder converts these to SQL automatically.
+#
+# Format:
+#   migration "<id>" {
+#       description = "..."
+#       file        = "path/to/schema.mlc"     # MLC schema file relative to project root
+#       module      = "core"                    # Module that owns this migration
+#       version     = "1.0.0"                   # CMS version this was introduced
+#       requires    = ["<other-migration-id>"]  # Dependencies (optional)
+#       reversible  = true                      # Whether rollback is defined (optional)
+#   }
+# ═══════════════════════════════════════════════════════════════════════════════
+
+migrations {
+
+    # ── Migration Tracking (self-bootstrap) ──────────────────────────────
+    # NOTE: This is always executed first by the MigrationManager.
+    migration "migration_tracking" {
+        description = "Migration tracking table (self-bootstrap)"
+        file        = "resources/migrations/migration_tracking.mlc"
+        module      = "system"
+        version     = "1.0.0"
+        requires    = []
+        reversible  = false
+    }
+
+    # ── Core Schema ──────────────────────────────────────────────────────
+    migration "core_schema" {
+        description = "Core CMS tables: roles, users, content types, nodes, fields, media, menus, taxonomy, settings"
+        file        = "resources/migrations/core_schema.mlc"
+        module      = "core"
+        version     = "1.0.0"
+        requires    = []
+        reversible  = false
+    }
+
+    # ── API Tokens ───────────────────────────────────────────────────────
+    migration "api_tokens" {
+        description = "API bearer token storage for the decoupled JSON:API"
+        file        = "resources/migrations/api_tokens.mlc"
+        module      = "api"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Apex AI Usage Log ─────────────────────────────────────────────────
+    migration "apex_usage_log" {
+        description = "AI usage tracking: operations, tokens, costs per user/model"
+        file        = "resources/migrations/apex_usage_log.mlc"
+        module      = "apex"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Blocks Extended ──────────────────────────────────────────────────
+    migration "blocks_extended" {
+        description = "Block instances (reusable pre-filled blocks) and block type revision tracking"
+        file        = "resources/migrations/blocks_extended.mlc"
+        module      = "blocks"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Activity / Audit Log ────────────────────────────────────────────
+    migration "activity_log" {
+        description = "Activity audit log for tracking administrative actions"
+        file        = "resources/migrations/activity_log.mlc"
+        module      = "core"
+        version     = "1.1.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Comments System ─────────────────────────────────────────────────
+    migration "comments" {
+        description = "Comments system for content nodes with threaded replies and moderation"
+        file        = "resources/migrations/comments.mlc"
+        module      = "comments"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Cron Log ────────────────────────────────────────────────────────
+    migration "cron_log" {
+        description = "Scheduled task execution log for the admin cron dashboard"
+        file        = "resources/migrations/cron_log.mlc"
+        module      = "system"
+        version     = "1.1.0"
+        requires    = []
+        reversible  = true
+    }
+    # ── Editorial Workflow ──────────────────────────────────────────────
+    migration "editorial_workflow" {
+        description = "Workflow transitions log and per-content-type moderation config"
+        file        = "resources/migrations/editorial_workflow.mlc"
+        module      = "workflow"
+        version     = "1.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+    # ── Sessions (DB Driver) ──────────────────────────────────────────────
+    migration "sessions" {
+        description = "Database-backed session storage (replaces file driver)"
+        file        = "resources/migrations/sessions.mlc"
+        module      = "system"
+        version     = "2.0.0"
+        requires    = []
+        reversible  = true
+    }
+    # ── Plugin System ───────────────────────────────────────────────────
+    migration "plugins" {
+        description = "Plugin registry and per-plugin settings storage"
+        file        = "resources/migrations/plugins.mlc"
+        module      = "plugins"
+        version     = "2.0.0"
+        requires    = []
+        reversible  = true
+    }
+    # ── Webhooks ────────────────────────────────────────────────────────
+    migration "webhooks" {
+        description = "Outbound webhook system: endpoint registration, event subscriptions, delivery log"
+        file        = "resources/migrations/webhooks.mlc"
+        module      = "webhooks"
+        version     = "2.0.0"
+        requires    = ["core_schema"]
+        reversible  = true
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Settings
+# ═══════════════════════════════════════════════════════════════════════════════
+
+settings {
+    # Table that tracks executed migrations
+    tracking_table = "cms_migrations"
+
+    # Where SQL migration files live
+    migrations_path = "resources/migrations"
+
+    # Execution order strategy: "dependency" (resolve requires) or "sequential" (by ID sort)
+    order = "dependency"
+
+    # Enable dry-run mode globally (can be overridden per command)
+    dry_run = false
+
+    # Auto-backup before migration (creates a dump)
+    auto_backup = true
+    backup_path = "storage/backups"
+}

@@ -1,0 +1,36 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+ * MonkeysCMS — Typography
+ * resources/css/base/typography.css
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+h1, h2, h3, h4, h5, h6 { color: var(--text-heading); font-weight: var(--weight-bold); line-height: var(--leading-tight); margin-bottom: var(--space-3); }
+h1 { font-size: var(--text-4xl); font-weight: var(--weight-extrabold); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); font-weight: var(--weight-semibold); }
+h6 { font-size: var(--text-base); font-weight: var(--weight-semibold); }
+p { margin-bottom: var(--space-4); }
+small { font-size: var(--text-sm); }
+strong, b { font-weight: var(--weight-semibold); }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--bg-surface); padding: 0.15em 0.4em; border-radius: var(--radius-sm); }
+pre { font-family: var(--font-mono); font-size: var(--text-sm); background: var(--bg-surface); padding: var(--space-4); border-radius: var(--radius); overflow-x: auto; margin-bottom: var(--space-4); }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid var(--color-primary); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); color: var(--text-muted); background: var(--color-primary-light); border-radius: 0 var(--radius) var(--radius) 0; }
+ul, ol { padding-left: var(--space-6); margin-bottom: var(--space-4); }
+li { margin-bottom: var(--space-1); }
+
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+.text-2xl { font-size: var(--text-2xl); }
+.text-muted { color: var(--text-muted); }
+.text-primary { color: var(--color-primary); }
+.text-success { color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.font-medium { font-weight: var(--weight-medium); }
+.font-semibold { font-weight: var(--weight-semibold); }
+.font-bold { font-weight: var(--weight-bold); }

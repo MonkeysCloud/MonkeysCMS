@@ -1,0 +1,290 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Canvas Chrome — Mosaic Editor
+   
+   Injected into the Shadow DOM alongside the front-end theme CSS.
+   Contains ONLY editor interaction styles — selection outlines, drag handles,
+   drop zones, block headers. NO visual block styles (those come from the theme).
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Root Container ──────────────────────────────────────────────────────────── */
+.mosaic-canvas-root {
+  padding: 1rem;
+  min-height: 300px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ── Sections ────────────────────────────────────────────────────────────────── */
+.me-section {
+  margin-bottom: .75rem;
+  border: 1px dashed transparent;
+  border-radius: 10px;
+  transition: border-color .15s;
+}
+.me-section:hover {
+  border-color: rgba(255,255,255,.08);
+}
+.me-section.is-selected {
+  border-color: rgba(99,102,241,.3);
+  background: rgba(99,102,241,.02);
+}
+
+/* Section Header */
+.me-section__header {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .6rem;
+  background: rgba(255,255,255,.02);
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  user-select: none;
+}
+.me-section__grip {
+  cursor: grab;
+  color: #3f4253;
+  padding: .15rem;
+  display: flex;
+  align-items: center;
+}
+.me-section__grip:active { cursor: grabbing; }
+.me-section__layout-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .68rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: .15rem .4rem;
+  border-radius: 5px;
+  background: rgba(255,255,255,.03);
+}
+.me-section__actions {
+  display: flex;
+  gap: .1rem;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.me-section:hover .me-section__actions { opacity: 1; }
+.me-section__btn {
+  background: none;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  padding: .25rem;
+  border-radius: 4px;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+}
+.me-section__btn:hover { color: #e2e8f0; background: rgba(255,255,255,.06); }
+.me-section__btn--danger:hover { color: #f87171; background: rgba(248,113,113,.08); }
+
+/* ── Regions (layout grid) ───────────────────────────────────────────────────── */
+.me-regions {
+  padding: .4rem;
+}
+.me-regions--full { }
+.me-regions--two_col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.me-regions--three_col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+.me-regions--sidebar_left {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1rem;
+}
+.me-regions--sidebar_right {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .me-regions--two_col,
+  .me-regions--three_col,
+  .me-regions--sidebar_left,
+  .me-regions--sidebar_right {
+    grid-template-columns: 1fr;
+  }
+}
+
+.me-region {
+  min-height: 60px;
+  border-radius: 8px;
+  transition: background .15s;
+}
+.me-region.is-drag-over {
+  background: rgba(99,102,241,.04);
+}
+.me-region__empty {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  border: 2px dashed rgba(255,255,255,.06);
+  border-radius: 8px;
+  color: #475569;
+  font-size: .8rem;
+  transition: all .2s;
+}
+.me-region__empty:hover {
+  border-color: rgba(99,102,241,.2);
+  color: #818cf8;
+}
+
+/* ── Blocks ──────────────────────────────────────────────────────────────────── */
+.me-block {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  margin-bottom: .4rem;
+  transition: border-color .15s, box-shadow .15s;
+}
+.me-block:last-child { margin-bottom: 0; }
+.me-block:hover {
+  border-color: rgba(99,102,241,.18);
+}
+.me-block.is-selected {
+  border-color: rgba(99,102,241,.4);
+  box-shadow: 0 0 0 2px rgba(99,102,241,.08);
+}
+.me-block.is-dragging {
+  opacity: .35;
+}
+
+/* Block Header (drag handle + label + actions) */
+.me-block__header {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .25rem .5rem;
+  background: rgba(0,0,0,.15);
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  user-select: none;
+}
+.me-block__grip {
+  cursor: grab;
+  color: #3f4253;
+  padding: .15rem;
+  display: flex;
+  align-items: center;
+}
+.me-block__grip:active { cursor: grabbing; }
+.me-block__icon {
+  color: #818cf8;
+  display: flex;
+  align-items: center;
+}
+.me-block__label {
+  font-size: .7rem;
+  font-weight: 500;
+  color: #94a3b8;
+  flex: 1;
+}
+.me-block__actions {
+  display: flex;
+  gap: .1rem;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.me-block:hover .me-block__actions { opacity: 1; }
+.me-block__btn {
+  background: none;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  padding: .2rem;
+  border-radius: 4px;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+}
+.me-block__btn:hover { color: #e2e8f0; background: rgba(255,255,255,.06); }
+.me-block__btn--del:hover { color: #f87171; }
+
+/* Block Preview */
+.me-block__preview {
+  padding: .5rem;
+  font-size: inherit;
+  color: inherit;
+  line-height: inherit;
+  overflow: auto;
+}
+.me-block__preview img { max-width: 100%; border-radius: 6px; }
+.me-block__preview-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: #475569;
+  font-size: .72rem;
+}
+.me-block__preview--placeholder {
+  color: #475569;
+  font-style: italic;
+  font-size: .75rem;
+  padding: .6rem;
+  text-align: center;
+}
+
+/* Inline Editing */
+.me-block__preview--editable { padding: .5rem; }
+.me-inline-edit {
+  outline: none;
+  min-height: 1.5em;
+  border-radius: 6px;
+  padding: .25rem .4rem;
+  transition: box-shadow .15s, background .15s;
+  cursor: text;
+}
+.me-inline-edit:focus {
+  box-shadow: 0 0 0 2px rgba(99,102,241,.2);
+  background: rgba(99,102,241,.04);
+}
+.me-inline-edit h1, .me-inline-edit h2, .me-inline-edit h3 { margin: 0; }
+
+/* ── Drop Indicators ─────────────────────────────────────────────────────────── */
+.me-drop-indicator {
+  height: 3px;
+  background: #818cf8;
+  border-radius: 2px;
+  margin: .15rem 0;
+  opacity: 0;
+  transition: opacity .1s;
+  box-shadow: 0 0 6px rgba(99,102,241,.4);
+}
+.me-drop-indicator.is-visible {
+  opacity: 1;
+}
+
+/* ── Add Section Button ──────────────────────────────────────────────────────── */
+.me-canvas__add-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: 1rem;
+  border: 2px dashed rgba(255,255,255,.06);
+  border-radius: 14px;
+  color: #475569;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: all .2s;
+  margin-top: .75rem;
+}
+.me-canvas__add-section:hover {
+  border-color: rgba(99,102,241,.25);
+  color: #818cf8;
+  background: rgba(99,102,241,.03);
+}

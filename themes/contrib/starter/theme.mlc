@@ -1,0 +1,52 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Starter Theme (Example Child Theme)
+# themes/contrib/starter/theme.mlc
+#
+# This is an EXAMPLE of how to create a child theme.
+# It extends the core "front" base theme, inheriting all its
+# views, components, regions, libraries, and assets.
+#
+# To install a new theme:
+#   1. Place the theme folder in themes/contrib/ or themes/custom/
+#   2. Include this theme.mlc config file
+#   3. Set base_theme to inherit from an existing theme
+#   4. Override only what you want to change
+#   5. Activate it in CMS settings
+#
+# The theme inherits EVERYTHING from its parent. You only need to:
+#   - Add your own CSS/JS for customization
+#   - Override specific views by placing them in views/
+#   - Override specific components by placing them in components/
+#   - Add/remove libraries
+#   - Redefine regions if needed
+# ═══════════════════════════════════════════════════════════════════════════════
+
+theme {
+    name        = "starter"
+    label       = "Starter Theme"
+    description = "Example child theme — demonstrates how to extend a base theme"
+    version     = "1.0.0"
+    type        = "frontend"
+
+    # Extend the core "front" theme
+    # All views, components, regions, libraries, and assets from "front" are inherited
+    base_theme = "front"
+
+    # Override regions (optional — remove this to inherit parent's regions)
+    # regions = ["header", "hero", "content", "sidebar", "footer"]
+
+    # Add extra libraries on top of what the parent provides
+    libraries = [
+        "core/modals"
+    ]
+
+    # Theme-specific CSS/JS — loaded AFTER parent's assets
+    assets {
+        css = [
+            "css/starter.css"
+        ]
+        js = [
+            "js/starter.js"
+        ]
+    }
+}

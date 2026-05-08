@@ -1,0 +1,22 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Content Locking Migration
+# resources/migrations/content_locking.mlc
+#
+# Pessimistic content locking: prevents concurrent edits by locking nodes
+# when an editor opens the edit form. Locks auto-expire after 15 minutes.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "content_locks" {
+    node_id    = { type = "bigint", primary = true }
+    user_id    = { type = "bigint" }
+    locked_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    expires_at = { type = "timestamp" }
+
+    index "idx_cl_user"    = ["user_id"]
+    index "idx_cl_expires" = ["expires_at"]
+}
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+rollback "content_locks" {
+    drop_table = "content_locks"
+}

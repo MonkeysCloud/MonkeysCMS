@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Cron Log Migration
+# resources/migrations/cron_log.mlc
+#
+# Stores execution history for scheduled tasks.
+# Used by the admin Cron Dashboard for monitoring and diagnostics.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "cron_log" {
+    id            = { type = "bigint", auto_increment = true, primary = true }
+    task_id       = { type = "string", length = 255 }
+    task_name     = { type = "string", length = 255 }
+    status        = { type = "string", length = 20, default = "running" }
+    duration_ms   = { type = "int", nullable = true }
+    output        = { type = "text", nullable = true }
+    error         = { type = "text", nullable = true }
+    started_at    = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+    finished_at   = { type = "timestamp", nullable = true }
+
+    index "idx_cron_task"    = ["task_id"]
+    index "idx_cron_status"  = ["status"]
+    index "idx_cron_started" = ["started_at"]
+}
+
+# Rollback
+rollback "cron_log" {
+    drop_table = "cron_log"
+}

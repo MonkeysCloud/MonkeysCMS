@@ -1,0 +1,21 @@
+{
+  "name": "monkeyscms",
+  "version": "2.0.0",
+  "description": "MonkeysCMS — A modern PHP CMS powered by MonkeysLegion v2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "monkeysjs": "^1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.4",
+    "tailwindcss": "^4.2.4",
+    "vite": "^6.4.2"
+  }
+}

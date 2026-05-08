@@ -4,139 +4,67 @@ declare(strict_types=1);
 
 namespace App\Cms\Taxonomy;
 
-use App\Cms\Attributes\ContentType;
-use App\Cms\Attributes\Field;
-use App\Cms\Attributes\Id;
-use App\Cms\Core\BaseEntity;
+use MonkeysLegion\Entity\Attributes\Column;
+use MonkeysLegion\Entity\Attributes\Entity;
+use MonkeysLegion\Entity\Attributes\Id;
 
 /**
- * VocabularyEntity - Database-defined taxonomy vocabularies
- *
- * Vocabularies can be defined both in code and in the database.
- * Database-defined vocabularies can have custom fields added to their terms.
+ * VocabularyEntity — A taxonomy vocabulary (e.g., "Categories", "Tags").
  */
-#[ContentType(
-    tableName: 'vocabularies',
-    label: 'Vocabulary',
-    description: 'Taxonomy vocabulary definitions'
-)]
-class VocabularyEntity extends BaseEntity
+#[Entity(table: 'vocabularies')]
+class VocabularyEntity
 {
-    #[Id(strategy: 'auto')]
+    #[Id]
     public ?int $id = null;
 
-    #[Field(type: 'string', label: 'Vocabulary ID', required: true, length: 100, unique: true)]
-    public string $vocabulary_id = '';
+    #[Column(type: 'string', length: 64, unique: true)]
+    public string $machine_name = '';
 
-    #[Field(type: 'string', label: 'Name', required: true, length: 255)]
-    public string $name = '';
+    #[Column(type: 'string', length: 128)]
+    public string $label = '';
 
-    #[Field(type: 'text', label: 'Description', required: false)]
+    #[Column(type: 'text', nullable: true)]
     public ?string $description = null;
 
-    #[Field(type: 'string', label: 'Icon', required: false, length: 50)]
-    public string $icon = '🏷️';
+    #[Column(type: 'boolean', default: true)]
+    public bool $hierarchical = false;
 
-    #[Field(type: 'boolean', label: 'Is System', default: false)]
-    public bool $is_system = false;
-
-    #[Field(type: 'boolean', label: 'Enabled', default: true)]
-    public bool $enabled = true;
-
-    #[Field(type: 'boolean', label: 'Hierarchical', default: true)]
-    public bool $hierarchical = true;
-
-    #[Field(type: 'boolean', label: 'Multiple Selection', default: true)]
+    #[Column(type: 'boolean', default: false)]
     public bool $multiple = true;
 
-    #[Field(type: 'boolean', label: 'Required', default: false)]
-    public bool $required = false;
-
-    #[Field(type: 'int', label: 'Max Depth', default: 0)]
-    public int $max_depth = 0; // 0 = unlimited
-
-    #[Field(type: 'json', label: 'Settings', default: [])]
-    public array $settings = [];
-
-    #[Field(type: 'json', label: 'Allowed Content Types', default: [])]
-    public array $allowed_content_types = [];
-
-    #[Field(type: 'int', label: 'Weight', default: 0)]
+    #[Column(type: 'integer', default: 0)]
     public int $weight = 0;
 
-    #[Field(type: 'datetime')]
+    #[Column(type: 'datetime')]
     public ?\DateTimeImmutable $created_at = null;
 
-    #[Field(type: 'datetime')]
+    #[Column(type: 'datetime')]
     public ?\DateTimeImmutable $updated_at = null;
 
-    /**
-     * Custom fields for terms in this vocabulary
-     * @var array<\App\Cms\Fields\FieldDefinition>
-     */
-    public array $fields = [];
-
-    public function prePersist(): void
+    public function hydrate(array $data): static
     {
-        parent::prePersist();
+        $this->id = isset($data['id']) ? (int) $data['id'] : $this->id;
+        $this->machine_name = $data['machine_name'] ?? $this->machine_name;
+        $this->label = $data['label'] ?? $this->label;
+        $this->description = $data['description'] ?? $this->description;
+        $this->hierarchical = (bool) ($data['hierarchical'] ?? $this->hierarchical);
+        $this->multiple = (bool) ($data['multiple'] ?? $this->multiple);
+        $this->weight = (int) ($data['weight'] ?? $this->weight);
+        $this->created_at = isset($data['created_at']) ? new \DateTimeImmutable($data['created_at']) : $this->created_at;
+        $this->updated_at = isset($data['updated_at']) ? new \DateTimeImmutable($data['updated_at']) : $this->updated_at;
 
-        if (empty($this->vocabulary_id)) {
-            $this->vocabulary_id = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $this->name));
-        }
+        return $this;
     }
 
-    /**
-     * Get field definition by machine name
-     */
-    public function getField(string $machineName): ?\App\Cms\Fields\FieldDefinition
-    {
-        foreach ($this->fields as $field) {
-            if ($field->machine_name === $machineName) {
-                return $field;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Check if this vocabulary allows a content type
-     */
-    public function allowsContentType(string $contentType): bool
-    {
-        if (empty($this->allowed_content_types)) {
-            return true; // All content types
-        }
-        return in_array($contentType, $this->allowed_content_types, true);
-    }
-
-    /**
-     * Get a specific setting
-     */
-    public function getSetting(string $key, mixed $default = null): mixed
-    {
-        return $this->settings[$key] ?? $default;
-    }
-
-    /**
-     * Convert to array for API responses
-     */
     public function toArray(): array
     {
         return [
             'id' => $this->id,
-            'vocabulary_id' => $this->vocabulary_id,
-            'name' => $this->name,
+            'machine_name' => $this->machine_name,
+            'label' => $this->label,
             'description' => $this->description,
-            'icon' => $this->icon,
-            'is_system' => $this->is_system,
-            'enabled' => $this->enabled,
             'hierarchical' => $this->hierarchical,
             'multiple' => $this->multiple,
-            'required' => $this->required,
-            'max_depth' => $this->max_depth,
-            'settings' => $this->settings,
-            'allowed_content_types' => $this->allowed_content_types,
-            'fields' => array_map(fn($f) => $f->toArray(), $this->fields),
         ];
     }
 }

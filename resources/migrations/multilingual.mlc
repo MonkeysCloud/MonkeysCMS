@@ -1,0 +1,91 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Multilingual System Migration
+# resources/migrations/multilingual.mlc
+#
+# Phase 1: Languages registry + entity-agnostic translation mapping table.
+# Phase 2: Add language column to existing entity tables.
+# Module is toggleable via settings (multilingual_enabled).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+table "languages" {
+    code       = { type = "string", length = 10, primary = true }
+    label      = { type = "string", length = 100 }
+    native     = { type = "string", length = 100 }
+    direction  = { type = "string", length = 3, default = "ltr" }
+    enabled    = { type = "boolean", default = false }
+    is_default = { type = "boolean", default = false }
+    weight     = { type = "integer", default = 0 }
+    created_at = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    index "idx_lang_enabled" = ["enabled"]
+    index "idx_lang_weight"  = ["weight"]
+}
+
+table "entity_translations" {
+    id          = { type = "bigint", auto_increment = true, primary = true }
+    source_type = { type = "string", length = 50 }
+    source_id   = { type = "bigint" }
+    target_type = { type = "string", length = 50 }
+    target_id   = { type = "bigint" }
+    language    = { type = "string", length = 10 }
+    created_at  = { type = "timestamp", default = "CURRENT_TIMESTAMP" }
+
+    unique "idx_src_lang"   = ["source_type", "source_id", "language"]
+    index "idx_target"      = ["target_type", "target_id"]
+    index "idx_lang"        = ["language"]
+}
+
+# Phase 2: Add language column to existing entity tables
+alter "terms" {
+    add_column "language" = { type = "string", length = 10, default = "en", after = "id" }
+    add_index "idx_terms_lang" = ["language"]
+}
+
+alter "menu_items" {
+    add_column "language" = { type = "string", length = 10, default = "en", after = "id" }
+    add_index "idx_menu_items_lang" = ["language"]
+}
+
+alter "menus" {
+    add_column "language" = { type = "string", length = 10, default = "en", after = "id" }
+    add_index "idx_menus_lang" = ["language"]
+}
+
+alter "block_instances" {
+    add_column "language" = { type = "string", length = 10, default = "en", after = "id" }
+    add_index "idx_block_instances_lang" = ["language"]
+}
+
+alter "webforms" {
+    add_column "language" = { type = "string", length = 10, default = "en", after = "id" }
+    add_index "idx_webforms_lang" = ["language"]
+}
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+rollback "languages" {
+    drop_table = "languages"
+}
+
+rollback "entity_translations" {
+    drop_table = "entity_translations"
+}
+
+rollback "terms" {
+    drop_column = "language"
+}
+
+rollback "menu_items" {
+    drop_column = "language"
+}
+
+rollback "menus" {
+    drop_column = "language"
+}
+
+rollback "block_instances" {
+    drop_column = "language"
+}
+
+rollback "webforms" {
+    drop_column = "language"
+}

@@ -1,0 +1,299 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Bulk Operations — Shared Styles
+   Used across Content, Comments, Media, Users, and Taxonomy admin listings.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Bulk Action Bar ───────────────────────────────────────────────────── */
+.bulk-bar {
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.15);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: bulkBarSlide 0.2s ease;
+}
+
+@keyframes bulkBarSlide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.bulk-bar__count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #818cf8;
+  margin-right: 0.5rem;
+  white-space: nowrap;
+}
+
+.bulk-bar__separator {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+
+.bulk-bar__role-select {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: #e2e8f0;
+}
+
+/* ── Table Checkbox Column ─────────────────────────────────────────────── */
+.table__check {
+  width: 40px;
+  text-align: center;
+  padding-left: 0.75rem !important;
+  padding-right: 0.25rem !important;
+}
+
+.table__check input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: #818cf8;
+  width: 15px;
+  height: 15px;
+}
+
+/* ── Selected Row Highlight ────────────────────────────────────────────── */
+.row--selected {
+  background: rgba(99,102,241,0.06) !important;
+}
+
+.row--selected td:first-child {
+  box-shadow: inset 3px 0 0 #818cf8;
+}
+
+/* ── Media Card Checkbox Overlay ───────────────────────────────────────── */
+.media-card {
+  position: relative;
+}
+
+.media-card__check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #818cf8;
+  opacity: 0.5;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.media-card__check:checked,
+.media-card:hover .media-card__check {
+  opacity: 1;
+}
+
+.media-card__check:checked {
+  transform: scale(1.1);
+}
+
+.media-card--selected {
+  outline: 2px solid #818cf8;
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+
+.media-card--selected .media-card__preview {
+  opacity: 0.85;
+}
+
+/* ── Confirmation Modal ────────────────────────────────────────────────── */
+.bulk-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: bulkFadeIn 0.15s ease;
+}
+
+@keyframes bulkFadeIn {
+  from { opacity: 0; }
+}
+
+.bulk-confirm-modal {
+  background: #1a1f2e;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  width: 420px;
+  max-width: 95vw;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  animation: bulkSlideUp 0.2s ease;
+}
+
+@keyframes bulkSlideUp {
+  from { transform: translateY(16px); opacity: 0; }
+}
+
+.bulk-confirm-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.bulk-confirm-modal__icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.bulk-confirm-modal__icon--danger {
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+}
+
+.bulk-confirm-modal__icon--warning {
+  background: rgba(251,191,36,0.15);
+  color: #fbbf24;
+}
+
+.bulk-confirm-modal__icon--info {
+  background: rgba(99,102,241,0.15);
+  color: #818cf8;
+}
+
+.bulk-confirm-modal__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.bulk-confirm-modal__body {
+  padding: 1.25rem 1.5rem;
+}
+
+.bulk-confirm-modal__message {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.bulk-confirm-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Toast Notification ────────────────────────────────────────────────── */
+.bulk-toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.bulk-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  pointer-events: auto;
+  animation: toastSlideIn 0.25s ease;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  max-width: 360px;
+}
+
+@keyframes toastSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+.bulk-toast--fadeout {
+  animation: toastSlideOut 0.3s ease forwards;
+}
+
+@keyframes toastSlideOut {
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+.bulk-toast--success {
+  background: rgba(34,197,94,0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34,197,94,0.3);
+}
+
+.bulk-toast--error {
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.3);
+}
+
+.bulk-toast--info {
+  background: rgba(99,102,241,0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99,102,241,0.3);
+}
+
+.bulk-toast__close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0.15rem;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+  line-height: 1;
+}
+
+.bulk-toast__close:hover {
+  opacity: 1;
+}
+
+/* ── Progress Bar (for large batches) ──────────────────────────────────── */
+.bulk-progress {
+  display: none;
+  height: 3px;
+  background: rgba(99,102,241,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.bulk-progress--active {
+  display: block;
+}
+
+.bulk-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, #818cf8, #a5b4fc);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s ease;
+  animation: bulkProgressPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bulkProgressPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}

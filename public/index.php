@@ -1,22 +1,32 @@
 <?php
-
 declare(strict_types=1);
 
-/**
- * MonkeysCMS - Application Entry Point
- * 
- * This file serves as the front controller for all HTTP requests.
- * All requests are routed through this file by the web server.
- */
+use MonkeysLegion\Framework\Application;
+use MonkeysLegion\Router\ControllerScanner;
 
-// Define the base path constant
 define('ML_BASE_PATH', dirname(__DIR__));
+require ML_BASE_PATH . '/vendor/autoload.php';
 
-// Load Composer autoloader
-require_once ML_BASE_PATH . '/vendor/autoload.php';
+$app = Application::create(basePath: ML_BASE_PATH);
 
-use App\Core\Kernel;
+// Load user DI bindings (interface overrides + content services)
+$userBindings = require ML_BASE_PATH . '/config/app.php';
+$app->withBindings($userBindings);
 
-// Initialize and Boot the Application Kernel
-$kernel = new Kernel(ML_BASE_PATH);
-$kernel->run();
+// Boot the framework (registers providers, middleware, etc.)
+$container = $app->boot();
+
+// ── CMS Controller Registration ─────────────────────────────────────────
+// The framework auto-scans app/Controller/ for routes.
+// CMS controllers live in app/Cms/Controller/ and need to be registered too.
+if ($container->has(ControllerScanner::class)) {
+    /** @var ControllerScanner $scanner */
+    $scanner = $container->get(ControllerScanner::class);
+    $cmsDir = ML_BASE_PATH . '/app/Cms/Controller';
+    if (is_dir($cmsDir)) {
+        $scanner->scan($cmsDir, 'App\\Cms\\Controller');
+    }
+}
+
+// Run the HTTP kernel
+$app->run();

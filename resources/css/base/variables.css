@@ -1,0 +1,137 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+ * MonkeysCMS — Design Tokens & CSS Variables
+ * resources/css/base/variables.css
+ *
+ * Global design tokens inherited by ALL themes.
+ * Themes override these via their own CSS files.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Color System ──────────────────────────────────────────────────── */
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-light: rgba(99, 102, 241, 0.12);
+  --color-primary-rgb: 99, 102, 241;
+
+  --color-secondary: #8b5cf6;
+  --color-secondary-hover: #7c3aed;
+
+  --color-success: #22c55e;
+  --color-success-light: rgba(34, 197, 94, 0.1);
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.1);
+  --color-danger: #ef4444;
+  --color-danger-light: rgba(239, 68, 68, 0.1);
+  --color-info: #3b82f6;
+  --color-info-light: rgba(59, 130, 246, 0.1);
+
+  /* ── Neutral Palette ───────────────────────────────────────────────── */
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --gray-950: #020617;
+
+  /* ── Semantic Colors ───────────────────────────────────────────────── */
+  --bg: var(--gray-50);
+  --bg-card: #ffffff;
+  --bg-surface: var(--gray-100);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --text: var(--gray-800);
+  --text-muted: var(--gray-500);
+  --text-heading: var(--gray-900);
+  --border: var(--gray-200);
+  --border-hover: var(--gray-300);
+
+  /* ── Typography ────────────────────────────────────────────────────── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-serif: 'Georgia', 'Times New Roman', serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+
+  /* ── Spacing ───────────────────────────────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* ── Layout ────────────────────────────────────────────────────────── */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1440px;
+  --sidebar-width: 260px;
+
+  /* ── Radius ────────────────────────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ───────────────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ── Transitions ───────────────────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* ── Z-Index Scale ─────────────────────────────────────────────────── */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+}
+
+/* ── Dark Mode ───────────────────────────────────────────────────────── */
+[data-theme="dark"], .dark {
+  --bg: var(--gray-900);
+  --bg-card: var(--gray-800);
+  --bg-surface: var(--gray-700);
+  --text: var(--gray-200);
+  --text-muted: var(--gray-400);
+  --text-heading: var(--gray-50);
+  --border: var(--gray-600);
+  --border-hover: var(--gray-500);
+}

@@ -1,0 +1,183 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS — Global Libraries
+# config/libraries.mlc
+#
+# Shared CSS/JS libraries that any theme can attach without reproducing them.
+# Themes declare which libraries they use via `libraries = [...]` in theme.mlc.
+#
+# Libraries defined here are available globally — themes inherit them
+# through the base theme chain. A child theme inherits its parent's
+# libraries automatically.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+libraries {
+
+    # ── Fonts ──────────────────────────────────────────────────────────────
+    library "core/fonts" {
+        description = "Google Fonts — Inter (used by admin + front themes)"
+        preconnect = [
+            "https://fonts.googleapis.com"
+            "https://fonts.gstatic.com"
+        ]
+        css = [
+            "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        ]
+        js = []
+        weight = -110
+        required = true
+        module = false
+    }
+
+    # ── Core (compiled by Tailwind/Vite — NOT served as HTTP assets) ────
+    library "core/base" {
+        description = "Core CSS reset, variables, grid, typography (compiled via @import)"
+        css = []
+        js = []
+        weight = -100
+        required = false
+    }
+
+    library "core/monkeysjs" {
+        description = "MonkeysJS reactive library (global UMD)"
+        js = [
+            "assets/js/monkeysjs.min.js"
+        ]
+        css = []
+        weight = -90
+        required = true
+        module = false
+    }
+
+    library "core/icons" {
+        description = "Lucide icon set"
+        js = [
+            "https://unpkg.com/lucide@latest"
+        ]
+        css = []
+        weight = -80
+        required = true
+        module = false
+    }
+
+    # ── Components ───────────────────────────────────────────────────────
+    library "core/forms" {
+        description = "Form styling: inputs, selects, buttons, labels"
+        css = [
+            "resources/css/components/forms.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    library "core/buttons" {
+        description = "Button styles and variants"
+        css = [
+            "resources/css/components/buttons.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    library "core/cards" {
+        description = "Card component styles"
+        css = [
+            "resources/css/components/cards.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    library "core/tables" {
+        description = "Table component styles"
+        css = [
+            "resources/css/components/tables.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    library "core/alerts" {
+        description = "Alert and notification styles"
+        css = [
+            "resources/css/components/alerts.css"
+        ]
+        js = [
+            "resources/js/components/alerts.js"
+        ]
+        weight = -50
+    }
+
+    library "core/modals" {
+        description = "Modal dialog component"
+        css = [
+            "resources/css/components/modals.css"
+        ]
+        js = [
+            "resources/js/components/modals.js"
+        ]
+        weight = -40
+    }
+
+    library "core/navigation" {
+        description = "Navigation, breadcrumbs, pagination"
+        css = [
+            "resources/css/components/navigation.css"
+        ]
+        js = []
+        weight = -50
+    }
+
+    # ── Media ────────────────────────────────────────────────────────────
+    library "core/media" {
+        description = "Responsive media, image styles, galleries"
+        css = [
+            "resources/css/components/media.css"
+        ]
+        js = []
+        weight = -30
+    }
+
+    # ── Admin-specific ───────────────────────────────────────────────────
+    library "admin/toolbar" {
+        description = "Admin toolbar and sidebar"
+        css = [
+            "resources/css/admin/toolbar.css"
+        ]
+        js = [
+            "resources/js/admin/toolbar.js"
+        ]
+        weight = -60
+    }
+
+    library "admin/editor" {
+        description = "Content editor, WYSIWYG, inline editing"
+        css = [
+            "resources/css/admin/editor.css"
+        ]
+        js = [
+            "resources/js/admin/editor.js"
+        ]
+        weight = -20
+    }
+
+    # ── Frontend-specific ────────────────────────────────────────────────
+    library "front/responsive" {
+        description = "Mobile-first responsive breakpoints and helpers"
+        css = [
+            "resources/css/front/responsive.css"
+        ]
+        js = []
+        weight = -60
+    }
+
+    library "front/animations" {
+        description = "Scroll animations and transitions"
+        css = [
+            "resources/css/front/animations.css"
+        ]
+        js = [
+            "resources/js/front/animations.js"
+        ]
+        weight = -20
+    }
+}

@@ -1,0 +1,288 @@
+/**
+ * Slug Manager — Admin page styles for URL alias management.
+ *
+ * Covers: stats bar, token bar, pattern rows, taxonomy patterns,
+ *         aliases table, edit modal, and copy/search utilities.
+ */
+
+/* ── Page Layout ─────────────────────────────── */
+.slug-page { padding: 1.5rem 2rem; max-width: 1280px; }
+
+/* ── Tabs ─────────────────────────────────────── */
+.slug-tabs {
+  display: flex; gap: 0.25rem; flex-wrap: wrap;
+}
+.slug-tab {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem; font-size: 0.85rem; color: #94a3b8;
+  border-radius: 8px; text-decoration: none; transition: all 0.15s;
+  border: 1px solid transparent; font-weight: 500;
+}
+.slug-tab:hover { color: #e2e8f0; background: rgba(255,255,255,0.04); }
+.slug-tab--active {
+  color: #818cf8; background: rgba(99,102,241,0.08);
+  border-color: rgba(99,102,241,0.15);
+}
+.slug-tab--active.slug-tab--term {
+  color: #fb923c; background: rgba(251,146,60,0.08);
+  border-color: rgba(251,146,60,0.15);
+}
+.slug-tab__count {
+  font-size: 0.7rem; font-weight: 600; padding: 0.1rem 0.45rem;
+  border-radius: 10px; background: rgba(255,255,255,0.06); color: #64748b;
+  min-width: 1.4rem; text-align: center;
+}
+.slug-tab--active .slug-tab__count {
+  background: rgba(99,102,241,0.15); color: #a5b4fc;
+}
+.slug-tab--active.slug-tab--term .slug-tab__count {
+  background: rgba(251,146,60,0.15); color: #fb923c;
+}
+
+/* ── Stats Bar ────────────────────────────────── */
+.slug-stats {
+  display: flex; gap: 1rem; margin-bottom: 1.5rem;
+}
+.slug-stats__item {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06));
+  border: 1px solid rgba(99,102,241,0.15);
+  border-radius: 12px; padding: 1.25rem 1.5rem;
+  display: flex; flex-direction: column; gap: 0.25rem;
+}
+.slug-stats__value {
+  font-size: 1.75rem; font-weight: 700;
+  background: linear-gradient(135deg, #a5b4fc, #818cf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.slug-stats__label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+.slug-stats__item--term {
+  background: linear-gradient(135deg, rgba(251,146,60,0.08), rgba(251,146,60,0.04));
+  border-color: rgba(251,146,60,0.15);
+}
+.slug-stats__item--term .slug-stats__value {
+  background: linear-gradient(135deg, #fdba74, #fb923c);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* ── Patterns Card ────────────────────────────── */
+.slug-patterns-header { display: flex; flex-direction: column; gap: 0.25rem; }
+.slug-patterns-subtitle { font-size: 0.8rem; color: #64748b; margin: 0; }
+
+/* ── Token Bar ────────────────────────────────── */
+.slug-token-bar {
+  display: flex; flex-direction: column; gap: 0.75rem;
+  padding: 0.75rem 1rem; margin-bottom: 1.25rem;
+  background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.12);
+  border-radius: 10px;
+}
+.slug-token-bar__label {
+  font-size: 0.75rem; color: #818cf8; font-weight: 600;
+  display: flex; align-items: center; gap: 0.35rem;
+  white-space: nowrap; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.slug-token-groups { display: flex; flex-direction: column; gap: 0.5rem; }
+.slug-token-group { display: flex; align-items: flex-start; gap: 0.5rem; }
+.slug-token-group__label {
+  font-size: 0.65rem; color: #64748b; text-transform: uppercase;
+  letter-spacing: 0.06em; font-weight: 600; min-width: 72px;
+  padding-top: 0.35rem; flex-shrink: 0;
+}
+.slug-token-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.slug-token-chip {
+  background: rgba(99,102,241,0.12); color: #a5b4fc;
+  border: 1px solid rgba(99,102,241,0.2); border-radius: 6px;
+  padding: 0.25rem 0.6rem; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;
+  cursor: pointer; transition: all 0.15s;
+}
+.slug-token-chip:hover {
+  background: rgba(99,102,241,0.25); border-color: #818cf8;
+  transform: translateY(-1px);
+}
+.slug-token-chip.is-inserted {
+  background: rgba(34,197,94,0.15); color: #4ade80; border-color: rgba(34,197,94,0.3);
+}
+
+/* ── Taxonomy Token Section ──────────────────── */
+.slug-taxonomy-section {
+  margin-top: 1.25rem; padding: 0.75rem 1rem;
+  background: rgba(251,146,60,0.04); border: 1px solid rgba(251,146,60,0.12);
+  border-radius: 10px;
+}
+.slug-taxonomy-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.8rem; color: #fb923c; font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+.slug-taxonomy-default {
+  margin-left: auto; font-weight: 400; font-size: 0.75rem; color: #64748b;
+}
+.slug-taxonomy-default code {
+  background: rgba(255,255,255,0.06); padding: 0.1rem 0.4rem;
+  border-radius: 4px; font-size: 0.75rem; color: #fb923c;
+}
+.slug-token-chips--taxonomy { margin-top: 0.25rem; }
+.slug-token-chip--term {
+  background: rgba(251,146,60,0.1); color: #fdba74;
+  border-color: rgba(251,146,60,0.2); cursor: default;
+}
+.slug-token-chip--term:hover {
+  background: rgba(251,146,60,0.2); border-color: #fb923c;
+}
+
+/* ── Pattern Rows ─────────────────────────────── */
+.slug-patterns-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.slug-pattern-row {
+  display: grid;
+  grid-template-columns: 44px 140px 1fr auto auto;
+  align-items: center; gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  transition: all 0.15s;
+}
+.slug-pattern-row:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(99,102,241,0.2);
+}
+.slug-pattern-row__icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(99,102,241,0.1); border-radius: 10px; color: #818cf8;
+}
+.slug-pattern-row__info { display: flex; flex-direction: column; gap: 0.1rem; }
+.slug-pattern-row__label { font-weight: 600; font-size: 0.9rem; color: #e2e8f0; }
+.slug-pattern-row__type-id { font-size: 0.7rem; color: #64748b; font-family: monospace; }
+.slug-pattern-input-wrap {
+  display: flex; align-items: center;
+  background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; overflow: hidden;
+}
+.slug-pattern-input-prefix {
+  padding: 0 0.5rem 0 0.75rem; color: #64748b; font-family: monospace; font-size: 0.85rem;
+}
+.slug-pattern-input {
+  border: none !important; background: transparent !important;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+  padding-left: 0 !important;
+}
+.slug-pattern-row__preview { display: flex; align-items: center; }
+.slug-preview-chip {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: rgba(34,197,94,0.08); color: #4ade80;
+  border: 1px solid rgba(34,197,94,0.15); border-radius: 6px;
+  padding: 0.3rem 0.6rem; font-size: 0.75rem; font-family: monospace;
+  white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis;
+}
+.slug-pattern-row__actions {
+  display: flex; align-items: center; gap: 0.25rem;
+}
+
+/* ── Taxonomy Pattern Rows ────────────────────── */
+.slug-patterns-card--taxonomy .card__title { color: #fb923c; }
+.slug-pattern-row--term:hover { border-color: rgba(251,146,60,0.25); }
+.slug-pattern-row__icon--term {
+  background: rgba(251,146,60,0.1); color: #fb923c;
+}
+.slug-preview-chip--term {
+  background: rgba(251,146,60,0.08); color: #fdba74;
+  border-color: rgba(251,146,60,0.15);
+}
+.badge--taxonomy {
+  background: rgba(251,146,60,0.15); color: #fb923c;
+}
+.badge--term-count {
+  background: rgba(251,146,60,0.15); color: #fb923c;
+  font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 10px;
+}
+
+/* ── Aliases Table ────────────────────────────── */
+.slug-table { width: 100%; }
+.slug-table th { padding: 0.75rem 1rem; text-align: left; }
+.slug-table td { padding: 0.65rem 1rem; vertical-align: middle; }
+.slug-filter { display: flex; gap: 0.5rem; align-items: center; }
+.slug-search-wrap {
+  position: relative; display: flex; align-items: center;
+}
+.slug-search-icon {
+  position: absolute; left: 0.6rem; color: #475569; pointer-events: none;
+}
+.slug-search-input { padding-left: 2rem !important; min-width: 200px; }
+
+.slug-table .slug-alias-title {
+  color: #e2e8f0; font-weight: 500; text-decoration: none;
+  transition: color 0.15s;
+}
+.slug-table .slug-alias-title:hover { color: #a5b4fc; }
+
+.badge--type {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600;
+}
+.badge--article { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+.badge--page { background: rgba(34,197,94,0.15); color: #4ade80; }
+.badge--news { background: rgba(251,146,60,0.15); color: #fb923c; }
+.badge--event { background: rgba(236,72,153,0.15); color: #ec4899; }
+
+.slug-cell { display: flex; align-items: center; gap: 0.35rem; }
+.slug-code {
+  font-size: 0.8rem; color: #94a3b8;
+  background: rgba(0,0,0,0.2); padding: 0.2rem 0.5rem;
+  border-radius: 4px; font-family: monospace;
+  max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.slug-copy-btn {
+  background: none; border: none; color: #475569; cursor: pointer;
+  padding: 0.2rem; border-radius: 4px; transition: all 0.15s;
+}
+.slug-copy-btn:hover { color: #a5b4fc; background: rgba(99,102,241,0.1); }
+.slug-copy-btn.is-copied { color: #4ade80; }
+
+.slug-url-link {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  color: #64748b; font-size: 0.8rem; text-decoration: none;
+  transition: color 0.15s;
+}
+.slug-url-link:hover { color: #a5b4fc; }
+
+/* ── Modal ────────────────────────────────────── */
+.slug-modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  animation: slugFadeIn 0.15s ease;
+}
+.slug-modal {
+  background: #1e1b2e; border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 16px; width: 100%; max-width: 480px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+}
+.slug-modal__header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.slug-modal__title { font-size: 1.1rem; font-weight: 600; color: #e2e8f0; margin: 0; }
+.slug-modal__subtitle { font-size: 0.8rem; color: #64748b; margin: 0.25rem 0 0; }
+.slug-modal__close {
+  background: none; border: none; color: #64748b; cursor: pointer;
+  padding: 0.25rem; border-radius: 6px; transition: all 0.15s;
+}
+.slug-modal__close:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+.slug-modal__body { padding: 1.5rem; }
+.slug-modal__footer {
+  display: flex; justify-content: flex-end; gap: 0.75rem;
+  padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.06);
+}
+.slug-edit-input-wrap {
+  display: flex; align-items: center;
+  background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; overflow: hidden;
+}
+.slug-edit-prefix { padding: 0 0.25rem 0 0.75rem; color: #64748b; font-family: monospace; }
+.slug-edit-input-wrap .form-input {
+  border: none !important; background: transparent !important;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+@keyframes slugFadeIn { from { opacity: 0; } to { opacity: 1; } }

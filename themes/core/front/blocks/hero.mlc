@@ -1,0 +1,31 @@
+# Theme Block: Hero Banner
+label = "Hero Banner"
+description = "A large hero section with title, subtitle, and background image."
+icon = "layout-template"
+category = "Layout"
+
+fields {
+    title {
+        type = "string"
+        label = "Hero Title"
+        default = "Welcome to our site"
+        required = true
+    }
+    subtitle {
+        type = "string"
+        label = "Subtitle"
+    }
+    bg_image {
+        type = "media"
+        label = "Background Image"
+    }
+    style {
+        type = "select"
+        label = "Style"
+        default = "dark"
+        options = [
+            "dark|Dark Theme",
+            "light|Light Theme"
+        ]
+    }
+}

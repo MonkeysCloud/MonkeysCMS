@@ -1,0 +1,141 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MonkeysCMS Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+
+cms {
+    name = ${CMS_NAME:MonkeysCMS}
+    version = "2.0.0"
+
+    # Content defaults
+    content {
+        default_status = "draft"
+        revisions_enabled = true
+        media_path = "storage/uploads"
+        max_upload_size = "50M"
+    }
+
+    # Admin panel
+    admin {
+        path = "/admin"
+        per_page = 25
+        max_per_page = 100
+        theme = "admin"
+    }
+
+    # Mosaic — Visual Page Builder
+    mosaic {
+        enabled = true
+        max_sections = 20
+        max_blocks_per_region = 10
+        autosave_interval = 30
+        allowed_section_layouts = [
+            "full",
+            "two_col",
+            "three_col",
+            "four_col",
+            "sidebar_left",
+            "sidebar_right"
+        ]
+    }
+
+    # Decoupled JSON:API
+    api {
+        enabled = true
+        prefix = "/api/v1"
+        format = "jsonapi"
+        pagination {
+            default_limit = 25
+            max_limit = 100
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Theme Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+
+themes {
+    # Active frontend theme
+    active = ${CMS_THEME:front}
+
+    # Admin theme (separate from frontend)
+    admin_theme = ${CMS_ADMIN_THEME:admin}
+
+    # Theme discovery paths (searched in priority order)
+    paths {
+        core = "themes/core"
+        contrib = "themes/contrib"
+        custom = "themes/custom"
+    }
+
+    # Theme cache
+    cache {
+        enabled = ${THEME_CACHE:true}
+        path = "var/cache/themes"
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# View / Template Engine
+# ═══════════════════════════════════════════════════════════════════════════════
+
+view {
+    # Template file extension
+    extension = ".ml.php"
+
+    # View paths (searched in order — theme first, then app fallback)
+    paths = [
+        "themes/custom/${CMS_THEME:front}/views",
+        "themes/contrib/${CMS_THEME:front}/views",
+        "themes/core/${CMS_THEME:front}/views",
+        "resources/views"
+    ]
+
+    # Component paths
+    components {
+        paths = [
+            "themes/custom/${CMS_THEME:front}/components",
+            "themes/contrib/${CMS_THEME:front}/components",
+            "themes/core/${CMS_THEME:front}/components",
+            "resources/views/components"
+        ]
+        namespace = "x"
+    }
+
+    # Compiled view cache
+    cache {
+        enabled = ${VIEW_CACHE:true}
+        path = "var/cache/views"
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Middleware Stack
+# ═══════════════════════════════════════════════════════════════════════════════
+
+middleware {
+    global = [
+        "MonkeysLegion\\Http\\Middleware\\CorsMiddleware"
+    ]
+
+    admin = [
+        "App\\Cms\\Middleware\\AuthMiddleware",
+        "App\\Cms\\Middleware\\AdminAccessMiddleware"
+    ]
+
+    api = [
+        "MonkeysLegion\\Http\\Middleware\\JsonMiddleware",
+        "MonkeysLegion\\Http\\Middleware\\RateLimitMiddleware"
+    ]
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Controller Scanning
+# ═══════════════════════════════════════════════════════════════════════════════
+
+controllers {
+    paths = [
+        "app/Controller",
+        "app/Cms/Controller"
+    ]
+}
