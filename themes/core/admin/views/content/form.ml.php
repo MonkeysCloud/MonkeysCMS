@@ -311,12 +311,29 @@
           <h3 class="card__title"><i data-lucide="image" class="w-4 h-4 card__title-icon"></i> Featured Image</h3>
         </div>
         <div class="card__body">
-          <div class="media-picker" id="featured-image-picker">
-            <div class="media-picker__placeholder">
+          <div class="media-picker {{ ($node->featured_image_id ?? null) ? 'has-image' : '' }}" id="featured-image-picker">
+            @if($node->featured_image_id ?? null)
+            <div class="media-picker__preview" id="fi-preview">
+              <img src="{{ $featuredImageUrl ?? '' }}" alt="{{ $featuredImageAlt ?? '' }}" id="fi-img">
+              <div class="media-picker__preview-info">
+                <span id="fi-name">{{ $featuredImageName ?? 'Image' }}</span>
+                <button type="button" class="media-picker__remove" id="fi-remove">Remove</button>
+              </div>
+            </div>
+            @else
+            <div class="media-picker__placeholder" id="fi-placeholder">
               <i data-lucide="image-plus" class="w-6 h-6"></i>
               <span class="text-sm text-muted">Click to select image</span>
             </div>
-            <input type="hidden" name="featured_image_id" value="{{ $node->featured_image_id ?? '' }}">
+            <div class="media-picker__preview" id="fi-preview" hidden>
+              <img src="" alt="" id="fi-img">
+              <div class="media-picker__preview-info">
+                <span id="fi-name"></span>
+                <button type="button" class="media-picker__remove" id="fi-remove">Remove</button>
+              </div>
+            </div>
+            @endif
+            <input type="hidden" name="featured_image_id" id="featured-image-id" value="{{ $node->featured_image_id ?? '' }}">
           </div>
         </div>
       </div>
@@ -517,8 +534,58 @@
 
 
 
+@push('head')
+<link rel="stylesheet" href="/themes/core/admin/css/media-picker.css?v={{ time() }}">
+@endpush
+
 @push('scripts')
+<script src="/themes/core/admin/js/media-picker.js?v={{ time() }}"></script>
 <script src="/themes/core/admin/js/content-editor.js?v={{ time() }}"></script>
+<script>
+(function() {
+  const picker = document.getElementById('featured-image-picker');
+  const input = document.getElementById('featured-image-id');
+  const placeholder = document.getElementById('fi-placeholder');
+  const preview = document.getElementById('fi-preview');
+  const img = document.getElementById('fi-img');
+  const nameEl = document.getElementById('fi-name');
+  const removeBtn = document.getElementById('fi-remove');
+
+  function openPicker() {
+    CMS.mediaPicker({
+      type: 'image',
+      onSelect(media) {
+        input.value = media.id;
+        img.src = media.url;
+        img.alt = media.alt || media.name;
+        nameEl.textContent = media.name;
+        if (placeholder) placeholder.hidden = true;
+        preview.hidden = false;
+        picker.classList.add('has-image');
+      },
+    });
+  }
+
+  // Click on picker area (but not on remove button)
+  picker.addEventListener('click', (e) => {
+    if (e.target.closest('.media-picker__remove')) return;
+    openPicker();
+  });
+
+  // Remove button
+  if (removeBtn) {
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      input.value = '';
+      img.src = '';
+      nameEl.textContent = '';
+      preview.hidden = true;
+      if (placeholder) placeholder.hidden = false;
+      picker.classList.remove('has-image');
+    });
+  }
+})();
+</script>
 @if(!$isNew)
 <script>
 (function() {

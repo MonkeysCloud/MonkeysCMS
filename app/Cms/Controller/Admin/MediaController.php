@@ -23,6 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * Routes:
  *   GET    /admin/media              — Library grid
+ *   GET    /admin/media/browse.json  — JSON API for media picker
  *   GET    /admin/media/upload       — Upload page
  *   POST   /admin/media/upload       — Handle upload(s)
  *   GET    /admin/media/settings     — Module settings
@@ -74,6 +75,61 @@ final class MediaController
             'totalPages'  => (int) ceil(count($total) / $perPage),
             'diskUsage'   => $this->media->getDiskUsage(),
         ]));
+    }
+
+    // ── JSON Browse API (for media picker modal) ───────────────────────
+
+    #[Route('GET', '/browse.json', name: 'admin::media.browse')]
+    public function browse(ServerRequestInterface $request): Response
+    {
+        $params = $request->getQueryParams();
+        $type = $params['type'] ?? 'image'; // default to images for picker
+        $search = $params['q'] ?? '';
+        $page = max(1, (int) ($params['page'] ?? 1));
+        $perPage = 24;
+        $offset = ($page - 1) * $perPage;
+
+        $items = $this->media->findAll(
+            type: $type !== 'all' ? $type : null,
+            limit: $perPage,
+            offset: $offset,
+        );
+
+        // Simple search filter on original_name
+        if ($search !== '') {
+            $items = array_values(array_filter($items, fn($m) =>
+                stripos($m->original_name, $search) !== false
+                || stripos($m->alt ?? '', $search) !== false
+                || stripos($m->title ?? '', $search) !== false
+            ));
+        }
+
+        $totalAll = $this->media->findAll(type: $type !== 'all' ? $type : null, limit: 999999);
+        $total = count($totalAll);
+
+        $data = array_map(fn($m) => [
+            'id'        => $m->id,
+            'filename'  => $m->filename,
+            'name'      => $m->original_name,
+            'mime'      => $m->mime_type,
+            'type'      => $m->type,
+            'url'       => $m->url ?: '/uploads/' . $m->path,
+            'thumb'     => $m->type === 'image' ? ($m->url ?: '/uploads/' . $m->path) : null,
+            'alt'       => $m->alt,
+            'title'     => $m->title,
+            'size'      => $m->formattedSize,
+            'width'     => $m->width,
+            'height'    => $m->height,
+            'created'   => $m->created_at?->format('Y-m-d H:i'),
+        ], $items);
+
+        return Response::json([
+            'items'      => $data,
+            'page'       => $page,
+            'perPage'    => $perPage,
+            'total'      => $total,
+            'totalPages' => (int) ceil($total / $perPage),
+        ]);
     }
 
     // ── Upload Page ─────────────────────────────────────────────────────

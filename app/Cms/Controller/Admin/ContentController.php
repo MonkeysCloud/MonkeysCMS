@@ -16,6 +16,7 @@ use App\Cms\Field\Widget\WidgetRegistry;
 use App\Cms\I18n\LanguageService;
 use App\Cms\I18n\TranslationService;
 use App\Cms\Log\ActivityLogger;
+use App\Cms\Media\MediaModule;
 use App\Cms\Slug\SlugManager;
 use App\Cms\Theme\PageAssets;
 use App\Cms\Apex\ApexService;
@@ -47,6 +48,7 @@ final class ContentController
         private readonly TranslationService $translationService,
         private readonly ContentLockService $lockService,
         private readonly HookManager $hooks,
+        private readonly MediaModule $mediaModule,
     ) {}
 
     // ── List ────────────────────────────────────────────────────────────
@@ -211,6 +213,19 @@ final class ContentController
             $this->pageAssets->attachLibrary('admin/apex-assistant');
         }
 
+        // Resolve featured image
+        $featuredImageUrl = '';
+        $featuredImageAlt = '';
+        $featuredImageName = '';
+        if ($node->featured_image_id) {
+            $fiMedia = $this->mediaModule->find((int) $node->featured_image_id);
+            if ($fiMedia) {
+                $featuredImageUrl = $fiMedia->url ?: '/uploads/' . $fiMedia->path;
+                $featuredImageAlt = $fiMedia->alt ?? '';
+                $featuredImageName = $fiMedia->original_name;
+            }
+        }
+
         return Response::html($this->renderer->render('admin::content.form', [
             'title'         => 'Edit: ' . $node->title,
             'contentType'   => $ct,
@@ -225,6 +240,9 @@ final class ContentController
             'authorId'      => $authorId,
             'lockAcquired'  => $lockAcquired,
             'lockInfo'      => $lockInfo,
+            'featuredImageUrl'  => $featuredImageUrl,
+            'featuredImageAlt'  => $featuredImageAlt,
+            'featuredImageName' => $featuredImageName,
             ...$this->getMultilingualViewData($node),
         ]));
     }
@@ -596,6 +614,13 @@ final class ContentController
         // Author
         if (isset($body['author_id']) && $body['author_id'] !== '') {
             $entity->author_id = (int) $body['author_id'];
+        }
+
+        // Featured image
+        if (array_key_exists('featured_image_id', $body)) {
+            $entity->featured_image_id = $body['featured_image_id'] !== ''
+                ? (int) $body['featured_image_id']
+                : null;
         }
 
         // Auto-generate slug from title if empty, using SlugManager patterns
