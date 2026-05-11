@@ -1,42 +1,42 @@
 {
-  "_monkeysjs.esm-Bge2XtfR.js": {
-    "file": "assets/monkeysjs.esm-Bge2XtfR.js",
+  "_monkeysjs.esm-DrkZZFmh.js": {
+    "file": "assets/monkeysjs.esm-DrkZZFmh.js",
     "name": "monkeysjs.esm"
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-C7CC9g_4.js",
+    "file": "assets/admin-BqmDbQNa.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true,
     "imports": [
-      "_monkeysjs.esm-Bge2XtfR.js"
+      "_monkeysjs.esm-DrkZZFmh.js"
     ]
   },
   "resources/js/frontend.js": {
-    "file": "assets/frontend-CxGcaYqj.js",
+    "file": "assets/frontend-CAwDK2rW.js",
     "name": "frontend",
     "src": "resources/js/frontend.js",
     "isEntry": true,
     "imports": [
-      "_monkeysjs.esm-Bge2XtfR.js"
+      "_monkeysjs.esm-DrkZZFmh.js"
     ]
   },
   "resources/js/mosaic-editor.js": {
-    "file": "assets/mosaic-editor-Dr0TTXAx.js",
+    "file": "assets/mosaic-editor-DUboLiJZ.js",
     "name": "mosaic-editor",
     "src": "resources/js/mosaic-editor.js",
     "isEntry": true,
     "imports": [
-      "_monkeysjs.esm-Bge2XtfR.js"
+      "_monkeysjs.esm-DrkZZFmh.js"
     ]
   },
   "themes/core/admin/css/admin.css": {
-    "file": "assets/admin-css-BDtsQOWx.css",
+    "file": "assets/admin-css-_KDm-S4l.css",
     "src": "themes/core/admin/css/admin.css",
     "isEntry": true
   },
   "themes/core/front/css/front.css": {
-    "file": "assets/frontend-css-DTiQZThW.css",
+    "file": "assets/frontend-css-4wcioCxm.css",
     "src": "themes/core/front/css/front.css",
     "isEntry": true
   }
